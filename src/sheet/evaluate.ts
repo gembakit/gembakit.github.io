@@ -1,10 +1,11 @@
 import { normalInv } from '../calc/stats';
-import type { Grid } from './layout';
+import { COLUMNS, type Grid } from './layout';
 
-// Evaluador mínimo de fórmulas de hoja de cálculo, solo para las pruebas que
+// Evaluador mínimo de fórmulas de hoja de cálculo. Lo usan las pruebas que
 // comparan las fórmulas de cada hoja con el módulo de cálculo (CLAUDE.md,
-// calidad de los cálculos). Sigue las reglas de Excel y Google Sheets en lo
-// que usan las hojas de la app: + − × ÷ ^ (el menos delante va antes que ^),
+// calidad de los cálculos) y la exportación, para saber cuántos decimales
+// enseñar en cada celda. Sigue las reglas de Excel y Google Sheets en lo que
+// usan las hojas de la app: + − × ÷ ^ (el menos delante va antes que ^),
 // comparaciones, texto entre comillas y las funciones de FUNCTIONS. Si una
 // hoja usa algo que no está aquí, la prueba falla en lugar de inventarlo.
 
@@ -128,7 +129,7 @@ const FUNCTIONS: Record<string, (args: Lazy[]) => Value> = {
 /** Calcula todas las celdas con fórmula de la cuadrícula. Devuelve dirección → valor. */
 export function evaluateGrid(grid: Grid): Record<string, Value> {
   const cells = new Map<string, { number?: number; text?: string; formula?: string }>();
-  grid.rows.forEach((row, r) => row.cells.forEach((c, col) => cells.set(`${'ABC'[col]}${r + 1}`, c)));
+  grid.rows.forEach((row, r) => row.cells.forEach((c, col) => cells.set(`${COLUMNS[col]}${r + 1}`, c)));
   const cache = new Map<string, Value>();
   const visiting = new Set<string>();
 

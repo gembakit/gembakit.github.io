@@ -95,6 +95,7 @@ export const es = {
       sheet: {
         tab: 'DPMO',
         file: 'DPMO y nivel sigma',
+        units: { units: 'unidades', opportunities: 'por unidad', defects: 'defectos' },
         notes: {
           opportunitiesTotal: 'unidades × oportunidades',
           dpu: 'defectos ÷ unidades',
@@ -147,12 +148,16 @@ export const es = {
     failed: (msg: string) => `No se pudo crear la hoja: ${msg}`,
   },
   sheet: {
+    summary: 'Resumen',
     inputs: 'Datos',
     results: 'Resultados',
     reading: 'Cómo leerlo',
     notes: 'Notas',
-    subheading: (version: string, date: string) => `Gemba Kit ${version} · ${date}`,
-    formulasNote: 'Los resultados son fórmulas: si cambias un dato, se recalculan.',
+    inputHeads: ['Dato', 'Valor', 'Unidad'],
+    resultHeads: ['Resultado', 'Valor', 'Cómo se calcula'],
+    editHint: 'Cambia los datos en las celdas de color: los resultados se recalculan solos.',
+    prefixes: { conclusion: 'Conclusión: ', warning: 'Aviso: ' },
+    subheading: (version: string, date: string) => `Creada con Gemba Kit ${version} el ${date}`,
     readingNote: '«Cómo leerlo» describe los datos tal como se exportaron; no cambia si editas los datos.',
   },
   capture: {

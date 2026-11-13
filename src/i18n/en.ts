@@ -95,6 +95,7 @@ export const en: Messages = {
       sheet: {
         tab: 'DPMO',
         file: 'DPMO and sigma level',
+        units: { units: 'units', opportunities: 'per unit', defects: 'defects' },
         notes: {
           opportunitiesTotal: 'units × opportunities',
           dpu: 'defects ÷ units',
@@ -147,12 +148,16 @@ export const en: Messages = {
     failed: (msg) => `The sheet could not be created: ${msg}`,
   },
   sheet: {
+    summary: 'Summary',
     inputs: 'Data',
     results: 'Results',
     reading: 'How to read it',
     notes: 'Notes',
-    subheading: (version, date) => `Gemba Kit ${version} · ${date}`,
-    formulasNote: 'Results are formulas: change a data value and they recalculate.',
+    inputHeads: ['Input', 'Value', 'Unit'],
+    resultHeads: ['Result', 'Value', 'How it is calculated'],
+    editHint: 'Change the data in the shaded cells: the results recalculate on their own.',
+    prefixes: { conclusion: 'Conclusion: ', warning: 'Warning: ' },
+    subheading: (version, date) => `Created with Gemba Kit ${version} on ${date}`,
     readingNote: '“How to read it” describes the data as exported; it does not change if you edit the data.',
   },
   capture: {

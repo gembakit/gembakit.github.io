@@ -9,7 +9,7 @@ import { dpmoSheet } from './sheet';
 // (CLAUDE.md, calidad de los cálculos), con los casos de referencia de la ficha.
 
 function sheetValues(input: DpmoInput) {
-  const def = dpmoSheet(input, MESSAGES.es, { reading: ['x'], version: '0.0.0', date: '1/1/2026' });
+  const def = dpmoSheet(input, MESSAGES.es, { reading: [{ tone: 'conclusion', text: 'x' }], version: '0.0.0', date: '1/1/2026' });
   const grid = layoutSheet(def);
   const values = evaluateGrid(grid);
   return (key: string) => values[grid.address[key]!];

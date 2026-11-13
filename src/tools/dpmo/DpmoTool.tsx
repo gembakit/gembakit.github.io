@@ -151,7 +151,11 @@ export default function DpmoTool() {
   const sheet = () =>
     parsed && r
       ? dpmoSheet(parsed, t, {
-          reading: [conclusion, ...warnings, d.typicalError],
+          reading: [
+            { tone: 'conclusion', text: conclusion },
+            ...warnings.map((w) => ({ tone: 'warning' as const, text: w })),
+            { tone: 'tip', text: d.typicalError },
+          ],
           version: APP_VERSION,
           date: new Date().toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB'),
         })
