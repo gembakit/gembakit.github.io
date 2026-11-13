@@ -36,6 +36,10 @@ paso.
 
 ## 2. Dónde estamos
 
+**En curso: prueba de viabilidad de Google** (sección 4, Fase 0). El dueño
+ya creó el proyecto en Google Cloud y la pantalla provisional está publicada;
+falta que haga la prueba en su Android y en el ordenador y pegue el registro.
+
 **La Fase 0 está terminada salvo la prueba de Google.** La app está
 publicada, se instala en el Android del dueño, funciona en modo avión y el
 almacenamiento protegido está concedido (comprobado por el dueño el
@@ -111,11 +115,33 @@ PLAN.md, sección 5.
 - [x] Git, esqueleto, idiomas, temas, piezas comunes, navegación, registro
       de herramientas, plantilla única, base local, modo sin conexión,
       publicación y comprobación del dueño en su Android.
-- [ ] **Prueba de viabilidad de Google** (opción A de arriba). Pantalla
-      provisional que se retira al acabar. Resultados que hay que anotar
-      aquí: permisos mínimos que funcionan, pantalla de aviso que ve el
-      usuario, cada cuánto pide reconfirmar, comportamiento en la app
-      instalada en Android y en el ordenador.
+- [ ] **Prueba de viabilidad de Google** (opción A de arriba, elegida por el
+      dueño el 2026-11-13). Resultados que hay que anotar aquí: permisos
+      mínimos que funcionan, pantalla de aviso que ve el usuario, cada cuánto
+      pide reconfirmar, comportamiento en la app instalada en Android y en el
+      ordenador.
+  - [x] Proyecto "Gemba Kit" creado por el dueño en Google Cloud con su
+        cuenta (2026-11-13): API de Drive y de Sheets activadas, pantalla de
+        permiso "External" en modo pruebas con el dueño como usuario de
+        prueba, permisos `drive.file` y `drive.appdata`, cliente web con
+        orígenes `https://pasqualebf.github.io` y `http://localhost:5173`.
+        El identificador de cliente está en `src/google/config.ts`.
+  - [x] Google exigió una cuenta de facturación para crear el proyecto. El
+        dueño vinculó la suya y decidió dejarla vinculada (tiene un
+        presupuesto de 10 $; se le explicó que un presupuesto solo avisa, no
+        corta el gasto). Drive y Sheets no cobran.
+  - [x] Pantalla provisional: Ajustes → "Prueba de conexión con Google"
+        (`#/prueba-google`). Cinco pasos (conectar, crear hoja, escribir y
+        leer con una fórmula en una hoja con región es_ES, carpeta oculta,
+        buscar la hoja desde otro aparato) y un registro que el dueño copia y
+        pega en el chat.
+  - [ ] Resultados del dueño en el Android (app instalada) y en el ordenador,
+        incluida una renovación del permiso pasada una hora.
+  - [ ] Al terminar, retirar la pantalla: `src/app/screens/GoogleTestScreen.tsx`,
+        su ruta en `AppShell.tsx`, el enlace de Ajustes, los textos
+        `googleTest` y `settings.googleTest*`, su prueba en `App.test.tsx` y
+        su captura en `scripts/screens.mjs`. Se quedan `src/google/gis.ts` y
+        `src/google/api.ts` como base del "almacén remoto" (PLAN.md, 4.3).
 
 ### Fase 1 — Entrada de datos y calculadoras rápidas
 

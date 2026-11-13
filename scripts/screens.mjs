@@ -21,6 +21,7 @@ const SHOTS = [
   { name: 'referencia', hash: '#/referencia' },
   { name: 'referencia-abierta', hash: '#/referencia', click: /^DMAIC/ },
   { name: 'ajustes', hash: '#/ajustes', full: true },
+  { name: 'prueba-google', hash: '#/prueba-google', full: true },
   { name: 'capturar', hash: '#/proyectos', click: /^(Capturar|Capture)$/, byLabel: true },
 ];
 
@@ -34,6 +35,8 @@ for (const mode of ['light', 'dark']) {
   for (const s of SHOTS) {
     await page.goto(base + s.hash, { waitUntil: 'networkidle0' });
     await page.waitForSelector('main h1');
+    // Cambiar solo la almohadilla no recarga la página: empezar siempre arriba.
+    await page.evaluate(() => window.scrollTo(0, 0));
     if (s.click) {
       const ok = await page.evaluate(
         (src, byLabel) => {

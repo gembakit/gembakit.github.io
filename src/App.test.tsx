@@ -24,6 +24,17 @@ test('abre la herramienta de muestra, carga el ejemplo y muestra resultado y lec
   expect(screen.getAllByText(/12 valores leídos|12 values read/).length).toBeGreaterThan(0);
 });
 
+test('Ajustes lleva a la prueba provisional de Google, con sus cinco pasos', async () => {
+  const user = userEvent.setup();
+  window.location.hash = '#/ajustes';
+  render(<App />);
+  await user.click(await screen.findByRole('button', { name: /Prueba de conexión con Google|Google connection test/ }));
+  expect(await screen.findByRole('heading', { level: 1, name: /Prueba de Google|Google test/ })).toBeInTheDocument();
+  expect(screen.getAllByRole('heading', { level: 2, name: /^(Paso|Step) \d/ })).toHaveLength(5);
+  // Al abrir anota en el registro dónde se está usando.
+  expect(screen.getByText(/Pantalla abierta como|Screen opened as/)).toBeInTheDocument();
+});
+
 test('el botón central abre la hoja de Capturar y se cierra', async () => {
   const user = userEvent.setup();
   render(<App />);

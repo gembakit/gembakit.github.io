@@ -10,6 +10,7 @@ import { ProjectsScreen } from './screens/ProjectsScreen';
 import { ToolsScreen } from './screens/ToolsScreen';
 import { ReferenceScreen } from './screens/ReferenceScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
+import { GoogleTestScreen } from './screens/GoogleTestScreen';
 
 function ToolRoute({ id }: { id: string }) {
   const { t } = useI18n();
@@ -40,13 +41,16 @@ export function AppShell({ persisted }: { persisted: boolean | null }) {
   else if (section === 'herramientas') screen = <ToolsScreen />;
   else if (section === 'referencia') screen = <ReferenceScreen />;
   else if (section === 'ajustes') screen = <SettingsScreen persisted={persisted} />;
+  else if (section === 'prueba-google') screen = <GoogleTestScreen />;
   else screen = <ProjectsScreen />;
+  // La prueba de Google cuelga de Ajustes: la barra marca Ajustes.
+  const navSection = section === 'prueba-google' ? 'ajustes' : section;
 
   return (
     <div className="min-h-dvh bg-bg text-text">
-      <SideNav active={section} onCapture={openCapture} />
+      <SideNav active={navSection} onCapture={openCapture} />
       <main className="pb-(--nav-h) md:pl-(--side-w)">{screen}</main>
-      <BottomNav active={section} onCapture={openCapture} />
+      <BottomNav active={navSection} onCapture={openCapture} />
       <Sheet open={capture} onClose={closeCapture} title={t.capture.title}>
         <div className="flex items-start gap-3">
           <span className="grid size-12 shrink-0 place-items-center rounded-[14px] bg-soft text-accent-ink">
