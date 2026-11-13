@@ -152,6 +152,21 @@ al final. Los pasos de construcción son:
   equipo y avisa si la página es más ancha que la pantalla o si un texto
   queda recortado. Revisado a 320, 360 y 1280 px: sin problemas.
 - Pruebas: 83, todas pasan. Compilación correcta.
-- Pendiente: paso 10 (publicación en GitHub Pages; necesita la parada 2:
-  cuenta y nombre del repositorio) y paso 11 (comprobación del dueño en su
-  Android). Después, prueba de viabilidad de Google (paradas 3 y 4).
+- Hecho (paso 10, parada 2 aprobada el 2026-11-13): repositorio público
+  https://github.com/pasqualebf/gemba-kit, app publicada en
+  https://pasqualebf.github.io/gemba-kit/ por GitHub Actions
+  (`.github/workflows/publicar.yml`: tipos + pruebas + compilación; solo
+  publica si todo pasa). `npm run check:live` comprueba la app publicada:
+  carga, manifiesto, modo sin conexión y apertura sin red. Todo OK.
+- Las confirmaciones de este repositorio usan la dirección privada de GitHub
+  (236227593+pasqualebf@users.noreply.github.com, configurada solo en este
+  repositorio) para no publicar el correo del dueño.
+- Incidencia resuelta: el package-lock.json generado en Windows no incluía
+  @emnapi/core y @emnapi/runtime (dependencias de un paquete opcional de
+  rolldown) y `npm ci` fallaba en Linux. Se regeneró desde cero. Si vuelve
+  a pasar tras instalar algo, borrar node_modules y package-lock.json y
+  ejecutar `npm install`.
+- Aviso de GitHub: actions/checkout@v4 y setup-node@v4 usan Node 20, que
+  GitHub ya ejecuta con Node 24. Funciona; actualizar cuando haya versión.
+- Pendiente: paso 11, comprobación del dueño en su Android. Después,
+  prueba de viabilidad de Google (paradas 3 y 4).
