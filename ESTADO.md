@@ -110,4 +110,21 @@ al final. Los pasos de construcción son:
 
 ## Registro por fase
 
-(Se rellena al cerrar cada fase; ver PLAN.md, sección 10.)
+### Fase 0 (en curso)
+
+- Hecho: Git local (rama main, sin repositorio remoto todavía: parada 2).
+- Hecho: esqueleto React 19 + TypeScript 7 + Vite 8 + Tailwind 4 + Vitest 5.
+  `npm test` usa `scripts/vitest.mjs`, que pone en mayúscula la letra de
+  unidad: con "c:\" en minúscula Vitest carga dos veces el mismo módulo y
+  todas las pruebas fallan ("failed to find the current suite"). Las pruebas
+  importan `test` y `expect` de 'vitest' (sin globales).
+- Hecho: idiomas es/en en `src/i18n` con claves comprobadas por TypeScript y
+  por prueba; detección automática del idioma del dispositivo. Falta el
+  selector en Ajustes y guardarlo (paso 8).
+- Hecho: temas en `src/ui/theme` (5 temas × claro/oscuro) con prueba de
+  contraste WCAG: texto ≥ 7, secundario, acento y estados ≥ 4,5. Para
+  cumplirlo se oscurecieron un poco algunos tonos claros respecto a la
+  maqueta (acento de Lino #9A6B3F → #8F6239, textos secundarios y el verde,
+  ámbar y rojo de estado). Falta el selector en Ajustes.
+- Pruebas: 49, todas pasan. Compilación correcta.
+- Pendiente: pasos 5 a 11 del plan de la Fase 0.

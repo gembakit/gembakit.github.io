@@ -1,5 +1,30 @@
 @import 'tailwindcss';
 
+/* Colores: los pone ThemeProvider como variables CSS en <html> según el tema
+   y el modo elegidos. Aquí solo se conectan con las clases de Tailwind
+   (bg-surface, text-muted, border-line, bg-accent, text-on-accent, …). */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-on-accent: var(--on-accent);
+  --color-soft: var(--soft);
+  --color-band: var(--band);
+  --color-band-text: var(--band-text);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+}
+
 @theme {
   --font-sans: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-display: 'Inter Tight Variable', 'Inter Variable', system-ui, sans-serif;
@@ -12,4 +37,43 @@ html {
 
 body {
   font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Relieve: piezas separadas que flotan sobre el fondo (dirección visual aprobada). */
+:root {
+  --elev: 0 1px 0 rgb(255 255 255 / 0.75) inset, 0 1px 2px rgb(50 35 20 / 0.07),
+    0 6px 12px -6px rgb(50 35 20 / 0.14), 0 20px 34px -22px rgb(50 35 20 / 0.38);
+  --elev-sm: 0 1px 0 rgb(255 255 255 / 0.7) inset, 0 1px 2px rgb(50 35 20 / 0.08),
+    0 4px 10px -5px rgb(50 35 20 / 0.18);
+  --press: 0 1px 0 rgb(255 255 255 / 0.5) inset, 0 1px 1px rgb(50 35 20 / 0.12);
+}
+:root[data-mode='dark'] {
+  --elev: 0 1px 0 rgb(255 255 255 / 0.06) inset, 0 1px 2px rgb(0 0 0 / 0.45), 0 10px 24px -10px rgb(0 0 0 / 0.7);
+  --elev-sm: 0 1px 0 rgb(255 255 255 / 0.06) inset, 0 1px 2px rgb(0 0 0 / 0.45), 0 6px 14px -8px rgb(0 0 0 / 0.6);
+  --press: 0 1px 0 rgb(255 255 255 / 0.04) inset, 0 1px 1px rgb(0 0 0 / 0.5);
+}
+
+@utility raised {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 72%, #fff), var(--surface) 60%);
+  border: 1px solid var(--line);
+  box-shadow: var(--elev);
+}
+@utility raised-sm {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 72%, #fff), var(--surface));
+  border: 1px solid var(--line);
+  box-shadow: var(--elev-sm);
+}
+:root[data-mode='dark'] .raised,
+:root[data-mode='dark'] .raised-sm {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 90%, #fff), var(--surface) 60%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
