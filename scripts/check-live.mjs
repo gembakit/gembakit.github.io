@@ -34,7 +34,7 @@ results.push(['modo sin conexión instalado', swReady]);
 await page.reload({ waitUntil: 'networkidle0' });
 
 await page.setOfflineMode(true);
-await page.goto(url + '#/herramientas/muestra', { waitUntil: 'domcontentloaded' });
+await page.goto(url + '#/herramientas/dpmo', { waitUntil: 'domcontentloaded' });
 await page.waitForSelector('main h1', { timeout: 10000 }).catch(() => {});
 const offlineOk = await page.evaluate(() => document.querySelector('main h1')?.textContent ?? '');
 results.push([`abre sin red (título: «${offlineOk}»)`, offlineOk.length > 0]);

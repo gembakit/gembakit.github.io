@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from 'react';
-import { FolderPlus, Share, SquareFunction, TriangleAlert, Lightbulb } from 'lucide-react';
+import { useId, useState, type ReactNode } from 'react';
+import { BookOpenText, ChevronDown, FolderPlus, Share, SquareFunction, TriangleAlert, Lightbulb } from 'lucide-react';
 import { useI18n } from '../i18n';
 import { Button } from './Button';
 import { BottomAction, Card, DetailHeader, Label, Screen } from './Layout';
@@ -26,6 +26,7 @@ export function ToolTemplate({
   result,
   reading,
   formula,
+  guide,
 }: {
   name: string;
   subtitle?: string;
@@ -35,14 +36,45 @@ export function ToolTemplate({
   result: ReactNode | null;
   reading: Reading | null;
   formula: ReactNode;
+  /** Pasos de «Cómo usarla», plegados al abrir la herramienta. */
+  guide?: string[];
 }) {
   const { t } = useI18n();
   const toast = useToast();
   const [showFormula, setShowFormula] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
+  const guideId = useId();
 
   return (
     <Screen wide>
       <DetailHeader title={name} subtitle={subtitle} onBack={() => navigate('/herramientas')} backLabel={t.common.back} />
+      {guide && guide.length > 0 && (
+        <section className="raised overflow-hidden rounded-[20px]">
+          <button
+            type="button"
+            aria-expanded={showGuide}
+            aria-controls={guideId}
+            onClick={() => setShowGuide((v) => !v)}
+            className="grid min-h-14 w-full grid-cols-[22px_minmax(0,1fr)_22px] items-center gap-3 px-4 py-2 text-left"
+          >
+            <BookOpenText aria-hidden size={22} className="text-accent-ink" />
+            <span className="text-[15.5px] font-semibold">{t.template.howTo}</span>
+            <ChevronDown aria-hidden size={20} className={`text-muted transition-transform duration-200 ${showGuide ? 'rotate-180' : ''}`} />
+          </button>
+          {showGuide && (
+            <ol id={guideId} className="flex flex-col gap-3 px-4 pb-4">
+              {guide.map((step, i) => (
+                <li key={i} className="grid grid-cols-[28px_minmax(0,1fr)] items-start gap-3 text-[15px] leading-relaxed">
+                  <span aria-hidden className="grid size-7 place-items-center rounded-full bg-soft text-[13px] font-bold text-accent-ink">
+                    {i + 1}
+                  </span>
+                  <span>{step}</span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </section>
+      )}
       <div className="grid items-start gap-4 md:grid-cols-2">
         <Card>
           <Label>1 · {t.template.data}</Label>

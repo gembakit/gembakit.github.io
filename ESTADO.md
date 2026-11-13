@@ -197,8 +197,15 @@ PLAN.md, sección 5.
       que compara las fórmulas con el cálculo.
 - [ ] Una herramienta cada vez: pruebas → cálculo → pantalla → textos →
       ejemplo → exportación.
-- [ ] Borrar la herramienta de muestra (`src/tools/muestra`,
-      `src/calc/muestra.ts` y sus textos `tools.muestra`).
+- [x] Borrada la herramienta de muestra (2026-11-13).
+- [x] **Calculadora 1, DPMO y nivel sigma** (2026-11-13): `src/calc/dpmo.ts`
+      con los casos publicados de la ficha en `dpmo.test.ts`, pantalla en
+      `src/tools/dpmo`, guía «Cómo usarla» plegable (nueva en la plantilla),
+      siglas tocables, ejemplo cargable. Inversa de la normal con jStat
+      1.9.6 (MIT) a través de `src/calc/stats.ts`. Falta su exportación a
+      .xlsx, que llega con la pieza común de exportación.
+- [ ] Calculadoras 2 a 6: FPY y RTY, takt, OEE, kanban, ahorro con ROI y
+      payback.
 - [x] Glosario ampliado con los términos de las seis calculadoras (31
       términos, categoría nueva «Finanzas») y guía de uso general en
       Referencia (`src/reference/guide.ts`), pedidos por el dueño el
@@ -374,6 +381,10 @@ cada dependencia nueva antes de añadirla.
   sincronización, y pruebas de combinación en cualquier orden.
 - El dueño puede editar las pestañas protegidas de la app (es el propietario
   del archivo): la app las reescribe y no confía en ellas.
+- `npm audit` avisa de fallos moderados en deepmerge, glob y minimatch, que
+  llegan a través de vite-plugin-pwa → workbox-build. Son herramientas de
+  compilación: no van dentro de la app. El arreglo que propone npm baja
+  vite-plugin-pwa a una versión antigua; esperar a una versión nueva.
 - GitHub avisa de que actions/checkout@v4 y setup-node@v4 usan Node 20 (ya
   se ejecutan con Node 24). Funciona; actualizarlas cuando salga versión.
 

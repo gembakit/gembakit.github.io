@@ -16,8 +16,10 @@ const base = 'http://localhost:4317/';
 const SHOTS = [
   { name: 'proyectos', hash: '#/proyectos' },
   { name: 'herramientas', hash: '#/herramientas' },
-  { name: 'muestra-vacia', hash: '#/herramientas/muestra' },
-  { name: 'muestra-ejemplo', hash: '#/herramientas/muestra', click: /Cargar ejemplo|Load example/, full: true },
+  { name: 'dpmo-vacia', hash: '#/herramientas/dpmo' },
+  { name: 'dpmo-ejemplo', hash: '#/herramientas/dpmo', click: /Cargar ejemplo|Load example/, full: true },
+  { name: 'dpmo-resultado', hash: '#/herramientas/dpmo', click: /Cargar ejemplo|Load example/, scrollTo: '2 · ' },
+  { name: 'dpmo-guia', hash: '#/herramientas/dpmo', click: /^Cómo usarla/ },
   { name: 'referencia', hash: '#/referencia' },
   { name: 'referencia-abierta', hash: '#/referencia', click: /^DMAIC/ },
   { name: 'referencia-guia', hash: '#/referencia', click: /^Cómo es cada herramienta/ },
@@ -35,6 +37,8 @@ for (const mode of ['light', 'dark']) {
   await page.setViewport({ width, height: 780, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
   await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: mode }]);
   for (const s of SHOTS) {
+    // Página nueva en cada captura: sin datos ni desplazamiento de la anterior.
+    await page.goto('about:blank');
     await page.goto(base + s.hash, { waitUntil: 'networkidle0' });
     await page.waitForSelector('main h1');
     // Cambiar solo la almohadilla no recarga la página: empezar siempre arriba.
@@ -54,6 +58,17 @@ for (const mode of ['light', 'dark']) {
       );
       if (!ok) problems.push(`${mode}/${s.name}: no encontré el botón ${s.click}`);
       await new Promise((r) => setTimeout(r, 400));
+    }
+    // Llevar a la vista un bloque intermedio (por su título) para revisarlo.
+    if (s.scrollTo) {
+      const ok = await page.evaluate((text) => {
+        const el = [...document.querySelectorAll('h2')].find((h) => h.textContent?.trim().startsWith(text));
+        el?.scrollIntoView({ block: 'start' });
+        window.scrollBy(0, -12);
+        return Boolean(el);
+      }, s.scrollTo);
+      if (!ok) problems.push(`${mode}/${s.name}: no encontré el bloque «${s.scrollTo}»`);
+      await new Promise((r) => setTimeout(r, 200));
     }
     // Comprobaciones automáticas: nada más ancho que la pantalla y ningún texto recortado.
     const issues = await page.evaluate(() => {

@@ -7,7 +7,18 @@ export interface CalcStep {
   value: number;
 }
 
-export type CalcWarning = { code: 'no-data' } | { code: 'single-value' };
+export type CalcWarning =
+  | { code: 'no-data' }
+  | { code: 'single-value' }
+  /** Un dato que debe ser entero no lo es. */
+  | { code: 'not-whole'; field: string }
+  /** Un dato que debe ser mayor que cero no lo es. */
+  | { code: 'not-positive'; field: string }
+  /** Un dato que no puede ser negativo lo es. */
+  | { code: 'negative'; field: string }
+  | { code: 'defects-exceed-opportunities' }
+  | { code: 'zero-defects' }
+  | { code: 'all-defects' };
 
 export interface CalcOutput<T> {
   result: T | null;

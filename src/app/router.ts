@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-// Rutas con almohadilla (#/proyectos, #/herramientas/muestra, …) para que la
+// Rutas con almohadilla (#/proyectos, #/herramientas/dpmo, …) para que la
 // app funcione dentro de la subcarpeta de GitHub Pages (decisión en ESTADO.md).
 
 export const HOME = '/proyectos';
