@@ -1,7 +1,15 @@
 # Fichas de la Fase 1 — Calculadoras rápidas
 
-Borrador del 2026-11-13 para que el dueño lo apruebe (parada 5 de PLAN.md).
-Nada de esto se construye hasta que esté aprobado.
+Redactado el 2026-11-13 y **aprobado por el dueño el mismo día** (parada 5
+de PLAN.md), con estas respuestas:
+
+| Pregunta | Respuesta |
+|---|---|
+| A. Seis calculadoras, con Ahorro, ROI y payback en una | Sí |
+| B. Número en grande en DPMO | Nivel sigma con el desplazamiento de 1,5; la Z de Minitab debajo |
+| C. Referencia del 85 % en OEE | Sí, con su fuente y sus matices (ficha 4) |
+| D. Horizonte del ROI por defecto | 1 año |
+| E. Separar ahorro duro y blando | Sí; el ROI y el payback, solo con el duro |
 
 Cómo leer cada ficha:
 
@@ -174,7 +182,9 @@ como mínimo.
 - Mínimo teórico de estaciones o personas = suma de tiempos de ciclo ÷ takt,
   redondeado hacia arriba
 - Eficiencia del balanceo = suma de tiempos de ciclo ÷ (número de estaciones
-  × tiempo de ciclo del cuello)
+  × takt). Es la forma de los libros de texto: mide el trabajo frente al
+  tiempo que la demanda da a la línea. Tiempo muerto = 1 − eficiencia.
+  Si pasa del 100 %, la línea no llega a la demanda y se avisa.
 
 **Qué enseña.** En grande, el takt. Si hay estaciones, un gráfico de barras
 con el tiempo de ciclo de cada una y una línea horizontal en el takt
@@ -201,7 +211,7 @@ con el tiempo de ciclo de cada una y una línea horizontal en el takt
 |---|---|---|
 | 480 min/día, 240 piezas/día | takt 2 min | Lean Enterprise Institute, Lean Lexicon, «Takt time» |
 | 280 h (1.008.000 s), 36.000 piezas | takt 28 s | Christoph Roser, AllAboutLean, «The Kanban Formula, Part 1» |
-| Balanceo (eficiencia, mínimo de estaciones) | — | **Pendiente**: aún no tengo un caso resuelto de una fuente sólida. Lo busco en un libro de texto antes de construir; si no lo encuentro, te lo digo. |
+| 500 coches/día en 420 min; trabajo total 195 s; 5 estaciones | takt 50,4 s; mínimo teórico 3,87 → 4 estaciones; eficiencia 77 % (tiempo muerto 23 %) | Apuntes de la Universidad CSJM (Kanpur), «Line Balancing», ejemplo «MS 800». Es el ejemplo clásico del libro de Chase, Jacobs y Aquilano; las 5 estaciones salen de su figura, que no se puede leer como texto, y cuadran con el 77 % publicado. |
 
 ---
 
@@ -255,10 +265,20 @@ que reparte el tiempo planificado entre tiempo útil y las tres pérdidas.
 |---|---|---|
 | Los del ejemplo de arriba | Disponibilidad 88,81 %, rendimiento 86,11 %, calidad 97,80 %, OEE 74,79 % | Vorne, oee.com, «Calculating OEE» |
 
-❓ **Decides tú (C):** ¿Muestro una referencia de comparación, por ejemplo
-«85 % se suele citar como clase mundial»? Si dices que sí, busco y cito la
-fuente original antes de ponerla. Si no, la app solo enseña dónde se pierde
-el tiempo.
+**Referencia de comparación (decisión C).** Debajo del resultado, en
+pequeño y sin colores de aprobado o suspenso:
+
+«Se suele citar un 85 % como OEE de clase mundial (90 % disponibilidad,
+95 % rendimiento, 99 % calidad), según Seiichi Nakajima, *Introduction to
+TPM* (1984; en inglés, Productivity Press, 1988). Es una referencia de la
+industria del automóvil japonesa de los años 70 para fabricación
+discreta. Muchas plantas están cerca del 60 %: lo útil es comparar tu
+línea consigo misma a lo largo del tiempo.»
+
+Fuente consultada: Vorne, oee.com, «World-Class OEE». Esa página dice
+«99 %» de calidad; otras citas de Nakajima dicen 99,9 %. Antes de
+publicar el texto lo compruebo; si no lo aclaro, pongo solo el 85 % sin
+desglose.
 
 ---
 
@@ -371,20 +391,18 @@ anual y el ROI, y un gráfico del ahorro acumulado frente a la inversión.
 El mismo texto de Lumen tiene un segundo caso con cifras que no cuadran
 entre sí (4,46 frente a 4,40 años). No lo uso.
 
-❓ **Decides tú (D):** ¿Horizonte del ROI por defecto: **1 año** o **3
-años**? Se puede cambiar en cada cálculo.
-
-❓ **Decides tú (E):** ¿Separamos ahorro «duro» (baja un coste real) y
-«blando» (tiempo liberado, coste evitado) y calculamos el ROI solo con el
-duro, enseñando el blando aparte? Es lo que suelen pedir los controllers.
-**Recomendado: sí.**
+**Decisiones D y E.** Horizonte del ROI por defecto: 1 año, cambiable en
+cada cálculo. Cada línea de ahorro se marca como «duro» (baja un coste
+real) o «blando» (tiempo liberado, coste evitado). El ROI y el payback se
+calculan solo con el ahorro duro; el blando se enseña aparte, con la frase
+«Además, {blando} €/año de ahorro blando, que no entra en el ROI».
 
 ---
 
 ## Sin resolver todavía
 
-- **Balanceo de línea (calculadora 3):** falta un caso de referencia de una
-  fuente sólida.
+- **OEE (calculadora 4):** confirmar si Nakajima da 99 % o 99,9 % de
+  calidad en el desglose del 85 %.
 - **Inversa de la normal (calculadora 1):** se calcula con jStat, como fija
   el encargo. Antes de usarla compruebo su licencia (MIT según su
   repositorio) y la contrasto con los casos de Minitab y de la tabla.

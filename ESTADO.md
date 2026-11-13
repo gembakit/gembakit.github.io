@@ -38,9 +38,10 @@ paso.
 
 **En curso, dos cosas a la vez:**
 
-1. **Fase 1:** fichas de las calculadoras rápidas redactadas en
-   `docs/fichas/fase-1.md`, esperando la aprobación del dueño y sus
-   respuestas a las preguntas A a E.
+1. **Fase 1:** fichas de las calculadoras rápidas aprobadas
+   (`docs/fichas/fase-1.md`). Siguiente: las piezas comunes (definición de
+   hoja, salida .xlsx, importar .xlsx/.csv) y después las calculadoras, una
+   a una.
 2. **Cierre de la prueba de Google** (sección 4, Fase 0): ha salido bien.
    Falta que el dueño pulse el paso 3 al día siguiente (2026-11-14) y a los
    8 días (2026-11-21). Después se retira la pantalla provisional.
@@ -183,12 +184,10 @@ PLAN.md, sección 5.
 
 - [x] Redactar las fichas (2026-11-13): `docs/fichas/fase-1.md`, con casos
       de referencia de fuentes públicas citadas.
-- [ ] Que el dueño las apruebe (parada 5) y responda las preguntas A a E de
-      ese archivo. Falta además un caso de referencia sólido para el
-      balanceo de línea.
-- [ ] Confirmar con el dueño qué entra en "calculadoras rápidas". Propuesta:
-      DPMO y nivel sigma, FPY y RTY, takt y cuello de botella, OEE, kanban,
-      ahorro, ROI y payback (las que no necesitan gráficos ni cartas).
+- [x] Aprobadas por el dueño el 2026-11-13, con sus respuestas a las
+      preguntas A a E anotadas al principio del archivo. Seis calculadoras:
+      DPMO y nivel sigma, FPY y RTY, takt y cuello de botella (con
+      balanceo), OEE, kanban, y ahorro con ROI y payback en una sola.
 - [ ] Entrada de datos común: teclear, pegar una columna (ya existe la
       lectura con vista previa en `src/ui/number.ts`), importar .xlsx y .csv
       con vista previa y elección de hoja y columnas (ExcelJS, cargado solo
