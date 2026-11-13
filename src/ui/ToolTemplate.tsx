@@ -1,4 +1,6 @@
-import { useId, useState, type ReactNode } from 'react';
+import { useCallback, useId, useState, type ReactNode } from 'react';
+import type { SheetDef } from '../sheet/types';
+import { ExportPanel } from './ExportPanel';
 import { BookOpenText, ChevronDown, FolderPlus, Share, SquareFunction, TriangleAlert, Lightbulb } from 'lucide-react';
 import { useI18n } from '../i18n';
 import { Button } from './Button';
@@ -27,6 +29,7 @@ export function ToolTemplate({
   reading,
   formula,
   guide,
+  sheet,
 }: {
   name: string;
   subtitle?: string;
@@ -38,10 +41,14 @@ export function ToolTemplate({
   formula: ReactNode;
   /** Pasos de «Cómo usarla», plegados al abrir la herramienta. */
   guide?: string[];
+  /** Hoja de la herramienta con los datos actuales, para exportarla. */
+  sheet?: () => SheetDef | null;
 }) {
   const { t } = useI18n();
   const toast = useToast();
   const [showFormula, setShowFormula] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const closeExport = useCallback(() => setExportOpen(false), []);
   const [showGuide, setShowGuide] = useState(false);
   const guideId = useId();
 
@@ -105,7 +112,7 @@ export function ToolTemplate({
             <Card>
               <Label>4 · {t.template.actions}</Label>
               <div className="grid grid-cols-2 gap-2.5">
-                <Button icon={Share} onClick={() => toast(t.template.exportLater)}>
+                <Button icon={Share} onClick={() => (sheet ? setExportOpen(true) : toast(t.template.exportLater))}>
                   {t.template.export}
                 </Button>
                 <Button icon={SquareFunction} aria-expanded={showFormula} onClick={() => setShowFormula((v) => !v)}>
@@ -117,6 +124,7 @@ export function ToolTemplate({
           )}
         </div>
       </div>
+      {sheet && <ExportPanel open={exportOpen} onClose={closeExport} build={sheet} />}
       <BottomAction>
         {hasData ? (
           <Button variant="primary" icon={FolderPlus} className="w-full" onClick={() => toast(t.template.saveLater)}>

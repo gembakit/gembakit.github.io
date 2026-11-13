@@ -20,6 +20,7 @@ const SHOTS = [
   { name: 'dpmo-ejemplo', hash: '#/herramientas/dpmo', click: /Cargar ejemplo|Load example/, full: true },
   { name: 'dpmo-resultado', hash: '#/herramientas/dpmo', click: /Cargar ejemplo|Load example/, scrollTo: '2 · ' },
   { name: 'dpmo-guia', hash: '#/herramientas/dpmo', click: /^Cómo usarla/ },
+  { name: 'dpmo-exportar', hash: '#/herramientas/dpmo', click: [/Cargar ejemplo|Load example/, /^Exportar$/] },
   { name: 'referencia', hash: '#/referencia' },
   { name: 'referencia-abierta', hash: '#/referencia', click: /^DMAIC/ },
   { name: 'referencia-guia', hash: '#/referencia', click: /^Cómo es cada herramienta/ },
@@ -44,7 +45,8 @@ for (const mode of ['light', 'dark']) {
     await page.waitForSelector('main h1');
     // Cambiar solo la almohadilla no recarga la página: empezar siempre arriba.
     await page.evaluate(() => window.scrollTo(0, 0));
-    if (s.click) {
+    // Uno o varios toques seguidos (por ejemplo, «Cargar ejemplo» y después «Exportar»).
+    for (const click of s.click ? [s.click].flat() : []) {
       const ok = await page.evaluate(
         (src, byLabel) => {
           const re = new RegExp(src);
@@ -54,10 +56,10 @@ for (const mode of ['light', 'dark']) {
           el?.click();
           return Boolean(el);
         },
-        s.click.source,
+        click.source,
         Boolean(s.byLabel),
       );
-      if (!ok) problems.push(`${mode}/${s.name}: no encontré el botón ${s.click}`);
+      if (!ok) problems.push(`${mode}/${s.name}: no encontré el botón ${click}`);
       await new Promise((r) => setTimeout(r, 400));
     }
     // Llevar a la vista un bloque intermedio (por su título) para revisarlo.

@@ -44,6 +44,19 @@ export async function createSpreadsheet(token: string, title: string, locale: st
   return { id: body.spreadsheetId, url: body.spreadsheetUrl };
 }
 
+/** Crea una hoja a partir de un cuerpo ya preparado (datos, formato y región). */
+export async function createSpreadsheetFrom(token: string, body: unknown, f: Fetch = fetch): Promise<SheetRef> {
+  const res = await call(token, SHEETS, { method: 'POST', headers: json, body: JSON.stringify(body) }, f);
+  const r = (await res.json()) as { spreadsheetId: string; spreadsheetUrl: string };
+  return { id: r.spreadsheetId, url: r.spreadsheetUrl };
+}
+
+/** Cambia la región de la hoja (formato de números, fechas e idioma de las fórmulas). */
+export async function setSpreadsheetLocale(token: string, id: string, locale: string, f: Fetch = fetch): Promise<void> {
+  const requests = [{ updateSpreadsheetProperties: { properties: { locale }, fields: 'locale' } }];
+  await call(token, `${SHEETS}/${id}:batchUpdate`, { method: 'POST', headers: json, body: JSON.stringify({ requests }) }, f);
+}
+
 /** Fórmula de prueba, escrita como la pide la API (nombres y separadores en inglés). */
 export const TEST_FORMULA = '=SUM(A3:A4)';
 export const TEST_NUMBERS = [2.5, 3.5] as const;

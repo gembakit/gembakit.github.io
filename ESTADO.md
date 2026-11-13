@@ -206,6 +206,21 @@ PLAN.md, sección 5.
       siglas tocables, ejemplo cargable. Inversa de la normal con jStat
       1.9.6 (MIT) a través de `src/calc/stats.ts`. Falta su exportación a
       .xlsx, que llega con la pieza común de exportación.
+- [x] **Exportar a hoja de Google** (2026-11-13), pieza común:
+      definición única de hoja (`src/sheet/types.ts`, `layout.ts`), salida a
+      Google con el estilo del tema en claro (`src/google/sheetsOutput.ts`),
+      sesión de Google con la cuenta recordada (`src/google/session.ts`),
+      panel «Exportar» en la plantilla (`src/ui/ExportPanel.tsx`) y
+      evaluador de fórmulas para las pruebas (`src/sheet/evaluate.ts`).
+      La hoja se crea con región en_US (fórmulas en inglés con comas) y
+      después se pasa a es_ES: así no depende de cómo trate la API los
+      separadores en cada región (dudoso según varias fuentes). Hecho para
+      DPMO; su prueba compara las fórmulas de la hoja con el cálculo.
+- [ ] El dueño exporta una hoja de DPMO y comprueba: fórmulas en español
+      (SUMA/DISTR.NORM.ESTAND.INV, punto y coma, coma decimal), que al
+      cambiar un dato se recalcula, y el aspecto.
+- [ ] La salida .xlsx, cuando el dueño la pida, se añade sobre la misma
+      definición de hoja sin tocar las herramientas.
 - [ ] Calculadoras 2 a 6: FPY y RTY, takt, OEE, kanban, ahorro con ROI y
       payback.
 - [x] Glosario ampliado con los términos de las seis calculadoras (31
@@ -340,7 +355,7 @@ Todas del 2026-11-13. No reabrirlas sin él.
 | Sincronizar | Un botón que envía y trae; además se ejecuta solo. Resumen corto al terminar. |
 | IA | La app no llama a ninguna IA. Fase 6: pestaña «Contexto» en cada hoja (objetivo, tipo y fase, indicador con base/objetivo/actual, cada análisis con su conclusión, acciones con responsable y fecha) para que Claude (conector de Google Drive de la suscripción del dueño) o Gemini en Sheets respondan sobre el proyecto, y botón «Copiar contexto para IA». No está comprobado que el conector de Claude pueda escribir celdas. |
 | Microsoft | Sin conexión directa; para Excel, archivo exportado. |
-| Excel (2026-11-13) | **En espera** por decisión del dueño (no tiene licencia): en la app sale como «próximamente». Se le explicó que un .xlsx también se abre gratis en Google Sheets. Propuesta pendiente de su respuesta: que «Exportar» cree directamente una hoja de Google con datos, fórmulas vivas, resultado y «Cómo leerlo», usando la definición única de hoja (PLAN.md, 4.2). |
+| Excel y exportar (2026-11-13) | Excel **en espera** por decisión del dueño (no tiene licencia): sale como «Próximamente». Se le explicó que un .xlsx también se abre gratis en Google Sheets. **«Exportar» crea una hoja de Google** en su Drive con datos, fórmulas vivas, resultado, «Cómo leerlo» y notas (elegido por el dueño). PDF e imagen, con los proyectos. |
 | Archivos Excel | ExcelJS. Se guarda el valor calculado junto a cada fórmula para que las vistas previas del móvil no salgan vacías. |
 
 **Técnicas (las toma el agente, se anotan)**

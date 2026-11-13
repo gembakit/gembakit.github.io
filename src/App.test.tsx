@@ -30,6 +30,18 @@ test('DPMO: carga el ejemplo publicado y muestra resultado, lectura y guía', as
   expect(screen.getAllByRole('listitem').length).toBeGreaterThanOrEqual(4);
 });
 
+test('DPMO: «Exportar» abre el panel con la hoja de Google y Excel como próximamente', async () => {
+  const user = userEvent.setup();
+  window.location.hash = '#/herramientas/dpmo';
+  render(<App />);
+  await user.click(await screen.findByRole('button', { name: /Cargar ejemplo|Load example/ }));
+  await user.click(screen.getByRole('button', { name: /^(Exportar|Export)$/ }));
+  const dialog = await screen.findByRole('dialog');
+  expect(within(dialog).getByText(/Hoja de Google|Google Sheet/)).toBeInTheDocument();
+  expect(within(dialog).getByText(/Próximamente|Coming soon/)).toBeInTheDocument();
+  expect(within(dialog).getByRole('button', { name: /Crear hoja|Create sheet/ })).toBeInTheDocument();
+});
+
 test('DPMO: más defectos que oportunidades da un aviso y ningún número', async () => {
   const user = userEvent.setup();
   window.location.hash = '#/herramientas/dpmo';

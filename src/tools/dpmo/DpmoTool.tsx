@@ -9,6 +9,8 @@ import { ToolTemplate } from '../../ui/ToolTemplate';
 import { Button } from '../../ui/Button';
 import { Acronym } from '../../ui/Acronym';
 import { useToast } from '../../ui/Toast';
+import { APP_VERSION } from '../../version';
+import { dpmoSheet } from './sheet';
 
 // Ejemplo: el caso publicado de Learn Lean Sigma (ficha 1): 1.000 unidades,
 // 5 oportunidades, 50 defectos → DPMO 10.000.
@@ -138,20 +140,22 @@ export default function DpmoTool() {
     );
   }
 
-  const reading = r
-    ? {
-        conclusion:
-          r.sigmaLevel !== null ? (
-            <>
-              {d.conclusion(fmtDpmo(r.dpmo), num(r.sigmaLevel, 2))} {d.shiftNote(num(r.zLongTerm!, 4))}
-            </>
-          ) : (
-            d.conclusionNoSigma(fmtDpmo(r.dpmo))
-          ),
-        warnings,
-        typicalError: d.typicalError,
-      }
-    : null;
+  const conclusion = r
+    ? r.sigmaLevel !== null
+      ? `${d.conclusion(fmtDpmo(r.dpmo), num(r.sigmaLevel, 2))} ${d.shiftNote(num(r.zLongTerm!, 4))}`
+      : d.conclusionNoSigma(fmtDpmo(r.dpmo))
+    : '';
+  const reading = r ? { conclusion, warnings, typicalError: d.typicalError } : null;
+
+  // La hoja lleva la misma lectura que la pantalla.
+  const sheet = () =>
+    parsed && r
+      ? dpmoSheet(parsed, t, {
+          reading: [conclusion, ...warnings, d.typicalError],
+          version: APP_VERSION,
+          date: new Date().toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB'),
+        })
+      : null;
 
   const stepLabel = (key: string) => (key in d.steps ? d.steps[key as keyof typeof d.steps] : key);
   const stepValue = (key: string, v: number) =>
@@ -187,6 +191,7 @@ export default function DpmoTool() {
       result={result}
       reading={reading}
       formula={formula}
+      sheet={sheet}
     />
   );
 }
