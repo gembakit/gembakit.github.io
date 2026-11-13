@@ -156,8 +156,18 @@ PLAN.md, sección 5.
     - Renovar exige un toque del usuario (la ventana de Google la bloquea el
       navegador si no). En la app real la renovación irá dentro de un toque
       que el usuario ya hace (Sincronizar, Guardar, abrir la hoja).
-  - [ ] Segunda ronda: comprobar en el Android si con `login_hint` la
-        renovación ya no pide elegir cuenta, y qué pasa al día siguiente.
+  - [x] Segunda ronda (2026-11-13): con `login_hint` el Android ya no
+        enseña la lista de cuentas. La ventana se abre y se cierra sola al
+        instante, como en el ordenador. La primera conexión en cada aparato
+        sí la enseña (todavía no conoce la cuenta). Conclusión: renovar es un
+        parpadeo dentro de un toque que el usuario ya hace; no hace falta
+        servidor.
+  - [ ] Al día siguiente: abrir la app y pulsar el paso 3 (permiso caducado
+        hace horas). Ver si sigue siendo un parpadeo.
+  - [ ] A los 8 días: lo mismo. En modo pruebas Google puede retirar los
+        permisos concedidos a los 7 días; si pasa, decidir con el dueño si
+        se pasa la app a producción (con solo permisos no confidenciales no
+        debería exigir revisión de Google; comprobarlo antes).
   - [ ] Al terminar, retirar la pantalla: `src/app/screens/GoogleTestScreen.tsx`,
         su ruta en `AppShell.tsx`, el enlace de Ajustes, los textos
         `googleTest` y `settings.googleTest*`, su prueba en `App.test.tsx` y
