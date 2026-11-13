@@ -48,14 +48,13 @@ siguiente paso es la parada 1 del plan: propuestas visuales para el dueño.
 | Calculadoras sin proyecto | Aprobado (2026-11-13): se puede calcular sin proyecto; para guardar, la app pide el proyecto. |
 | Barra inferior | Proyectos (Inicio) · Herramientas · botón central Capturar · Referencia · Ajustes. Capturar siempre pregunta el proyecto, con el último usado ya elegido. |
 | Tipografía | Inter (texto) e Inter Tight (títulos y cifras), incluidas en la app para que funcionen sin conexión. Sustituye a "tipografía del sistema" del encargo. |
-| IA conectada | Pendiente del dueño. Recomendación: la app no llama a ninguna IA; la hoja de Google lleva una pestaña «Contexto» pensada para que Claude (con el conector de Google Drive de su suscripción) o Gemini en Sheets respondan sobre el proyecto, y un botón «Copiar contexto para IA». Ver conversación del 2026-11-13. |
+| IA conectada | Aprobado (2026-11-13). La app no llama a ninguna IA. En la Fase 6: pestaña «Contexto» en la hoja de cada proyecto (objetivo, tipo y fase, indicador con base/objetivo/actual, cada análisis con su conclusión, acciones con responsable y fecha), escrita en lenguaje claro para que Claude (conector de Google Drive de su suscripción) o Gemini en Sheets respondan sobre el proyecto; y botón «Copiar contexto para IA» con el mismo resumen. Comprobar entonces si el conector de Claude puede escribir celdas (no prometido). |
 | Plantillas personalizadas | Pedido por el dueño (2026-11-13): el usuario crea sus propios tipos de proyecto eligiendo nombre, fases y, en cada fase, herramientas del catálogo de la app. Solo herramientas que existan en la app. Entra en la Fase 6 junto con Proyectos. |
 | Primera ronda visual | Rechazada (2026-11-13): las tres propuestas se parecían y se veían básicas. Segunda ronda con tres estructuras distintas, temas de color y tipografía incluida en la app. |
 
 ## Pendiente de confirmar con el dueño
 
-1. Cómo conectar una IA (ver "IA conectada" arriba).
-2. Estructura final de pestañas de la hoja, sobre una hoja de muestra
+1. Estructura final de pestañas de la hoja, sobre una hoja de muestra
    (parada 6 del plan).
 
 ## Maqueta visual aprobada
@@ -126,5 +125,33 @@ al final. Los pasos de construcción son:
   cumplirlo se oscurecieron un poco algunos tonos claros respecto a la
   maqueta (acento de Lino #9A6B3F → #8F6239, textos secundarios y el verde,
   ámbar y rojo de estado). Falta el selector en Ajustes.
-- Pruebas: 49, todas pasan. Compilación correcta.
-- Pendiente: pasos 5 a 11 del plan de la Fase 0.
+- Hecho (paso 5): piezas comunes en `src/ui`: botón (48 px, 54 el
+  principal, efecto al tocar), botón fijo al pie, campo numérico (coma o
+  punto, aviso con icono y texto), lectura de columnas pegadas con vista
+  previa y aviso de "1.234" ambiguo, sigla tocable con su definición, hoja
+  inferior modal y aviso con "Deshacer".
+- Hecho (paso 6): barra inferior flotante (Proyectos · Herramientas ·
+  Capturar · Referencia · Ajustes) y menú lateral en pantallas anchas
+  (≥ 768 px). Rutas con almohadilla. Pantallas provisionales.
+- Hecho (paso 7): registro central `src/tools/registry.ts` y plantilla única
+  `src/ui/ToolTemplate.tsx` (Datos → Resultado → Cómo leerlo → Acciones, dos
+  columnas en pantallas anchas). Herramienta de muestra "Media de una
+  columna" en `src/tools/muestra` y `src/calc/muestra.ts`: BORRARLA en la
+  Fase 1.
+- Hecho (paso 8): base local Dexie (`src/data`) con todas las tablas y los
+  campos de sincronización (id, createdAt, updatedAt que nunca se repite,
+  deleted 0/1, origin app/hoja). Toda escritura pasa por `src/data/repo.ts`.
+  Ajustes guardados: idioma, tema, modo, favoritas. Se pide almacenamiento
+  protegido y se muestra su estado en Ajustes.
+- Hecho (paso 9): PWA con vite-plugin-pwa 2.0 en modo "prompt" (avisa de
+  versión nueva con botón Actualizar), funciona sin conexión (20 archivos
+  precargados, solo fuentes latinas), icono provisional (barras de Pareto)
+  generado con `npm run icons`, versión visible en Ajustes.
+- Herramienta de revisión visual: `npm run build && npm run screens -- <carpeta> 360`
+  saca capturas de todas las pantallas en claro y oscuro con el Chrome del
+  equipo y avisa si la página es más ancha que la pantalla o si un texto
+  queda recortado. Revisado a 320, 360 y 1280 px: sin problemas.
+- Pruebas: 83, todas pasan. Compilación correcta.
+- Pendiente: paso 10 (publicación en GitHub Pages; necesita la parada 2:
+  cuenta y nombre del repositorio) y paso 11 (comprobación del dueño en su
+  Android). Después, prueba de viabilidad de Google (paradas 3 y 4).

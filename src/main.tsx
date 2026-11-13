@@ -10,6 +10,6 @@ if (!root) throw new Error('No se encontró el elemento #root');
 
 createRoot(root).render(
   <StrictMode>
-    <App />
+    <App withServiceWorker={import.meta.env.PROD} />
   </StrictMode>,
 );
