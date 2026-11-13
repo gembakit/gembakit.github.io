@@ -36,9 +36,14 @@ paso.
 
 ## 2. Dónde estamos
 
-**En curso: prueba de viabilidad de Google** (sección 4, Fase 0). El dueño
-ya creó el proyecto en Google Cloud y la pantalla provisional está publicada;
-falta que haga la prueba en su Android y en el ordenador y pegue el registro.
+**En curso, dos cosas a la vez:**
+
+1. **Fase 1:** fichas de las calculadoras rápidas redactadas en
+   `docs/fichas/fase-1.md`, esperando la aprobación del dueño y sus
+   respuestas a las preguntas A a E.
+2. **Cierre de la prueba de Google** (sección 4, Fase 0): ha salido bien.
+   Falta que el dueño pulse el paso 3 al día siguiente (2026-11-14) y a los
+   8 días (2026-11-21). Después se retira la pantalla provisional.
 
 **La Fase 0 está terminada salvo la prueba de Google.** La app está
 publicada, se instala en el Android del dueño, funciona en modo avión y el
@@ -176,9 +181,11 @@ PLAN.md, sección 5.
 
 ### Fase 1 — Entrada de datos y calculadoras rápidas
 
-- [ ] Redactar las fichas y que el dueño las apruebe (parada 5). Cada
-      ficha: para qué sirve, datos, fórmulas, frases de interpretación,
-      avisos y casos de referencia con su fuente pública (PLAN.md, sección 7).
+- [x] Redactar las fichas (2026-11-13): `docs/fichas/fase-1.md`, con casos
+      de referencia de fuentes públicas citadas.
+- [ ] Que el dueño las apruebe (parada 5) y responda las preguntas A a E de
+      ese archivo. Falta además un caso de referencia sólido para el
+      balanceo de línea.
 - [ ] Confirmar con el dueño qué entra en "calculadoras rápidas". Propuesta:
       DPMO y nivel sigma, FPY y RTY, takt y cuello de botella, OEE, kanban,
       ahorro, ROI y payback (las que no necesitan gráficos ni cartas).
