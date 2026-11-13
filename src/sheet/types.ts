@@ -3,8 +3,8 @@
 // qué notas lleva su hoja; los módulos de salida (hoja de Google ahora,
 // .xlsx más adelante) la convierten sin que la herramienta sepa cómo.
 
-/** Formato de número de una celda. «auto»: los decimales que pida el valor. */
-export type NumFormat = 'integer' | 'decimal2' | 'decimal4' | 'percent' | 'auto';
+/** Formato de número de una celda. «auto»: los decimales que pida el valor. «text»: la fórmula da un texto. */
+export type NumFormat = 'integer' | 'decimal2' | 'decimal4' | 'percent' | 'auto' | 'text';
 
 interface SheetRowBase {
   /** Nombre para referirse a la fila desde las fórmulas: {clave}. */
@@ -23,13 +23,37 @@ export interface SheetResult extends SheetRowBase {
   /**
    * Fórmula en sintaxis inglesa de hoja de cálculo (comas, punto decimal,
    * nombres de función en inglés), sin el «=» inicial. Las referencias a
-   * otras filas van entre llaves: {units}, {dpo}.
+   * otras filas van entre llaves: {units}, {dpo}. Una columna entera de la
+   * tabla, como rango: {fpy[]}; la columna de nombres de la tabla: {label[]}.
    */
   formula: string;
   /** Resultado principal: se destaca en la tabla y encabeza el resumen. */
   main?: boolean;
   /** Aparece también en el resumen de arriba. */
   summary?: boolean;
+}
+
+/** Columna de una tabla de datos. Sin fórmula, es un dato que se puede cambiar. */
+export interface SheetTableColumn {
+  key: string;
+  head: string;
+  format: NumFormat;
+  /** Fórmula de cada fila; {.clave} es la celda de la misma fila en otra columna. */
+  formula?: string;
+}
+
+/**
+ * Tabla de datos con una fila por elemento (pasos, estaciones, años). Va en
+ * la sección de datos; los resultados la citan por columnas: {clave[]}.
+ */
+export interface SheetTable {
+  /** Encabezado de la columna de nombres. */
+  labelHead: string;
+  /** Hasta tres columnas de números. */
+  columns: SheetTableColumn[];
+  rows: { label: string; values: Record<string, number> }[];
+  /** Columna en la que se resalta el valor más bajo. */
+  highlightMin?: string;
 }
 
 /** Una frase de «Cómo leerlo», con su tono. */
@@ -66,6 +90,8 @@ export interface SheetDef {
   subheading: string;
   texts: SheetTexts;
   inputs: SheetInput[];
+  /** Datos en forma de tabla, debajo de los datos sueltos. */
+  table?: SheetTable;
   results: SheetResult[];
   reading: ReadingLine[];
   notes: string[];

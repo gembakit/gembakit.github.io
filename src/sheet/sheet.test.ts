@@ -56,6 +56,37 @@ describe('evaluador de fórmulas (reglas de Excel y Google Sheets)', () => {
     expect(() => evaluate('1/0')).toThrow(FormulaError);
     expect(() => evaluate('VLOOKUP(1,2,3)')).toThrow(/#NAME\?/);
   });
+  test('rangos de una tabla: PRODUCT, MIN, INDEX y MATCH', () => {
+    const d = def(
+      [
+        { key: 'prod', label: 'P', formula: 'PRODUCT({v[]})', format: 'auto' },
+        { key: 'min', label: 'M', formula: 'MIN({v[]})', format: 'auto' },
+        { key: 'name', label: 'N', formula: 'INDEX({label[]},MATCH({min},{v[]},0))', format: 'text' },
+        { key: 'doubleSum', label: 'D', formula: 'PRODUCT({twice[]})', format: 'auto' },
+      ],
+      [],
+    );
+    d.table = {
+      labelHead: 'Paso',
+      columns: [
+        { key: 'v', head: 'V', format: 'auto' },
+        { key: 'twice', head: '2V', format: 'auto', formula: '{.v}*2' },
+      ],
+      rows: [
+        { label: 'uno', values: { v: 3 } },
+        { label: 'dos', values: { v: 0.5 } },
+        { label: 'tres', values: { v: 4 } },
+      ],
+    };
+    const grid = layoutSheet(d);
+    const values = evaluateGrid(grid);
+    const v = (k: string) => values[grid.address[k]!];
+    expect(v('prod')).toBe(6);
+    expect(v('min')).toBe(0.5);
+    expect(v('name')).toBe('dos');
+    expect(v('doubleSum')).toBe(48);
+    expect(() => evaluate('MATCH(1,{a},1)')).toThrow(FormulaError);
+  });
 });
 
 describe('cuadrícula de la hoja', () => {
@@ -117,13 +148,39 @@ describe('salida a Google Sheets', () => {
     expect(rows[r]!.values[2]).toMatchObject({ userEnteredValue: { formulaValue: `=${grid.address.a}*2` } });
   });
 
-  test('títulos, secciones y textos ocupan de B a D', () => {
+  test('títulos, secciones y textos ocupan de B a E; la nota de cada fila, D y E', () => {
     const merged = new Map(body.sheets[0]!.merges.map((m) => [m.startRowIndex, m]));
     grid.rows.forEach((row, i) => {
       const wide = ['title', 'sub', 'section', 'hint', 'reading', 'note'].includes(row.kind);
-      expect(merged.has(i)).toBe(wide);
-      if (wide) expect(merged.get(i)).toMatchObject({ startColumnIndex: 1, endColumnIndex: 4 });
+      const note = ['heads', 'input', 'result'].includes(row.kind);
+      expect(merged.has(i)).toBe(wide || note);
+      if (wide) expect(merged.get(i)).toMatchObject({ startColumnIndex: 1, endColumnIndex: 5 });
+      if (note) expect(merged.get(i)).toMatchObject({ startColumnIndex: 3, endColumnIndex: 5 });
     });
+    expect(body.sheets[0]!.conditionalFormats).toEqual([]);
+  });
+
+  test('tabla: datos en color, fórmulas por fila y el valor más bajo resaltado por la hoja', () => {
+    const t = def([{ key: 'm', label: 'Mín', formula: 'MIN({v[]})', format: 'auto' }], []);
+    t.table = {
+      labelHead: 'Paso',
+      columns: [{ key: 'v', head: 'V', format: 'percent' }],
+      rows: [
+        { label: 'uno', values: { v: 0.9 } },
+        { label: 'dos', values: { v: 0.8 } },
+      ],
+      highlightMin: 'v',
+    };
+    const g = layoutSheet(t);
+    const b = buildSpreadsheet(t, g, THEMES.lino.light);
+    const [first, last] = g.address['v[]']!.split(':');
+    const r0 = Number(first!.slice(1)) - 1;
+    const cell = b.sheets[0]!.data[0]!.rowData[r0]!.values[2] as { userEnteredFormat: { backgroundColor: unknown; numberFormat: { type: string } } };
+    expect(cell.userEnteredFormat.backgroundColor).toEqual({ red: 0xeb / 255, green: 0xdd / 255, blue: 0xc8 / 255 });
+    expect(cell.userEnteredFormat.numberFormat.type).toBe('PERCENT');
+    const rule = b.sheets[0]!.conditionalFormats[0]!;
+    expect(rule.ranges[0]).toEqual({ sheetId: 0, startRowIndex: r0, endRowIndex: Number(last!.slice(1)), startColumnIndex: 2, endColumnIndex: 3 });
+    expect(rule.booleanRule.condition.values[0]!.userEnteredValue).toBe(`=${first}=MIN($C$${r0 + 1}:$C$${last!.slice(1)})`);
   });
 
   test('los datos que se pueden cambiar llevan el color suave del tema', () => {

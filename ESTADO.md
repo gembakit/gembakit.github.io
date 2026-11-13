@@ -38,10 +38,9 @@ paso.
 
 **En curso, dos cosas a la vez:**
 
-1. **Fase 1:** fichas de las calculadoras rápidas aprobadas
-   (`docs/fichas/fase-1.md`). Siguiente: las piezas comunes (definición de
-   hoja, salida .xlsx, importar .xlsx/.csv) y después las calculadoras, una
-   a una.
+1. **Fase 1:** calculadoras 1 (DPMO) y 2 (FPY y RTY) hechas, con su hoja de
+   Google. Siguiente: importar .xlsx/.csv para las calculadoras con lista y
+   después las calculadoras 3 a 6 (takt, OEE, kanban, ahorro con ROI).
 2. **Cierre de la prueba de Google** (sección 4, Fase 0): ha salido bien.
    Falta que el dueño pulse el paso 3 al día siguiente (2026-11-14) y a los
    8 días (2026-11-21). Después se retira la pantalla provisional.
@@ -216,9 +215,25 @@ PLAN.md, sección 5.
       después se pasa a es_ES: así no depende de cómo trate la API los
       separadores en cada región (dudoso según varias fuentes). Hecho para
       DPMO; su prueba compara las fórmulas de la hoja con el cálculo.
-- [ ] El dueño exporta una hoja de DPMO y comprueba: fórmulas en español
-      (SUMA/DISTR.NORM.ESTAND.INV, punto y coma, coma decimal), que al
-      cambiar un dato se recalcula, y el aspecto.
+- [x] El dueño exportó la hoja de DPMO (2026-11-13): se recalcula al cambiar
+      un dato y las fórmulas salen con punto y coma (región es_ES). Primer
+      diseño «bastante básico»: rehecho (banda de título, resumen arriba,
+      datos en color, tablas con encabezados, filas alternas). Aprobado:
+      «me gusta más, podemos dejarlo así por ahora».
+- [x] Tablas en la hoja (2026-11-14), pieza común para las calculadoras con
+      lista (pasos, estaciones, años): `SheetDef.table`, cuadrícula de cinco
+      columnas (A margen · B etiqueta · C valor · D+E nota, unidas; en las
+      tablas C, D y E son números), fórmulas por fila `{.col}`, columnas como
+      rango `{col[]}` y `{label[]}`, y resaltado del valor más bajo con
+      formato condicional de la propia hoja. El evaluador de pruebas conoce
+      PRODUCT, MIN, INDEX y MATCH exacto.
+- [x] **Calculadora 2, FPY y RTY** (2026-11-14): `src/calc/fpy.ts` con los
+      tres casos de la ficha, pantalla en `src/tools/fpy` (modo «Contar
+      unidades» o «Escribir el FPY», pasos con nombre, añadir y quitar con
+      deshacer, barras por paso con el que más resta marcado), guía, ejemplo
+      de Fabrico (97, 94, 91 % → 83 %) y hoja de Google con tabla.
+- [ ] Importar .xlsx y .csv en las calculadoras con lista (FPY ya; takt y
+      ROI después): pieza común pendiente, siguiente paso.
 - [ ] La salida .xlsx, cuando el dueño la pida, se añade sobre la misma
       definición de hoja sin tocar las herramientas.
 - [ ] Calculadoras 2 a 6: FPY y RTY, takt, OEE, kanban, ahorro con ROI y

@@ -18,7 +18,13 @@ export type CalcWarning =
   | { code: 'negative'; field: string }
   | { code: 'defects-exceed-opportunities' }
   | { code: 'zero-defects' }
-  | { code: 'all-defects' };
+  | { code: 'all-defects' }
+  /** Avisos de una fila de una lista (paso, estación…); step empieza en 0. */
+  | { code: 'step-not-whole'; step: number }
+  | { code: 'step-no-input'; step: number }
+  | { code: 'step-negative'; step: number }
+  | { code: 'good-exceed-entering'; step: number }
+  | { code: 'fpy-out-of-range'; step: number };
 
 export interface CalcOutput<T> {
   result: T | null;

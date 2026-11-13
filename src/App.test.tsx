@@ -53,6 +53,39 @@ test('DPMO: más defectos que oportunidades da un aviso y ningún número', asyn
   expect(await screen.findByText(/más defectos que oportunidades|more defects than opportunities/)).toBeInTheDocument();
 });
 
+test('FPY y RTY: carga el ejemplo publicado (RTY 83 %) y marca el paso que más resta', async () => {
+  const user = userEvent.setup();
+  window.location.hash = '#/herramientas/fpy';
+  render(<App />);
+  await user.click(await screen.findByRole('button', { name: /Cargar ejemplo|Load example/ }));
+  // Fabrico: 97 % × 94 % × 91 % → RTY 83 % (82,97 %, que se enseña como 83).
+  expect(await screen.findByText(/^83 %$/)).toBeInTheDocument();
+  expect(screen.getByText(/^(el que más resta|costs the most)$/)).toBeInTheDocument();
+  expect(screen.getByText(/De cada 100 unidades, 83 pasan|Out of every 100 units, 83 go/)).toBeInTheDocument();
+});
+
+test('FPY y RTY: contando unidades, más buenas que entradas da un aviso', async () => {
+  const user = userEvent.setup();
+  window.location.hash = '#/herramientas/fpy';
+  render(<App />);
+  await screen.findByRole('button', { name: /Añadir paso|Add step/ });
+  await user.type(screen.getAllByRole('textbox', { name: /^(Entran|In)$/ })[0]!, '10');
+  await user.type(screen.getAllByRole('textbox', { name: /^(Buenas a la 1\.ª|Good first time)$/ })[0]!, '12');
+  expect(await screen.findByText(/hay más buenas que unidades que entran|more good units than units in/)).toBeInTheDocument();
+});
+
+test('FPY y RTY: añadir y quitar pasos, con deshacer', async () => {
+  const user = userEvent.setup();
+  window.location.hash = '#/herramientas/fpy';
+  render(<App />);
+  await user.click(await screen.findByRole('button', { name: /Añadir paso|Add step/ }));
+  expect(screen.getAllByRole('textbox', { name: /^(Nombre del paso|Name of step) \d/ })).toHaveLength(4);
+  await user.click(screen.getByRole('button', { name: /^(Quitar|Remove) (Paso|Step) 2$/ }));
+  expect(screen.getAllByRole('textbox', { name: /^(Nombre del paso|Name of step) \d/ })).toHaveLength(3);
+  await user.click(await screen.findByRole('button', { name: /^(Deshacer|Undo)$/ }));
+  expect(screen.getAllByRole('textbox', { name: /^(Nombre del paso|Name of step) \d/ })).toHaveLength(4);
+});
+
 test('Ajustes lleva a la prueba provisional de Google, con sus cinco pasos', async () => {
   const user = userEvent.setup();
   window.location.hash = '#/ajustes';

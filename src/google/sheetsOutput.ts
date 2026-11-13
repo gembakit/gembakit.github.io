@@ -47,18 +47,38 @@ export function patternFor(v: Value | undefined, format: NumFormat): string {
   return format === 'percent' ? `${d === 0 ? '0' : `0.${'0'.repeat(d)}`}%` : base;
 }
 
-const WIDTHS = [18, 300, 140, 320];
+// A: margen · B: etiqueta · C: valor · D+E: unidad o fórmula en palabras (unidas).
+// En las tablas, C, D y E son tres columnas de números.
+const WIDTHS = [18, 280, 130, 130, 190];
 const HEIGHTS: Partial<Record<GridRow['kind'], number>> = {
   title: 52,
   sub: 26,
   gap: 14,
   section: 32,
   heads: 24,
+  theads: 24,
   input: 28,
   result: 28,
+  trow: 28,
   hint: 24,
 };
+/** Filas con un solo texto de B a E. */
 const WIDE = new Set<GridRow['kind']>(['title', 'sub', 'section', 'hint', 'reading', 'note']);
+/** Filas cuya nota ocupa D y E. */
+const NOTE_SPAN = new Set<GridRow['kind']>(['heads', 'input', 'result']);
+const LAST = COLUMNS.length - 1;
+
+/** «E12:E14» → rango de la API (índices desde 0, final excluido). */
+function gridRange(range: string) {
+  const [a, b] = range.split(':').map((x) => /^([A-Z]+)(\d+)$/.exec(x)!);
+  return {
+    sheetId: 0,
+    startRowIndex: Number(a![2]) - 1,
+    endRowIndex: Number(b![2]),
+    startColumnIndex: COLUMNS.indexOf(a![1]!),
+    endColumnIndex: COLUMNS.indexOf(b![1]!) + 1,
+  };
+}
 const FONT = 'Inter';
 
 function value(cell: GridCell) {
@@ -98,7 +118,7 @@ export function buildSpreadsheet(def: SheetDef, grid: Grid, palette: Palette) {
       const f: Record<string, unknown> = { verticalAlignment: 'MIDDLE', textFormat: text(c.text), backgroundColor: c.white };
       const label = col === 1;
       const val = col === 2;
-      const note = col === 3;
+      const note = col >= 3;
       switch (row.kind) {
         case 'title':
           f.backgroundColor = c.accent;
@@ -141,6 +161,20 @@ export function buildSpreadsheet(def: SheetDef, grid: Grid, palette: Palette) {
           }
           if (col > 0) f.borders = { bottom: border('SOLID', c.line) };
           break;
+        case 'theads':
+          f.textFormat = text(c.muted, 9, { bold: true });
+          if (col >= 2) f.horizontalAlignment = 'RIGHT';
+          if (col > 0) f.borders = { bottom: border('SOLID', c.line) };
+          break;
+        case 'trow':
+          if (row.alt && col > 0) f.backgroundColor = c.bg;
+          if (col >= 2) f.horizontalAlignment = 'RIGHT';
+          if (cell.input) {
+            f.backgroundColor = c.soft;
+            f.textFormat = text(c.text, 11, { bold: true });
+          }
+          if (col > 0) f.borders = { bottom: border('SOLID', c.line) };
+          break;
         case 'hint':
           f.textFormat = text(c.muted, 10, { italic: true });
           break;
@@ -157,8 +191,9 @@ export function buildSpreadsheet(def: SheetDef, grid: Grid, palette: Palette) {
           f.textFormat = text(c.muted, 10);
           break;
       }
-      if (val && (row.kind === 'input' || row.kind === 'result' || row.kind === 'kpi')) {
-        f.numberFormat = { type: row.format === 'percent' ? 'PERCENT' : 'NUMBER', pattern: patternFor(computed[addr] ?? cell.number, row.format ?? 'auto') };
+      const fmt = row.kind === 'trow' ? cell.format : val && (row.kind === 'input' || row.kind === 'result' || row.kind === 'kpi') ? (row.format ?? 'auto') : undefined;
+      if (fmt && fmt !== 'text') {
+        f.numberFormat = { type: fmt === 'percent' ? 'PERCENT' : 'NUMBER', pattern: patternFor(computed[addr] ?? cell.number, fmt) };
       }
       const out: Record<string, unknown> = { ...value(cell), userEnteredFormat: f };
       if (cell.boldPrefix) {
@@ -171,9 +206,27 @@ export function buildSpreadsheet(def: SheetDef, grid: Grid, palette: Palette) {
     }),
   }));
 
-  const merges = grid.rows.flatMap((row, r) =>
-    WIDE.has(row.kind) ? [{ sheetId: 0, startRowIndex: r, endRowIndex: r + 1, startColumnIndex: 1, endColumnIndex: 4 }] : [],
-  );
+  const span = (r: number, from: number) => ({ sheetId: 0, startRowIndex: r, endRowIndex: r + 1, startColumnIndex: from, endColumnIndex: LAST + 1 });
+  const merges = grid.rows.flatMap((row, r) => (WIDE.has(row.kind) ? [span(r, 1)] : NOTE_SPAN.has(row.kind) ? [span(r, 3)] : []));
+
+  // El valor más bajo de la tabla, resaltado por la propia hoja: si el
+  // usuario cambia un dato, el resaltado se mueve solo.
+  const conditionalFormats = grid.highlightMin
+    ? (() => {
+        const range = gridRange(grid.highlightMin);
+        const [first, last] = grid.highlightMin.split(':');
+        const abs = (a: string) => a.replace(/^([A-Z]+)(\d+)$/, '$$$1$$$2');
+        return [
+          {
+            ranges: [range],
+            booleanRule: {
+              condition: { type: 'CUSTOM_FORMULA', values: [{ userEnteredValue: `=${first}=MIN(${abs(first!)}:${abs(last!)})` }] },
+              format: { backgroundColor: c.warnSoft, textFormat: { bold: true } },
+            },
+          },
+        ];
+      })()
+    : [];
   const rowMetadata = grid.rows.map((row) => (HEIGHTS[row.kind] ? { pixelSize: HEIGHTS[row.kind] } : {}));
   if (rowMetadata.length) {
     const kpiMain = grid.rows.findIndex((r) => r.kind === 'kpi' && r.main);
@@ -188,11 +241,12 @@ export function buildSpreadsheet(def: SheetDef, grid: Grid, palette: Palette) {
         properties: {
           sheetId: 0,
           title: def.tabTitle,
-          gridProperties: { rowCount: grid.rows.length + 5, columnCount: 4, hideGridlines: true },
+          gridProperties: { rowCount: grid.rows.length + 5, columnCount: COLUMNS.length, hideGridlines: true },
           tabColorStyle: { rgbColor: c.accent },
         },
         data: [{ startRow: 0, startColumn: 0, rowData, rowMetadata, columnMetadata: WIDTHS.map((pixelSize) => ({ pixelSize })) }],
         merges,
+        conditionalFormats,
       },
     ],
   };

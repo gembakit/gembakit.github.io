@@ -21,11 +21,12 @@ type Node =
   | { t: 'num'; v: number }
   | { t: 'str'; v: string }
   | { t: 'ref'; v: string }
+  | { t: 'range'; v: string }
   | { t: 'neg'; e: Node }
   | { t: 'bin'; op: string; a: Node; b: Node }
   | { t: 'call'; name: string; args: Node[] };
 
-const TOKEN = /\s*(?:(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|("(?:[^"]|"")*")|([A-Z]+\d+)\b|([A-Z][A-Z0-9.]*)(?=\()|(<=|>=|<>|[-+*/^&=<>(),]))/y;
+const TOKEN = /\s*(?:(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|("(?:[^"]|"")*")|([A-Z]+\d+:[A-Z]+\d+)\b|([A-Z]+\d+)\b|([A-Z][A-Z0-9.]*)(?=\()|(<=|>=|<>|[-+*/^&=<>(),]))/y;
 
 function tokenize(src: string): string[] {
   const out: string[] = [];
@@ -34,7 +35,7 @@ function tokenize(src: string): string[] {
     if (/^\s*$/.test(src.slice(TOKEN.lastIndex))) break;
     const m = TOKEN.exec(src);
     if (!m) throw new FormulaError(`#PARSE! cerca de «${src.slice(TOKEN.lastIndex)}»`);
-    out.push(m[1] ?? m[2] ?? m[3] ?? m[4] ?? m[5]!);
+    out.push(m[1] ?? m[2] ?? m[3] ?? m[4] ?? m[5] ?? m[6]!);
   }
   return out;
 }
@@ -79,6 +80,7 @@ function parse(src: string): Node {
     }
     if (/^\d/.test(tok)) return { t: 'num', v: Number(tok) };
     if (tok.startsWith('"')) return { t: 'str', v: tok.slice(1, -1).replace(/""/g, '"') };
+    if (tok.includes(':')) return { t: 'range', v: tok };
     if (/^[A-Z]+\d+$/.test(tok) && peek() !== '(') return { t: 'ref', v: tok };
     if (/^[A-Z][A-Z0-9.]*$/.test(tok)) {
       take('(');
@@ -100,15 +102,35 @@ function parse(src: string): Node {
   return node;
 }
 
-const num = (v: Value): number => {
+const num = (v: Value | Value[]): number => {
+  if (Array.isArray(v)) throw new FormulaError('#VALUE! rango donde iba un valor');
   if (typeof v === 'number') return v;
   if (typeof v === 'boolean') return v ? 1 : 0;
   throw new FormulaError('#VALUE!');
 };
 
-type Lazy = () => Value;
+/** Un argumento: un valor o, si es un rango, la lista de sus celdas. */
+type Lazy = () => Value | Value[];
+
+/** Números de los argumentos; dentro de un rango, el texto se ignora (como en la hoja). */
+const numbers = (args: Lazy[]): number[] =>
+  args.flatMap((x) => {
+    const v = x();
+    return Array.isArray(v) ? v.filter((c): c is number => typeof c === 'number') : [num(v)];
+  });
+
+const list = (x: Lazy | undefined): Value[] => {
+  const v = x?.();
+  if (!Array.isArray(v)) throw new FormulaError('#VALUE! se esperaba un rango');
+  return v;
+};
+
 const FUNCTIONS: Record<string, (args: Lazy[]) => Value> = {
-  IF: ([c, a, b]) => (num(c!()) !== 0 ? a!() : b ? b() : false),
+  IF: ([c, a, b]) => {
+    const v = num(c!()) !== 0 ? a!() : b ? b() : false;
+    if (Array.isArray(v)) throw new FormulaError('#VALUE! rango donde iba un valor');
+    return v;
+  },
   OR: (args) => args.some((x) => num(x()) !== 0),
   AND: (args) => args.every((x) => num(x()) !== 0),
   ISNUMBER: ([x]) => {
@@ -119,6 +141,26 @@ const FUNCTIONS: Record<string, (args: Lazy[]) => Value> = {
     }
   },
   ABS: ([x]) => Math.abs(num(x!())),
+  PRODUCT: (args) => numbers(args).reduce((a, b) => a * b, 1),
+  // Como en la hoja: sin ningún número, MIN da 0.
+  MIN: (args) => {
+    const n = numbers(args);
+    return n.length ? Math.min(...n) : 0;
+  },
+  // Solo la coincidencia exacta (tercer argumento 0), que es la que usan las hojas de la app.
+  MATCH: ([x, range, type]) => {
+    if (!type || num(type()) !== 0) throw new FormulaError('#N/A solo se admite MATCH exacto');
+    const v = x!() as Value;
+    const i = list(range).findIndex((c) => c === v);
+    if (i < 0) throw new FormulaError('#N/A');
+    return i + 1;
+  },
+  INDEX: ([range, n]) => {
+    const cells = list(range);
+    const i = num(n!() as Value);
+    if (!(Number.isInteger(i) && i >= 1 && i <= cells.length)) throw new FormulaError('#REF!');
+    return cells[i - 1]!;
+  },
   'NORM.S.INV': ([x]) => {
     const p = num(x!());
     if (!(p > 0 && p < 1)) throw new FormulaError('#NUM!');
@@ -148,6 +190,17 @@ export function evaluateGrid(grid: Grid): Record<string, Value> {
     return v;
   };
 
+  // Celdas de un rango, por filas: «C3:D4» → C3, D3, C4, D4.
+  const rangeValues = (range: string): Value[] => {
+    const [from, to] = range.split(':').map((a) => /^([A-Z]+)(\d+)$/.exec(a)!);
+    const c0 = COLUMNS.indexOf(from![1]!);
+    const c1 = COLUMNS.indexOf(to![1]!);
+    if (c0 < 0 || c1 < 0) throw new FormulaError(`#REF! ${range}`);
+    const out: Value[] = [];
+    for (let r = Number(from![2]); r <= Number(to![2]); r++) for (let c = c0; c <= c1; c++) out.push(cellValue(`${COLUMNS[c]}${r}`));
+    return out;
+  };
+
   const evalNode = (n: Node): Value => {
     switch (n.t) {
       case 'num':
@@ -155,12 +208,14 @@ export function evaluateGrid(grid: Grid): Record<string, Value> {
         return n.v;
       case 'ref':
         return cellValue(n.v);
+      case 'range':
+        throw new FormulaError('#VALUE! rango donde iba un valor');
       case 'neg':
         return -num(evalNode(n.e));
       case 'call': {
         const fn = FUNCTIONS[n.name];
         if (!fn) throw new FormulaError(`#NAME? ${n.name} no está en el evaluador`);
-        return fn(n.args.map((a) => () => evalNode(a)));
+        return fn(n.args.map((a) => (a.t === 'range' ? () => rangeValues(a.v) : () => evalNode(a))));
       }
       case 'bin': {
         const a = evalNode(n.a);

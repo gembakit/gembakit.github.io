@@ -1,13 +1,16 @@
 import type { NumFormat, ReadingLine, SheetDef } from './types';
 
-// Coloca la definición en una cuadrícula de cuatro columnas:
-//   A: margen · B: etiqueta · C: valor o fórmula · D: unidad o fórmula en palabras.
+// Coloca la definición en una cuadrícula de cinco columnas:
+//   A: margen · B: etiqueta · C: valor o fórmula · D y E: unidad o fórmula en palabras.
+// Las tablas usan B para el nombre de cada fila y C, D y E para sus números.
 // Las salidas (hoja de Google, .xlsx) y la prueba que comprueba las fórmulas
 // trabajan sobre esta misma cuadrícula.
 
-export const COLUMNS = 'ABCD';
+export const COLUMNS = 'ABCDE';
+/** Columnas de números de una tabla. */
+const TABLE_COLUMNS = 'CDE';
 
-export type RowKind = 'title' | 'sub' | 'gap' | 'kpi' | 'hint' | 'section' | 'heads' | 'input' | 'result' | 'reading' | 'note';
+export type RowKind = 'title' | 'sub' | 'gap' | 'kpi' | 'hint' | 'section' | 'heads' | 'input' | 'result' | 'theads' | 'trow' | 'reading' | 'note';
 
 export interface GridCell {
   text?: string;
@@ -16,9 +19,13 @@ export interface GridCell {
   formula?: string;
   /** Caracteres iniciales en negrita (prefijo de «Cómo leerlo»). */
   boldPrefix?: number;
+  /** Formato propio de la celda (celdas de tabla). */
+  format?: NumFormat;
+  /** Dato que el usuario puede cambiar (celdas de tabla). */
+  input?: boolean;
 }
 
-export type Cells = [GridCell, GridCell, GridCell, GridCell];
+export type Cells = [GridCell, GridCell, GridCell, GridCell, GridCell];
 
 export interface GridRow {
   kind: RowKind;
@@ -32,15 +39,18 @@ export interface GridRow {
 
 export interface Grid {
   rows: GridRow[];
-  /** Dirección de cada clave: {units: 'C8', …}. */
+  /** Dirección de cada clave: {units: 'C8', fpy[]: 'E12:E14', …}. */
   address: Record<string, string>;
+  /** Rango en el que se resalta el valor más bajo. */
+  highlightMin?: string;
 }
 
 const E: GridCell = {};
+const empty = (): Cells => [E, E, E, E, E];
 
-/** Fila con un texto en la columna B que ocupará el ancho de B a D. */
+/** Fila con un texto en la columna B que ocupará el ancho de B a E. */
 function wide(kind: RowKind, text: string, extra: Partial<GridRow> = {}, boldPrefix?: number): GridRow {
-  return { kind, cells: [E, { text, boldPrefix }, E, E], ...extra };
+  return { kind, cells: [E, { text, boldPrefix }, E, E, E], ...extra };
 }
 
 export class SheetDefError extends Error {}
@@ -49,12 +59,14 @@ export function layoutSheet(def: SheetDef): Grid {
   const T = def.texts;
   const rows: GridRow[] = [];
   const address: Record<string, string> = {};
-  const pending: { cell: GridCell; formula: string }[] = [];
-  const place = (key: string) => {
+  const pending: { cell: GridCell; formula: string; row?: Record<string, string> }[] = [];
+  const setAddress = (key: string, a: string) => {
     if (address[key]) throw new SheetDefError(`Clave repetida en la hoja: ${key}`);
-    address[key] = `C${rows.length + 1}`;
+    address[key] = a;
   };
-  const gap = () => rows.push({ kind: 'gap', cells: [E, E, E, E] });
+  const place = (key: string) => setAddress(key, `C${rows.length + 1}`);
+  const gap = () => rows.push({ kind: 'gap', cells: empty() });
+  let highlightMin: string | undefined;
 
   rows.push(wide('title', def.heading), wide('sub', def.subheading));
   gap();
@@ -66,25 +78,62 @@ export function layoutSheet(def: SheetDef): Grid {
     for (const r of summary) {
       const value: GridCell = {};
       pending.push({ cell: value, formula: `{${r.key}}` });
-      rows.push({ kind: 'kpi', cells: [E, { text: r.label }, value, E], format: r.format, main: r.main });
+      rows.push({ kind: 'kpi', cells: [E, { text: r.label }, value, E, E], format: r.format, main: r.main });
     }
     gap();
   }
 
-  rows.push(wide('section', T.inputs), { kind: 'heads', cells: [E, { text: T.inputHeads[0] }, { text: T.inputHeads[1] }, { text: T.inputHeads[2] }] });
-  def.inputs.forEach((i, n) => {
-    place(i.key);
-    rows.push({ kind: 'input', cells: [E, { text: i.label }, { number: i.value }, i.note ? { text: i.note } : E], format: i.format, alt: n % 2 === 1 });
-  });
+  rows.push(wide('section', T.inputs));
+  if (def.inputs.length) {
+    rows.push({ kind: 'heads', cells: [E, { text: T.inputHeads[0] }, { text: T.inputHeads[1] }, { text: T.inputHeads[2] }, E] });
+    def.inputs.forEach((i, n) => {
+      place(i.key);
+      rows.push({ kind: 'input', cells: [E, { text: i.label }, { number: i.value }, i.note ? { text: i.note } : E, E], format: i.format, alt: n % 2 === 1 });
+    });
+  }
+
+  const table = def.table;
+  if (table) {
+    if (table.columns.length > TABLE_COLUMNS.length) throw new SheetDefError(`Una tabla admite ${TABLE_COLUMNS.length} columnas`);
+    if (def.inputs.length) gap();
+    const heads = empty();
+    heads[1] = { text: table.labelHead };
+    table.columns.forEach((c, i) => (heads[i + 2] = { text: c.head }));
+    rows.push({ kind: 'theads', cells: heads });
+    const first = rows.length + 1;
+    const last = first + table.rows.length - 1;
+    setAddress('label[]', `B${first}:B${last}`);
+    table.columns.forEach((c, i) => setAddress(`${c.key}[]`, `${TABLE_COLUMNS[i]}${first}:${TABLE_COLUMNS[i]}${last}`));
+    if (table.highlightMin) highlightMin = address[`${table.highlightMin}[]`];
+    table.rows.forEach((tr, n) => {
+      const r = rows.length + 1;
+      const own: Record<string, string> = {};
+      table.columns.forEach((c, i) => (own[c.key] = `${TABLE_COLUMNS[i]}${r}`));
+      const cells = empty();
+      cells[1] = { text: tr.label };
+      table.columns.forEach((c, i) => {
+        if (c.formula) {
+          const cell: GridCell = { format: c.format };
+          pending.push({ cell, formula: c.formula, row: own });
+          cells[i + 2] = cell;
+        } else {
+          const v = tr.values[c.key];
+          if (v === undefined) throw new SheetDefError(`Falta el dato ${c.key} en la fila «${tr.label}»`);
+          cells[i + 2] = { number: v, format: c.format, input: true };
+        }
+      });
+      rows.push({ kind: 'trow', cells, alt: n % 2 === 1 });
+    });
+  }
   rows.push(wide('hint', T.editHint));
   gap();
 
-  rows.push(wide('section', T.results), { kind: 'heads', cells: [E, { text: T.resultHeads[0] }, { text: T.resultHeads[1] }, { text: T.resultHeads[2] }] });
+  rows.push(wide('section', T.results), { kind: 'heads', cells: [E, { text: T.resultHeads[0] }, { text: T.resultHeads[1] }, { text: T.resultHeads[2] }, E] });
   def.results.forEach((r, n) => {
     place(r.key);
     const value: GridCell = {};
     pending.push({ cell: value, formula: r.formula });
-    rows.push({ kind: 'result', cells: [E, { text: r.label }, value, r.note ? { text: r.note } : E], format: r.format, main: r.main, alt: n % 2 === 1 });
+    rows.push({ kind: 'result', cells: [E, { text: r.label }, value, r.note ? { text: r.note } : E, E], format: r.format, main: r.main, alt: n % 2 === 1 });
   });
   gap();
 
@@ -103,12 +152,12 @@ export function layoutSheet(def: SheetDef): Grid {
 
   // Las fórmulas se resuelven al final: un resultado puede citar a otro, y el
   // resumen cita resultados que van más abajo.
-  for (const { cell, formula } of pending) {
-    cell.formula = formula.replace(/\{(\w+)\}/g, (_, k: string) => {
-      const a = address[k];
-      if (!a) throw new SheetDefError(`Referencia desconocida en la fórmula: {${k}}`);
+  for (const { cell, formula, row } of pending) {
+    cell.formula = formula.replace(/\{(\.?)(\w+(?:\[\])?)\}/g, (_, dot: string, k: string) => {
+      const a = dot ? row?.[k] : address[k];
+      if (!a) throw new SheetDefError(`Referencia desconocida en la fórmula: {${dot}${k}}`);
       return a;
     });
   }
-  return { rows, address };
+  return { rows, address, highlightMin };
 }
