@@ -133,7 +133,11 @@ export const es = {
       indicador: 'Indicador',
       estadistica: 'Estadística',
       finanzas: 'Finanzas',
+      proyecto: 'Proyecto',
+      simbolo: 'Símbolo',
     },
+    category: 'Categoría',
+    allCategories: 'Todas',
   },
   settings: {
     title: 'Ajustes',

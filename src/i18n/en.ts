@@ -133,7 +133,11 @@ export const en: Messages = {
       indicador: 'Indicator',
       estadistica: 'Statistics',
       finanzas: 'Finance',
+      proyecto: 'Project',
+      simbolo: 'Symbol',
     },
+    category: 'Category',
+    allCategories: 'All',
   },
   settings: {
     title: 'Settings',

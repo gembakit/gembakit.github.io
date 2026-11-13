@@ -24,6 +24,7 @@ const SHOTS = [
   { name: 'referencia-abierta', hash: '#/referencia', click: /^DMAIC/ },
   { name: 'referencia-guia', hash: '#/referencia', click: /^Cómo es cada herramienta/ },
   { name: 'referencia-glosario', hash: '#/referencia', full: true },
+  { name: 'referencia-glosario-inicio', hash: '#/referencia', scrollTo: 'Glosario' },
   { name: 'ajustes', hash: '#/ajustes', full: true },
   { name: 'prueba-google', hash: '#/prueba-google', full: true },
   { name: 'capturar', hash: '#/proyectos', click: /^(Capturar|Capture)$/, byLabel: true },

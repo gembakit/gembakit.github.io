@@ -2,7 +2,7 @@ import { useId, useMemo, useState, type ReactNode } from 'react';
 import { ChevronDown, Search } from 'lucide-react';
 import { useI18n } from '../../i18n';
 import { BigHeader, Label, Screen } from '../../ui/Layout';
-import { searchGlossary } from '../../reference/glossary';
+import { GLOSSARY_CATEGORIES, normalize, searchGlossary, type GlossaryCategory } from '../../reference/glossary';
 import { guideFor } from '../../reference/guide';
 
 /** Fila plegable: título (y subtítulo) siempre visibles, contenido al tocar. */
@@ -50,10 +50,14 @@ function useOpenSet() {
 export function ReferenceScreen() {
   const { t, lang } = useI18n();
   const searchId = useId();
+  const categoryId = useId();
   const [q, setQ] = useState('');
+  const [cat, setCat] = useState<GlossaryCategory | ''>('');
   const [openTerms, toggleTerm] = useOpenSet();
   const [openTopics, toggleTopic] = useOpenSet();
-  const list = useMemo(() => searchGlossary(q, lang), [q, lang]);
+  const list = useMemo(() => searchGlossary(q, lang, cat || undefined), [q, lang, cat]);
+  // Se abre sola la definición si solo hay un resultado o si el primero es justo lo buscado.
+  const autoOpen = q.trim() !== '' && list.length > 0 && (list.length === 1 || normalize(list[0]![lang].term) === normalize(q.trim())) ? list[0]!.id : null;
   const guide = useMemo(() => guideFor(lang), [lang]);
 
   return (
@@ -90,6 +94,27 @@ export function ReferenceScreen() {
             className="min-w-0 flex-1 bg-transparent text-[16px] text-text outline-none placeholder:text-muted"
           />
         </label>
+        <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3">
+          <label htmlFor={categoryId} className="text-[14px] font-semibold text-muted">
+            {t.reference.category}
+          </label>
+          <div className="relative">
+            <select
+              id={categoryId}
+              value={cat}
+              onChange={(e) => setCat(e.target.value as GlossaryCategory | '')}
+              className="h-12 w-full appearance-none rounded-[15px] border-[1.5px] border-line bg-surface pr-10 pl-3.5 text-[16px] text-text outline-none focus:border-accent"
+            >
+              <option value="">{t.reference.allCategories}</option>
+              {GLOSSARY_CATEGORIES.map((c) => (
+                <option key={c} value={c}>
+                  {t.reference.categories[c]}
+                </option>
+              ))}
+            </select>
+            <ChevronDown aria-hidden size={20} className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-muted" />
+          </div>
+        </div>
         {list.length === 0 ? (
           <p className="text-[15px] text-muted">{t.reference.noResults(q.trim())}</p>
         ) : (
@@ -100,7 +125,7 @@ export function ReferenceScreen() {
                 title={g[lang].term}
                 aside={t.reference.categories[g.category]}
                 subtitle={g[lang].name}
-                open={openTerms.has(g.id) || (q.trim() !== '' && list.length === 1)}
+                open={openTerms.has(g.id) || g.id === autoOpen}
                 onToggle={() => toggleTerm(g.id)}
               >
                 <p>{g[lang].def}</p>

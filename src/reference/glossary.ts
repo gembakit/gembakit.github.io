@@ -1,10 +1,11 @@
 import type { Language } from '../i18n/types';
+import { OWNER_TERMS } from './glossary-owner';
 
 // Glosario de la sección Referencia y de las siglas tocables.
 // Cada término lleva su texto en los dos idiomas (una prueba lo comprueba).
 // Las definiciones se redactan con palabras propias: el código es público.
 
-export const GLOSSARY_CATEGORIES = ['metodo', 'lean', 'indicador', 'estadistica', 'finanzas'] as const;
+export const GLOSSARY_CATEGORIES = ['metodo', 'lean', 'indicador', 'estadistica', 'finanzas', 'proyecto', 'simbolo'] as const;
 export type GlossaryCategory = (typeof GLOSSARY_CATEGORIES)[number];
 
 export interface GlossaryText {
@@ -22,7 +23,8 @@ export interface GlossaryEntry {
   en: GlossaryText;
 }
 
-export const GLOSSARY: readonly GlossaryEntry[] = [
+/** Términos redactados para la app (los de cada herramienta). */
+const APP_TERMS: readonly GlossaryEntry[] = [
   {
     id: 'dmaic',
     category: 'metodo',
@@ -230,12 +232,12 @@ export const GLOSSARY: readonly GlossaryEntry[] = [
     category: 'indicador',
     es: {
       term: 'FPY',
-      name: 'Rendimiento a la primera (First Pass Yield)',
+      name: 'Rendimiento a la primera (First Pass Yield; también FTY)',
       def: 'Unidades buenas a la primera ÷ unidades que entran en un paso. Las unidades retrabajadas no cuentan como buenas.',
     },
     en: {
       term: 'FPY',
-      name: 'First Pass Yield',
+      name: 'First Pass Yield (also FTY, First Time Yield)',
       def: 'Units good the first time ÷ units entering a step. Reworked units do not count as good.',
     },
   },
@@ -387,12 +389,12 @@ export const GLOSSARY: readonly GlossaryEntry[] = [
     id: 'rendimiento',
     category: 'indicador',
     es: {
-      term: 'Rendimiento',
+      term: 'Rendimiento (OEE)',
       name: 'Segundo factor del OEE',
       def: '(Tiempo de ciclo ideal × piezas producidas) ÷ tiempo en marcha. Lo que resta son las microparadas y trabajar por debajo de la velocidad ideal.',
     },
     en: {
-      term: 'Performance',
+      term: 'Performance (OEE)',
       name: 'Second OEE factor',
       def: '(Ideal cycle time × parts produced) ÷ run time. What it loses are minor stops and running below ideal speed.',
     },
@@ -475,27 +477,50 @@ export const GLOSSARY: readonly GlossaryEntry[] = [
     es: {
       term: 'Ahorro blando',
       name: 'Beneficio sin coste que baje',
-      def: 'Tiempo liberado, costes evitados o capacidad extra que no bajan ningún gasto directo. Es real, pero no entra en el ROI hasta que se convierte en ahorro duro.',
+      def: 'Tiempo liberado (por ejemplo, horas de alguien que sigue en plantilla), costes evitados o capacidad extra que no bajan ningún gasto directo. Es real, pero no entra en el ROI hasta que se convierte en ahorro duro.',
     },
     en: {
       term: 'Soft savings',
       name: 'Benefit with no cost going down',
-      def: 'Freed-up time, avoided costs or extra capacity that do not lower any direct expense. It is real, but it does not count toward ROI until it turns into hard savings.',
+      def: 'Freed-up time (for example, hours of someone who stays on the payroll), avoided costs or extra capacity that do not lower any direct expense. It is real, but it does not count toward ROI until it turns into hard savings.',
     },
   },
 ];
+
+/** Todos los términos: los de la app y los del glosario del dueño. */
+export const GLOSSARY: readonly GlossaryEntry[] = [...APP_TERMS, ...OWNER_TERMS];
 
 export function findTerm(id: string): GlossaryEntry | undefined {
   return GLOSSARY.find((g) => g.id === id);
 }
 
-function normalize(s: string): string {
+/** Sin tildes ni mayúsculas, para comparar lo que escribe el usuario. */
+export function normalize(s: string): string {
   return s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
 }
 
-/** Busca en término, nombre y definición, sin distinguir tildes ni mayúsculas. */
-export function searchGlossary(query: string, lang: Language): GlossaryEntry[] {
+/**
+ * Busca en término, nombre y definición, sin distinguir tildes ni mayúsculas.
+ * Primero lo que coincide con el término (exacto, empieza por, contiene),
+ * después con el nombre y al final con la definición; dentro de cada grupo,
+ * por orden alfabético. Sin búsqueda, todo en orden alfabético.
+ */
+export function searchGlossary(query: string, lang: Language, category?: GlossaryCategory): GlossaryEntry[] {
   const q = normalize(query.trim());
-  const list = q ? GLOSSARY.filter((g) => normalize(`${g[lang].term} ${g[lang].name} ${g[lang].def}`).includes(q)) : [...GLOSSARY];
-  return list.sort((a, b) => a[lang].term.localeCompare(b[lang].term, lang, { sensitivity: 'base' }));
+  const pool = category ? GLOSSARY.filter((g) => g.category === category) : GLOSSARY;
+  const rank = (g: GlossaryEntry): number => {
+    if (!q) return 0;
+    const term = normalize(g[lang].term);
+    if (term === q) return 0;
+    if (term.startsWith(q)) return 1;
+    if (term.includes(q)) return 2;
+    if (normalize(g[lang].name).includes(q)) return 3;
+    if (normalize(g[lang].def).includes(q)) return 4;
+    return -1;
+  };
+  return pool
+    .map((g) => ({ g, r: rank(g) }))
+    .filter((x) => x.r >= 0)
+    .sort((a, b) => a.r - b.r || a.g[lang].term.localeCompare(b.g[lang].term, lang, { sensitivity: 'base' }))
+    .map((x) => x.g);
 }

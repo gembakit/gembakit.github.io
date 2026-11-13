@@ -214,7 +214,13 @@ PLAN.md, sección 5.
       2026-11-13.
 - [ ] Cada calculadora, al construirse, lleva su propia guía («Cómo usarla»)
       dentro de la herramienta y sus términos en el glosario.
-- [ ] Incorporar el glosario en PDF del dueño cuando lo envíe (sección 7).
+- [x] Glosario en PDF del dueño incorporado (2026-11-13) en
+      `src/reference/glossary-owner.ts`: 143 términos (siglas, símbolos y
+      conceptos), adaptados (sin referencias al examen ni a módulos,
+      repetidos fusionados, tres matices de precisión) y traducidos. Total:
+      174 términos, con buscador por relevancia y filtro por categoría
+      (categorías nuevas: Proyecto y Símbolo).
+- [ ] El dueño valida la adaptación y la traducción del glosario.
 
 ### Fase 2 — Gráficos
 
@@ -334,6 +340,7 @@ Todas del 2026-11-13. No reabrirlas sin él.
 | Sincronizar | Un botón que envía y trae; además se ejecuta solo. Resumen corto al terminar. |
 | IA | La app no llama a ninguna IA. Fase 6: pestaña «Contexto» en cada hoja (objetivo, tipo y fase, indicador con base/objetivo/actual, cada análisis con su conclusión, acciones con responsable y fecha) para que Claude (conector de Google Drive de la suscripción del dueño) o Gemini en Sheets respondan sobre el proyecto, y botón «Copiar contexto para IA». No está comprobado que el conector de Claude pueda escribir celdas. |
 | Microsoft | Sin conexión directa; para Excel, archivo exportado. |
+| Excel (2026-11-13) | **En espera** por decisión del dueño (no tiene licencia): en la app sale como «próximamente». Se le explicó que un .xlsx también se abre gratis en Google Sheets. Propuesta pendiente de su respuesta: que «Exportar» cree directamente una hoja de Google con datos, fórmulas vivas, resultado y «Cómo leerlo», usando la definición única de hoja (PLAN.md, 4.2). |
 | Archivos Excel | ExcelJS. Se guarda el valor calculado junto a cada fórmula para que las vistas previas del móvil no salgan vacías. |
 
 **Técnicas (las toma el agente, se anotan)**
