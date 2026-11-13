@@ -93,6 +93,13 @@ export async function readTestCells(token: string, id: string, f: Fetch = fetch)
   };
 }
 
+/** Correo de la cuenta conectada (sirve para no enseñar la lista de cuentas al renovar). */
+export async function getAccountEmail(token: string, f: Fetch = fetch): Promise<string | null> {
+  const q = new URLSearchParams({ fields: 'user(emailAddress)' });
+  const body = (await (await call(token, `https://www.googleapis.com/drive/v3/about?${q}`, {}, f)).json()) as { user?: { emailAddress?: string } };
+  return body.user?.emailAddress ?? null;
+}
+
 export interface DriveFile {
   id: string;
   name: string;

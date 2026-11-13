@@ -28,6 +28,7 @@ import { navigate } from '../router';
 import { gisReady, GoogleAuthError, loadGis, requestToken, revokeToken, type GoogleToken } from '../../google/gis';
 import {
   createSpreadsheet,
+  getAccountEmail,
   GoogleApiError,
   listAppSpreadsheets,
   loadAppData,
@@ -47,6 +48,7 @@ import {
 const KEY_TOKEN = 'gk.googleTest.token';
 const KEY_SHEET = 'gk.googleTest.sheet';
 const KEY_LOG = 'gk.googleTest.log';
+const KEY_HINT = 'gk.googleTest.account';
 
 function load<T>(key: string): T | null {
   try {
@@ -133,6 +135,8 @@ export function GoogleTestScreen() {
   const [token, setToken] = useState<GoogleToken | null>(() => load(KEY_TOKEN));
   const [sheet, setSheet] = useState<SheetRef | null>(() => load(KEY_SHEET));
   const [log, setLog] = useState<LogEntry[]>(() => load(KEY_LOG) ?? []);
+  // Correo de la cuenta ya usada: solo se guarda en este aparato y no se escribe en el registro.
+  const [hint, setHint] = useState<string | null>(() => load(KEY_HINT));
   const [busy, setBusy] = useState<Busy>(null);
   const [read, setRead] = useState<{ r: TestRead; match: boolean } | null>(null);
   const [found, setFound] = useState<DriveFile[] | null>(null);
@@ -179,6 +183,7 @@ export function GoogleTestScreen() {
   useEffect(() => store(KEY_TOKEN, token), [token]);
   useEffect(() => store(KEY_SHEET, sheet), [sheet]);
   useEffect(() => store(KEY_LOG, log), [log]);
+  useEffect(() => store(KEY_HINT, hint), [hint]);
 
   const valid = !!token && token.expiresAt - now > 0;
   const minutesLeft = token ? Math.max(0, Math.round((token.expiresAt - now) / 60_000)) : 0;
@@ -187,14 +192,23 @@ export function GoogleTestScreen() {
   /** Pide permiso. Se llama de forma síncrona desde el toque, antes de cualquier espera. */
   const askToken = (renew: boolean): Promise<GoogleToken> => {
     const started = performance.now();
-    const pending = requestToken('');
-    add(true, g.ev.tokenAsk(renew));
+    const pending = requestToken('', hint ?? undefined);
+    add(true, g.ev.tokenAsk(renew, !!hint));
     return pending.then(
       (tk) => {
         const secs = ((performance.now() - started) / 1000).toLocaleString(locale, { maximumFractionDigits: 1 });
         setToken(tk);
         setNow(Date.now());
         add(tk.allScopes, g.ev.tokenOk(secs, Math.round((tk.expiresAt - Date.now()) / 60_000), tk.allScopes));
+        if (!hint) {
+          getAccountEmail(tk.accessToken).then(
+            (email) => {
+              if (email) setHint(email);
+              add(!!email, email ? g.ev.hintSaved : g.ev.hintFailed);
+            },
+            () => add(false, g.ev.hintFailed),
+          );
+        }
         return tk;
       },
       (e: unknown) => {
@@ -241,6 +255,7 @@ export function GoogleTestScreen() {
     if (!token || busy) return;
     void revokeToken(token.accessToken).then(() => {
       setToken(null);
+      setHint(null);
       add(true, g.ev.revoked);
     });
   };

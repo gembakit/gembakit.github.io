@@ -165,7 +165,10 @@ export const es = {
       opened: (where: string, device: string) => `Pantalla abierta como ${where} en ${device}.`,
       installed: 'app instalada',
       browser: 'página del navegador',
-      tokenAsk: (renew: boolean) => (renew ? 'Pidiendo renovar el permiso…' : 'Pidiendo permiso…'),
+      tokenAsk: (renew: boolean, withAccount: boolean) =>
+        `${renew ? 'Pidiendo renovar el permiso' : 'Pidiendo permiso'}${withAccount ? ', indicando la cuenta ya usada' : ', sin indicar cuenta'}…`,
+      hintSaved: 'Cuenta recordada en este aparato para la próxima conexión.',
+      hintFailed: 'No se pudo leer la cuenta conectada.',
       tokenOk: (s: string, min: number, all: boolean) =>
         `Permiso concedido en ${s} s, válido ${min} min. ${all ? 'Los dos permisos, concedidos.' : 'Falta alguno de los dos permisos.'}`,
       tokenFail: (code: string) => `Permiso no concedido (${code}).`,

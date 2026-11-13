@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { createSpreadsheet, GoogleApiError, listAppSpreadsheets, loadAppData, readTestCells, saveAppData, writeTestCells, TEST_FORMULA } from './api';
+import { createSpreadsheet, getAccountEmail, GoogleApiError, listAppSpreadsheets, loadAppData, readTestCells, saveAppData, writeTestCells, TEST_FORMULA } from './api';
 
 // Las pruebas no llaman a Google: un fetch falso apunta cada petición y
 // responde lo que le digamos.
@@ -60,6 +60,13 @@ test('un error de Google llega con su código y su mensaje', async () => {
   expect(err).toBeInstanceOf(GoogleApiError);
   expect((err as GoogleApiError).status).toBe(401);
   expect((err as GoogleApiError).message).toBe('Invalid Credentials');
+});
+
+test('lee el correo de la cuenta conectada', async () => {
+  const { f, calls } = fakeFetch([ok({ user: { emailAddress: 'alguien@example.com' } })]);
+  expect(await getAccountEmail('T', f)).toBe('alguien@example.com');
+  expect(calls[0]!.url).toContain('/drive/v3/about?');
+  expect(new URL(calls[0]!.url).searchParams.get('fields')).toBe('user(emailAddress)');
 });
 
 test('busca solo hojas de cálculo que no estén en la papelera', async () => {

@@ -15,7 +15,7 @@ interface GisError {
   message?: string;
 }
 interface GisTokenClient {
-  requestAccessToken(o?: { prompt?: string }): void;
+  requestAccessToken(o?: { prompt?: string; login_hint?: string }): void;
 }
 interface GisOAuth2 {
   initTokenClient(c: {
@@ -80,8 +80,11 @@ export class GoogleAuthError extends Error {
  * Pide un permiso de acceso a Google. Hay que llamarla directamente desde el
  * toque del usuario, sin esperas antes, para que el navegador no bloquee la
  * ventana de Google. `prompt: ''` solo enseña la ventana si hace falta.
+ * `loginHint` (el correo de la cuenta ya usada) le dice a Google qué cuenta
+ * usar y así se salta la lista de cuentas: en Android, sin él, la enseña en
+ * cada renovación (comprobado el 2026-11-13).
  */
-export function requestToken(prompt: '' | 'consent' = ''): Promise<GoogleToken> {
+export function requestToken(prompt: '' | 'consent' = '', loginHint?: string): Promise<GoogleToken> {
   const oauth2 = window.google?.accounts?.oauth2;
   if (!oauth2) return Promise.reject(new GoogleAuthError('not-loaded'));
   return new Promise((resolve, reject) => {
@@ -103,7 +106,7 @@ export function requestToken(prompt: '' | 'consent' = ''): Promise<GoogleToken> 
       },
       error_callback: (e) => reject(new GoogleAuthError(e.type ?? 'unknown', e.message)),
     });
-    client.requestAccessToken({ prompt });
+    client.requestAccessToken(loginHint ? { prompt, login_hint: loginHint } : { prompt });
   });
 }
 

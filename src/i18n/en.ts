@@ -165,7 +165,10 @@ export const en: Messages = {
       opened: (where, device) => `Screen opened as ${where} on ${device}.`,
       installed: 'installed app',
       browser: 'browser page',
-      tokenAsk: (renew) => (renew ? 'Asking to renew access…' : 'Asking for access…'),
+      tokenAsk: (renew, withAccount) =>
+        `${renew ? 'Asking to renew access' : 'Asking for access'}${withAccount ? ', naming the account already used' : ', without naming an account'}…`,
+      hintSaved: 'Account remembered on this device for the next connection.',
+      hintFailed: 'Could not read the connected account.',
       tokenOk: (s, min, all) => `Access granted in ${s} s, valid ${min} min. ${all ? 'Both permissions granted.' : 'One of the two permissions is missing.'}`,
       tokenFail: (code) => `Access not granted (${code}).`,
       revoked: 'Access revoked. The next connection will ask again.',

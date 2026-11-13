@@ -135,8 +135,29 @@ PLAN.md, sección 5.
         leer con una fórmula en una hoja con región es_ES, carpeta oculta,
         buscar la hoja desde otro aparato) y un registro que el dueño copia y
         pega en el chat.
-  - [ ] Resultados del dueño en el Android (app instalada) y en el ordenador,
-        incluida una renovación del permiso pasada una hora.
+  - [x] Primera ronda del dueño (2026-11-13, registros pegados en el chat):
+    - Pantallas que ve el usuario la primera vez en Android: "Google no ha
+      verificado esta aplicación" (botón «Continuar») y después la lista de
+      los dos permisos, ya marcados, con el aviso de que pasqualebf.github.io
+      no tiene enlaces a política de privacidad ni condiciones.
+    - Con solo `drive.file` la API de Sheets crea, escribe y lee la hoja. La
+      carpeta oculta (`drive.appdata`) guarda y lee. El ordenador encuentra
+      la hoja creada en el móvil (mismo cliente, otro aparato).
+    - Fórmulas: se escriben por la API en inglés (`=SUM(A3:A4)`) con
+      `USER_ENTERED`; en una hoja con región es_ES funcionan y el dueño las ve
+      en español. La API las devuelve en inglés. Los decimales se envían como
+      números JSON, no como texto.
+    - Permiso: dura 60 min. En el ordenador (Chrome, página) renovar es
+      invisible: la ventana se abre y se cierra sola en 0,5-1,2 s. En el
+      Android (app instalada) renovar enseñaba la lista de cuentas: el dueño
+      tiene que elegir cuenta cada vez. Arreglo en prueba: guardar el correo
+      de la cuenta (leído de Drive `about`) en el aparato y pasarlo como
+      `login_hint`, que según Google se salta la lista.
+    - Renovar exige un toque del usuario (la ventana de Google la bloquea el
+      navegador si no). En la app real la renovación irá dentro de un toque
+      que el usuario ya hace (Sincronizar, Guardar, abrir la hoja).
+  - [ ] Segunda ronda: comprobar en el Android si con `login_hint` la
+        renovación ya no pide elegir cuenta, y qué pasa al día siguiente.
   - [ ] Al terminar, retirar la pantalla: `src/app/screens/GoogleTestScreen.tsx`,
         su ruta en `AppShell.tsx`, el enlace de Ajustes, los textos
         `googleTest` y `settings.googleTest*`, su prueba en `App.test.tsx` y
