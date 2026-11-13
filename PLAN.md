@@ -60,8 +60,10 @@ Todas son **decididas** salvo que se indique.
 4. En la hoja hay tres tipos de pestaña:
    - Pestañas de la app: solo escribe la app. El usuario puede comentarlas y
      referenciarlas desde otras pestañas, pero no editarlas.
-   - Pestaña "Entrada": solo escribe el usuario. La app la lee.
-   - Pestañas del usuario: la app no las lee ni las toca nunca.
+   - Pestaña "Entrada": la escribe el usuario en Google o desde la app
+     (regla 5).
+   - Pestañas del usuario: la app solo las lee para mostrarlas como tabla;
+     nunca las escribe.
 5. Quién edita qué (cambiado por el dueño el 2026-11-13). Lo que nace en la
    app (capturas, análisis) se edita en la app; en la hoja está protegido.
    La pestaña "Entrada" se edita en la app y en la hoja: la sincronización
@@ -74,8 +76,8 @@ Todas son **decididas** salvo que se indique.
    "Entrada". Además se ejecuta solo al abrir la app y al recuperar conexión.
    Al terminar muestra un resumen corto de lo enviado, lo recibido y lo
    ignorado. No hay vista previa antes de aceptar: el dueño pidió que fuera
-   fluido, y como la app no modifica "Entrada", un error se corrige en la hoja
-   y se vuelve a sincronizar.
+   fluido; un error se corrige en la hoja o en la app y se vuelve a
+   sincronizar.
 7. Las dos direcciones tienen que verse profesionales (sección 6). El dueño
    lo dijo así: nada de números sueltos y feos en la app, y lo que llega a la
    hoja tiene que poder presentarse tal cual.
@@ -84,7 +86,9 @@ Todas son **decididas** salvo que se indique.
    no tiene Minitab (sección 7).
 9. La copia de seguridad en archivo se adelanta de la Fase 6 a la Fase 4
    (confirmado por el dueño el 2026-11-13).
-10. La Fase 0 empieza con propuestas visuales para que el dueño elija.
+10. La Fase 0 empieza con propuestas visuales para que el dueño elija (hecho:
+    ver ESTADO.md, sección 6, para la dirección elegida y el resto de
+    decisiones posteriores a este plan).
 
 ## 4. Diseño que condiciona el trabajo desde la Fase 0
 
@@ -271,7 +275,11 @@ Como en el encargo.
 ### Fase 6 — Proyectos, asistente, exportaciones y hoja de Google
 
 Lo del encargo, más la hoja del proyecto (4.5), la pestaña "Entrada" (4.6) y
-el botón único de sincronizar. Cierre adicional: el dueño conecta un proyecto,
+el botón único de sincronizar. Además, decidido con el dueño después de
+escribir este plan (detalle en ESTADO.md, sección 6): los cinco tipos de
+proyecto con sus fases y las plantillas propias; la hoja dentro de la app a
+pantalla completa, editable por filas, con zoom; la pestaña «Contexto» para
+IA y el botón «Copiar contexto para IA». Cierre adicional: el dueño conecta un proyecto,
 ve la hoja con el formato acordado, añade un gráfico propio en otra pestaña
 que sigue vivo tras dos sincronizaciones con datos nuevos, y trae una columna
 desde "Entrada" a una herramienta.

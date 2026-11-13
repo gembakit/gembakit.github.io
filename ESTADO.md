@@ -1,182 +1,315 @@
-# Estado del proyecto
+# Estado del proyecto Gemba Kit
 
-Última actualización: 2026-11-13
+Última actualización: 2026-11-13 (fin de la primera sesión de trabajo).
 
-## Dónde estamos
+Este archivo es la memoria del proyecto. Quien abra una sesión nueva debe
+poder seguir trabajando solo con leerlo. Mantenlo al día al terminar cada
+paso.
 
-Antes de la Fase 0. Todavía no hay código ni Git iniciado. El plan de
-ejecución está escrito en PLAN.md y pendiente de que un agente lo ejecute. El
-siguiente paso es la parada 1 del plan: propuestas visuales para el dueño.
+---
 
-## Hecho
+## 1. Cómo retomar
 
-- Encargo leído y resumido; dudas de producto respondidas.
-- Carpeta del proyecto creada en `C:\Users\pasqu\Proyectos\gemba-kit`, fuera
-  de OneDrive (OneDrive bloquea los miles de archivos pequeños del proyecto).
-- Comprobado que el ordenador tiene Node 24, npm 11, Git y GitHub CLI.
-- 2026-11-13: acordado con el dueño el flujo móvil + ordenador + Google
-  Sheets. CLAUDE.md actualizado y PLAN.md escrito.
+1. Lee **CLAUDE.md** (el encargo del dueño, con las reglas que no se
+   negocian), después **este archivo** y después **PLAN.md** (el plan de
+   ejecución detallado). Si se contradicen: CLAUDE.md manda en las reglas,
+   PLAN.md en el orden y el diseño, y las decisiones de la sección 6 de este
+   archivo son las más recientes.
+2. Háblale al dueño siempre en español, sin jerga, y dile qué debe comprobar
+   en su Android. Él no lee código.
+3. Antes de enseñarle cualquier pantalla, revísala a 320 y 360 px de ancho,
+   en claro y en oscuro (sección 3). El dueño no tolera textos cortados,
+   elementos montados unos sobre otros ni pantallas amontonadas.
+4. Una confirmación en Git por paso, con mensaje claro en español, y
+   `git push` para publicar. Solo se publica si pasan todas las pruebas.
 
-## Decisiones tomadas
+### Direcciones
+
+| Qué | Dónde |
+|---|---|
+| App publicada | https://pasqualebf.github.io/gemba-kit/ |
+| Código (público) | https://github.com/pasqualebf/gemba-kit |
+| Maqueta visual aprobada (privada, del dueño) | https://claude.ai/artifact/WE7dYB8wSRRKpsRY7Lwghg |
+| Carpeta local | `C:\Users\pasqu\Proyectos\gemba-kit` (fuera de OneDrive a propósito: OneDrive bloquea los miles de archivos pequeños) |
+
+---
+
+## 2. Dónde estamos
+
+**La Fase 0 está terminada salvo la prueba de Google.** La app está
+publicada, se instala en el Android del dueño, funciona en modo avión y el
+almacenamiento protegido está concedido (comprobado por el dueño el
+2026-11-13). Tiene la estructura completa (navegación, temas, idiomas,
+plantilla de herramienta, base de datos local) pero todavía ninguna
+herramienta real: solo una de muestra.
+
+### Siguiente paso (el dueño elige)
+
+- **Opción A, recomendada: prueba de viabilidad de Google** (paradas 3 y 4 de
+  PLAN.md, sección 5, Fase 0, punto 4). Necesita al dueño unos 15 minutos en
+  el ordenador para crear un proyecto en Google Cloud con su cuenta, guiado
+  paso a paso. Después se comprueba desde su Android que la app inicia
+  sesión, crea una hoja en su Drive, escribe, lee, y cada cuánto pide volver
+  a confirmar el permiso. Todo el diseño de la hoja depende de que esto
+  funcione bien; si sale mal, parar y proponerle alternativas.
+- **Opción B: empezar la Fase 1** (sección 4). Su primer paso es redactar las
+  fichas de las calculadoras para que el dueño las apruebe (parada 5).
+
+Si el dueño no puede sentarse al ordenador, avanzar con la opción B.
+
+---
+
+## 3. Cómo se trabaja en este proyecto (comandos)
+
+| Comando | Para qué |
+|---|---|
+| `npm install` | Instalar dependencias (la primera vez). |
+| `npm run dev` | App en modo desarrollo en el ordenador. |
+| `npm test` | Todas las pruebas. Usa `scripts/vitest.mjs` (ver nota 1). |
+| `npm run typecheck` | Comprobar tipos de TypeScript. |
+| `npm run build` | Compilar la app (incluye el modo sin conexión). |
+| `npm run screens -- <carpeta> 360` | Tras `npm run build`: capturas de todas las pantallas en claro y oscuro con el Chrome del equipo, y aviso automático si la página es más ancha que la pantalla o si un texto sale recortado. Repetir con 320 y 1280. |
+| `npm run check:live` | Comprueba la app publicada: carga, instalación y apertura sin red. |
+| `npm run icons` | Regenera el icono provisional. |
+
+Notas técnicas que costó descubrir:
+
+1. **Vitest en Windows:** si la terminal entrega la ruta con la unidad en
+   minúscula (`c:\…`), Vitest carga dos veces el mismo módulo y todas las
+   pruebas fallan con "failed to find the current suite". Por eso
+   `npm test` pasa por `scripts/vitest.mjs`, que la pone en mayúscula. Las
+   pruebas importan `test` y `expect` de `vitest` (sin globales).
+2. **package-lock.json:** si `npm ci` falla en GitHub por paquetes que
+   "faltan en el lock file", borrar `node_modules` y `package-lock.json` y
+   ejecutar `npm install` de nuevo (npm a veces no anota las dependencias de
+   paquetes opcionales de otras plataformas).
+3. **Git Bash cambia las rutas:** `BASE_PATH=/gemba-kit/` se convierte en una
+   ruta de Windows. Para probar la compilación de GitHub Pages en local, usar
+   `MSYS_NO_PATHCONV=1 BASE_PATH=/gemba-kit/ npx vite build`.
+4. **Chrome sin ventana** no baja de unos 500 px de ancho; por eso las
+   capturas se hacen con `puppeteer-core` (scripts/screens.mjs), que sí
+   simula un móvil de 320-360 px.
+5. **Correo privado:** en este repositorio Git firma con
+   `236227593+pasqualebf@users.noreply.github.com` (configurado solo aquí)
+   para no publicar el correo del dueño. No cambiarlo.
+6. Versiones nuevas en uso: React 19, TypeScript 7, Vite 8, Tailwind 4,
+   Vitest 5, vite-plugin-pwa 2, Dexie 4, lucide-react 1. Ante dudas sobre su
+   uso, mirar la documentación que trae cada paquete en `node_modules`.
+
+---
+
+## 4. Lo que falta, por fase
+
+Cada fase se cierra cuando: pasan las pruebas, el dueño la probó en su
+Android con una mano y en modo avión, los textos están en los dos idiomas y
+cada herramienta nueva tiene su ejemplo cargable. Detalle completo en
+PLAN.md, sección 5.
+
+### Fase 0 — Cimientos: falta solo la prueba de Google
+
+- [x] Propuestas visuales y elección del dueño.
+- [x] Git, esqueleto, idiomas, temas, piezas comunes, navegación, registro
+      de herramientas, plantilla única, base local, modo sin conexión,
+      publicación y comprobación del dueño en su Android.
+- [ ] **Prueba de viabilidad de Google** (opción A de arriba). Pantalla
+      provisional que se retira al acabar. Resultados que hay que anotar
+      aquí: permisos mínimos que funcionan, pantalla de aviso que ve el
+      usuario, cada cuánto pide reconfirmar, comportamiento en la app
+      instalada en Android y en el ordenador.
+
+### Fase 1 — Entrada de datos y calculadoras rápidas
+
+- [ ] Redactar las fichas y que el dueño las apruebe (parada 5). Cada
+      ficha: para qué sirve, datos, fórmulas, frases de interpretación,
+      avisos y casos de referencia con su fuente pública (PLAN.md, sección 7).
+- [ ] Confirmar con el dueño qué entra en "calculadoras rápidas". Propuesta:
+      DPMO y nivel sigma, FPY y RTY, takt y cuello de botella, OEE, kanban,
+      ahorro, ROI y payback (las que no necesitan gráficos ni cartas).
+- [ ] Entrada de datos común: teclear, pegar una columna (ya existe la
+      lectura con vista previa en `src/ui/number.ts`), importar .xlsx y .csv
+      con vista previa y elección de hoja y columnas (ExcelJS, cargado solo
+      al importar).
+- [ ] Definición única de la hoja de cada herramienta y salida a .xlsx con
+      fórmulas vivas, más el módulo de estilo (PLAN.md, 4.2 y 6.2). Prueba
+      que compara las fórmulas con el cálculo.
+- [ ] Una herramienta cada vez: pruebas → cálculo → pantalla → textos →
+      ejemplo → exportación.
+- [ ] Borrar la herramienta de muestra (`src/tools/muestra`,
+      `src/calc/muestra.ts` y sus textos `tools.muestra`).
+- [ ] Añadir al glosario los términos de cada herramienta nueva.
+
+### Fase 2 — Gráficos
+
+- [ ] Estadística descriptiva con histograma, Pareto, gráfico de corrida.
+      Gráficos en SVG propio e interactivos: tocar una barra o un punto
+      muestra su valor (y, desde la Fase 6, la celda de la hoja de donde
+      sale). Diseño de referencia: maqueta aprobada.
+
+### Fase 3 — Capacidad y cartas de control
+
+- [ ] Cp, Cpk, Pp, Ppk; cartas I-MR y X-barra R con señales de causa
+      especial. Antes de usar las constantes de las cartas (A2, D3, D4, d2),
+      enseñar la tabla con su fuente al dueño para que la valide.
+
+### Fase 4 — Captura en planta, copia de seguridad y sincronización
+
+- [ ] Cronómetro de ciclos (hora real de inicio y fin), hoja de conteo,
+      recorrido de desperdicios con fotos (reducidas al guardar), auditoría
+      5S.
+- [ ] Copia de seguridad en archivo (exportar y restaurar), primero.
+- [ ] Sincronización entre dispositivos por el Drive del usuario (PLAN.md,
+      4.4).
+
+### Fase 5 — Causa y acción
+
+- [ ] 5 porqués, espina de pescado, lista de acciones (quién, qué, cuándo),
+      informe A3, plantilla de evento Kaizen, plan de control sencillo.
+
+### Fase 6 — Proyectos, exportaciones y hoja de Google
+
+- [ ] Proyectos: lista en Inicio, crear proyecto, los cinco tipos (DMAIC,
+      Kaizen rápido, A3 · PDCA, Implantación 5S, Seguimiento de proceso) con
+      sus fases, herramientas de cada fase y lo que falta para cerrarla.
+- [ ] Plantillas propias: nombre, fases y herramientas del catálogo.
+- [ ] Botón Capturar y "Guardar" que piden el proyecto (el último ya
+      elegido, opción de crear uno).
+- [ ] Exportación a PNG, PDF y Excel.
+- [ ] Hoja de Google por proyecto (PLAN.md, 4.5 y 4.6): antes, enseñar una
+      hoja de muestra al dueño (parada 6). Pestaña «Entrada» editable desde
+      la app a pantalla completa, por filas, con editor grande debajo y zoom
+      (− / +). Botón único Sincronizar.
+- [ ] Pestaña «Contexto» para IA y botón «Copiar contexto para IA»
+      (decisión en la sección 6).
+
+---
+
+## 5. Hecho (Fase 0, en detalle)
+
+Pruebas: 88, todas pasan. Compilación y publicación correctas.
+
+| Paso | Dónde está |
+|---|---|
+| Esqueleto React + TypeScript + Vite + Tailwind + Vitest | raíz del proyecto |
+| Idiomas es/en, detección del idioma del teléfono, selector en Ajustes | `src/i18n` (prueba de que es y en tienen las mismas claves y ningún texto vacío) |
+| Cinco temas × claro/oscuro, prueba de contraste WCAG (texto ≥ 7; secundario, acento y estados ≥ 4,5) | `src/ui/theme` |
+| Piezas comunes: botones de 48 px (54 el principal) con efecto al tocar, botón fijo al pie, campo numérico con coma o punto, lectura de columnas pegadas con vista previa y aviso de "1.234" ambiguo, sigla tocable, hoja inferior, aviso con "Deshacer" | `src/ui` |
+| Barra inferior flotante en el móvil y menú lateral en pantallas ≥ 768 px; rutas con almohadilla | `src/app` |
+| Registro central de herramientas y plantilla única (Datos → Resultado → Cómo leerlo → Acciones, dos columnas en pantallas anchas) | `src/tools/registry.ts`, `src/ui/ToolTemplate.tsx` |
+| Herramienta de muestra "Media de una columna" (se borra en la Fase 1) | `src/tools/muestra`, `src/calc/muestra.ts` |
+| Forma común de los cálculos: resultado, pasos y avisos (códigos; el texto va en los idiomas) | `src/calc/types.ts` |
+| Base local Dexie con todas las tablas y los campos de sincronización (id, createdAt, updatedAt que nunca se repite, deleted 0/1, origin app/hoja); toda escritura pasa por `repo.ts` | `src/data` |
+| Ajustes guardados en el teléfono: idioma, tema, modo, favoritas; almacenamiento protegido pedido y visible en Ajustes | `src/data/settings.ts`, `src/app/screens/SettingsScreen.tsx` |
+| Glosario plegable con buscador (3 términos de momento: DMAIC, OEE, Cpk) | `src/reference/glossary.ts`, `src/app/screens/ReferenceScreen.tsx` |
+| Modo sin conexión e instalación (aviso de versión nueva con botón Actualizar, solo fuentes latinas precargadas), icono provisional, versión visible | `vite.config.ts`, `src/app/UpdatePrompt.tsx`, `public/icons` |
+| Publicación automática en GitHub Pages solo si pasan tipos y pruebas | `.github/workflows/publicar.yml` |
+
+Desviaciones respecto a la maqueta o al plan, con su motivo:
+
+- Algunos tonos claros son un poco más oscuros que en la maqueta (acento de
+  Lino #9A6B3F → #8F6239, textos secundarios, verde/ámbar/rojo de estado)
+  para cumplir el contraste mínimo.
+- "Ver fórmula" se llama "Fórmula": el texto largo partía el botón en dos
+  líneas a 360 px.
+- El glosario salió de los textos de idioma a su propio archivo para poder
+  crecer sin límite.
+
+---
+
+## 6. Decisiones tomadas con el dueño
+
+Todas del 2026-11-13. No reabrirlas sin él.
+
+**Producto**
 
 | Tema | Decisión |
 |---|---|
-| Teléfono de pruebas | Android del dueño. Se mantiene compatible con iPhone, pero no se prueba allí por ahora. |
-| Público | App personal. Puede que en el futuro una empresa quiera adaptarla; no se construye nada para eso todavía. |
-| Código | Público en GitHub (lo exige GitHub Pages gratis). Sin licencia de uso por ahora, para no regalar derechos. |
-| Todo dentro de un proyecto | Cambiado por el dueño (2026-11-13): no hay bandeja "Sin proyecto". Todo lo que se guarda (capturas, análisis, acciones) pertenece a un proyecto. Inicio es la lista de proyectos. Capturar o guardar pide el proyecto, con el último usado ya elegido y la opción de crear uno en el momento. Calcular sin guardar sí se puede sin proyecto (recomendación, pendiente de confirmar). |
-| Dirección visual | Elegida (2026-11-13): base de la propuesta A (tarjetas y botones separados, con relieve y sombras que "salen de la pantalla") más la estructura DMAIC de la propuesta B: cada proyecto se organiza por fases y cada fase muestra sus herramientas y lo que falta para cerrarla. |
-| Archivos Excel | ExcelJS. Se guarda también el valor calculado junto a cada fórmula, para que las vistas previas del móvil no salgan vacías. |
-| Rutas de la app | Con almohadilla (#), para que funcionen en la subcarpeta de GitHub Pages. |
-| Cronómetro | Mide con la hora real de inicio y fin, no contando segundos. |
-| Dónde viven los datos | En el dispositivo. Sincronización opcional entre dispositivos a través del Drive del propio usuario. Sin servidor. |
+| Uso | App personal. Quizá una empresa la adapte en el futuro; no se construye nada para eso. |
+| Teléfono de pruebas | Android del dueño. Compatible con iPhone, pero no se prueba allí. |
+| Todo dentro de un proyecto | No hay bandeja "Sin proyecto". Todo lo que se guarda pertenece a un proyecto. Calcular sin guardar sí se puede sin proyecto; para guardar, la app pide el proyecto. |
+| Tipos de proyecto | DMAIC (Definir, Medir, Analizar, Mejorar, Controlar), Kaizen rápido (Preparar, Evento, Seguimiento), A3 · PDCA (Planificar, Hacer, Verificar, Actuar), Implantación 5S (Clasificar, Ordenar, Limpiar, Estandarizar, Sostener) y Seguimiento de proceso (sin fases). Más plantillas propias del usuario (nombre, fases y herramientas del catálogo; solo herramientas que existan). |
+| Navegación | Barra inferior: Proyectos (es Inicio) · Herramientas · botón central Capturar · Referencia · Ajustes. Dentro de cada proyecto: Fases, Hoja, Acciones, Informe. |
 | Ordenador | La misma app en el navegador, a dos columnas, con los mismos datos. Es un uso principal. |
-| Google Sheets | Una hoja por proyecto. Pestañas de la app (solo escribe la app, comentables), pestaña "Entrada" (solo escribe el usuario, la app la lee) y pestañas libres del usuario. |
-| Dueño de cada dato | Uno solo: lo que nace en la app se corrige en la app; lo que nace en "Entrada", en la hoja. Sin edición en los dos sentidos. |
-| Sincronizar | Un botón que envía y trae, y que además se ejecuta solo. Resumen al terminar, sin vista previa. |
-| Aspecto | Profesional en las dos direcciones: datos de la hoja como tarjetas con gráfico en la app; formato presentable en la hoja y en el .xlsx. |
-| Microsoft | Sin conexión directa. Para Excel, archivo exportado. |
-| Convenciones de cálculo | Las de Minitab por defecto, visibles, cambiables y anotadas en la exportación. El dueño no tiene Minitab: casos de referencia de fuentes públicas (NIST, libros de texto, documentación de Minitab). |
-| Fichas | El borrador lo redacta el agente al empezar cada fase; el dueño lo aprueba. |
-| Dirección visual | La Fase 0 empieza con 2 o 3 propuestas para que el dueño elija. |
+| Copia de seguridad | En archivo, en la Fase 4 (adelantada desde la 6). |
+| Convenciones de cálculo | Las de Minitab por defecto, visibles, cambiables en Ajustes y anotadas en la exportación. El dueño no tiene Minitab: los casos de referencia salen de fuentes públicas (NIST, libros de texto, documentación de Minitab) con su fuente citada. |
+| Fichas | Las redacta el agente al empezar cada fase; el dueño las aprueba antes de construir. |
+| Glosario | El dueño tiene un glosario en PDF, redactado por él con ayuda de Claude: su texto se puede usar, adaptándolo y traduciéndolo al inglés, y el dueño valida el resultado. Ampliarlo además con los términos de cada herramienta. |
 
-| Copia de seguridad | Confirmado por el dueño (2026-11-13): se adelanta a la Fase 4. |
-| App y hoja | Mismos datos y mismos números; cada una con su propia presentación. Los gráficos de la app son interactivos (tocar una barra o un punto muestra su valor y la celda de la hoja de donde sale). No se copian a la app los gráficos que el usuario dibuje en Sheets. |
-| Temas de color | Varios temas a elegir en Ajustes, cada uno con versión clara y oscura y un solo color de acento. Por defecto, crema y marrón claro. La hoja de Google y los PDF usan la versión clara del tema elegido. |
-| Editar la hoja desde la app | Aprobado (2026-11-13). La pestaña «Entrada» se edita en la app y en Google; si la misma celda cambia en los dos sitios antes de sincronizar, la app enseña los dos valores y el usuario elige. Las capturas de la app se editan en la app (en Google, protegidas y comentables). Las pestañas propias del usuario se ven en la app como tabla, solo lectura. En el móvil la hoja ocupa toda la pantalla, se edita por filas con un editor grande debajo (no encima) y tiene botones de zoom (− / +). |
-| Tipos de proyecto | Aprobados los cinco (2026-11-13): DMAIC (Definir, Medir, Analizar, Mejorar, Controlar), Kaizen rápido (Preparar, Evento, Seguimiento), A3 · PDCA (Planificar, Hacer, Verificar, Actuar), Implantación 5S (Clasificar, Ordenar, Limpiar, Estandarizar, Sostener) y Seguimiento de proceso (sin fases). Más plantillas propias. |
-| Calculadoras sin proyecto | Aprobado (2026-11-13): se puede calcular sin proyecto; para guardar, la app pide el proyecto. |
-| Barra inferior | Proyectos (Inicio) · Herramientas · botón central Capturar · Referencia · Ajustes. Capturar siempre pregunta el proyecto, con el último usado ya elegido. |
-| Tipografía | Inter (texto) e Inter Tight (títulos y cifras), incluidas en la app para que funcionen sin conexión. Sustituye a "tipografía del sistema" del encargo. |
-| IA conectada | Aprobado (2026-11-13). La app no llama a ninguna IA. En la Fase 6: pestaña «Contexto» en la hoja de cada proyecto (objetivo, tipo y fase, indicador con base/objetivo/actual, cada análisis con su conclusión, acciones con responsable y fecha), escrita en lenguaje claro para que Claude (conector de Google Drive de su suscripción) o Gemini en Sheets respondan sobre el proyecto; y botón «Copiar contexto para IA» con el mismo resumen. Comprobar entonces si el conector de Claude puede escribir celdas (no prometido). |
-| Plantillas personalizadas | Pedido por el dueño (2026-11-13): el usuario crea sus propios tipos de proyecto eligiendo nombre, fases y, en cada fase, herramientas del catálogo de la app. Solo herramientas que existan en la app. Entra en la Fase 6 junto con Proyectos. |
-| Primera ronda visual | Rechazada (2026-11-13): las tres propuestas se parecían y se veían básicas. Segunda ronda con tres estructuras distintas, temas de color y tipografía incluida en la app. |
+**Diseño**
 
-## Pendiente de confirmar con el dueño
+| Tema | Decisión |
+|---|---|
+| Dirección visual | Propuesta A (tarjetas y botones separados, con relieve y sombras) más la organización DMAIC de la propuesta B. Referencia: la maqueta aprobada. Primera ronda rechazada por parecida y básica. |
+| Temas de color | Lino (crema y marrón claro, por defecto), Salvia, Pizarra, Grafito y Ciruela; cada uno claro y oscuro. La hoja de Google y los PDF usan la versión clara del tema elegido. |
+| Tipografía | Inter (texto) e Inter Tight (títulos y cifras), incluidas en la app para funcionar sin conexión. |
+| Espacio | Nada cortado, nada encima de otra cosa, nada amontonado a 320-360 px. |
+| Referencia | Glosario plegable por término, con buscador. |
 
-1. Estructura final de pestañas de la hoja, sobre una hoja de muestra
-   (parada 6 del plan).
+**Datos, Google y Excel**
 
-## Maqueta visual aprobada
+| Tema | Decisión |
+|---|---|
+| Dónde viven los datos | En el teléfono (IndexedDB de Chrome, almacenamiento protegido). Sincronización opcional entre dispositivos a través del Drive del propio usuario. Sin servidor propio. |
+| Google Sheets | Una hoja por proyecto, creada por la app con un toque. Pestañas de la app (las escribe la app; en Google, protegidas y comentables), pestaña «Entrada» y pestañas libres del usuario. |
+| Quién edita qué | Lo que nace en la app se edita en la app. «Entrada» se edita en la app y en Google; si la misma celda cambió en los dos sitios, la app enseña los dos valores y el usuario elige. Las pestañas del usuario se ven en la app como tabla, solo lectura. |
+| Hoja dentro de la app | A pantalla completa, columnas que caben sin desplazarse a los lados, edición por filas con un editor grande debajo (nunca encima), flechas a la fila siguiente y zoom (− / +). Colores del tema elegido. |
+| App y hoja | Mismos datos y mismos números, cada una con su presentación. Los gráficos de la app son interactivos (tocar muestra el valor y la celda de la hoja, con la marca "coincide"). Los gráficos que el usuario dibuje en Sheets no se copian a la app. |
+| Sincronizar | Un botón que envía y trae; además se ejecuta solo. Resumen corto al terminar. |
+| IA | La app no llama a ninguna IA. Fase 6: pestaña «Contexto» en cada hoja (objetivo, tipo y fase, indicador con base/objetivo/actual, cada análisis con su conclusión, acciones con responsable y fecha) para que Claude (conector de Google Drive de la suscripción del dueño) o Gemini en Sheets respondan sobre el proyecto, y botón «Copiar contexto para IA». No está comprobado que el conector de Claude pueda escribir celdas. |
+| Microsoft | Sin conexión directa; para Excel, archivo exportado. |
+| Archivos Excel | ExcelJS. Se guarda el valor calculado junto a cada fórmula para que las vistas previas del móvil no salgan vacías. |
 
-La parada 1 del plan está cerrada (2026-11-13). La maqueta aprobada está
-publicada en https://claude.ai/artifact/WE7dYB8wSRRKpsRY7Lwghg (privada, del
-dueño). Es la referencia visual para construir: relieve en tarjetas y
-botones, temas Lino (por defecto), Salvia, Pizarra, Grafito y Ciruela, cada
-uno claro y oscuro; proyectos con fases; hoja a pantalla completa editable
-por filas con zoom. Comprobar cada pantalla a 320-360 px de ancho, en claro
-y oscuro: nada cortado, nada encima de otra cosa.
+**Técnicas (las toma el agente, se anotan)**
 
-## Plan de la Fase 0
+| Tema | Decisión |
+|---|---|
+| Código | Público en GitHub (lo exige GitHub Pages gratis). Sin licencia de uso. |
+| Rutas | Con almohadilla (#) por la subcarpeta de GitHub Pages. |
+| Cronómetro | Hora real de inicio y fin, no contar segundos. |
+| Versiones nuevas | La app no se actualiza sola: avisa y el usuario pulsa "Actualizar". |
 
-Ver PLAN.md, sección 5, que añade las propuestas visuales al principio, la
-capa de datos preparada para sincronizar y la prueba de viabilidad de Google
-al final. Los pasos de construcción son:
+---
 
-1. Iniciar Git en esta carpeta.
-2. Esqueleto (React, TypeScript, Vite, Tailwind) y pruebas con un ejemplo.
-3. Idiomas es y en, detección automática, cambio manual, prueba de textos
-   sin traducir.
-4. Temas claro y oscuro con un color de acento.
-5. Piezas comunes: botón de 48 px, botón fijo al pie, campo numérico (coma o
-   punto), sigla tocable.
-6. Barra inferior con las 5 pestañas y pantallas provisionales.
-7. Registro central de herramientas y plantilla única, con una herramienta
-   de muestra que se borra en la Fase 1.
-8. Base de datos local: idioma, tema, favoritas; pedir almacenamiento
-   protegido.
-9. Instalación, modo sin conexión, icono provisional, aviso de versión nueva.
-10. Publicación automática en GitHub Pages (solo si pasan las pruebas).
-11. Comprobación del dueño en su Android.
+## 7. Pendiente de decidir con el dueño
 
-## Riesgos que hay que vigilar
+1. Opción A o B como siguiente paso (sección 2).
+2. Qué entra en "calculadoras rápidas" de la Fase 1 (sección 4).
+3. Estructura final de pestañas de la hoja, sobre una hoja de muestra
+   (parada 6, antes de construir la hoja de Google en la Fase 6).
+4. El dueño ofreció enviar el PDF de su glosario: pedírselo cuando toque
+   ampliar Referencia.
 
-- La app sin conexión puede quedarse en una versión antigua: aviso de
-  actualización y número de versión visible.
+## 8. Por comprobar (PLAN.md, sección 9)
+
+Nada de la sección 9 del plan está comprobado todavía. Lo más urgente es lo
+de Google, que se resuelve con la prueba de viabilidad. Licencias revisadas
+(leídas de cada package.json el 2026-11-13): React, React DOM, Vite,
+Tailwind, vite-plugin-pwa y workbox-window (MIT), Dexie (Apache-2.0),
+lucide-react (ISC), fuentes Inter e Inter Tight (OFL-1.1, permite incluirlas
+en la app). Ninguna obliga a publicar el código bajo sus condiciones. Revisar
+cada dependencia nueva antes de añadirla.
+
+## 9. Riesgos que hay que vigilar
+
+- La app sin conexión puede quedarse en una versión antigua: hay aviso de
+  versión nueva y la versión se ve en Ajustes.
+- Los datos viven solo en el teléfono hasta la Fase 4: si el dueño desinstala
+  la app o borra los datos de Chrome, se pierden. Todavía no se guarda nada
+  real.
 - Las fotos ocupan mucho: reducirlas al guardar.
-- "1.234" es ambiguo al pegar: vista previa siempre antes de aceptar.
+- "1.234" es ambiguo al pegar: ya se avisa en la vista previa.
 - Las pruebas de Excel usan un simulador: en cada herramienta, el dueño abre
   el archivo una vez en Excel y en Google Sheets.
-- Constantes de cartas de control (A2, D3, D4, d2): enseñar la tabla con su
-  fuente para que el dueño la valide antes de usarla.
-- La conexión con Google sin servidor no está probada: cada cuánto pide
-  reconfirmar el permiso y cómo se comporta en la app instalada en Android.
-  Se comprueba al final de la Fase 0, antes de construir nada encima.
+- Constantes de cartas de control: tabla con fuente validada por el dueño.
+- La conexión con Google sin servidor no está probada (prueba de la opción A).
 - Una sincronización mal hecha pierde datos: copia de seguridad antes que
   sincronización, y pruebas de combinación en cualquier orden.
-- El usuario puede editar las pestañas de la app aunque estén protegidas (es
-  el propietario del archivo): la app las reescribe y no confía en ellas.
+- El dueño puede editar las pestañas protegidas de la app (es el propietario
+  del archivo): la app las reescribe y no confía en ellas.
+- GitHub avisa de que actions/checkout@v4 y setup-node@v4 usan Node 20 (ya
+  se ejecutan con Node 24). Funciona; actualizarlas cuando salga versión.
 
-## Registro por fase
+## 10. Historial
 
-### Fase 0 (en curso)
-
-- Hecho: Git local (rama main, sin repositorio remoto todavía: parada 2).
-- Hecho: esqueleto React 19 + TypeScript 7 + Vite 8 + Tailwind 4 + Vitest 5.
-  `npm test` usa `scripts/vitest.mjs`, que pone en mayúscula la letra de
-  unidad: con "c:\" en minúscula Vitest carga dos veces el mismo módulo y
-  todas las pruebas fallan ("failed to find the current suite"). Las pruebas
-  importan `test` y `expect` de 'vitest' (sin globales).
-- Hecho: idiomas es/en en `src/i18n` con claves comprobadas por TypeScript y
-  por prueba; detección automática del idioma del dispositivo. Falta el
-  selector en Ajustes y guardarlo (paso 8).
-- Hecho: temas en `src/ui/theme` (5 temas × claro/oscuro) con prueba de
-  contraste WCAG: texto ≥ 7, secundario, acento y estados ≥ 4,5. Para
-  cumplirlo se oscurecieron un poco algunos tonos claros respecto a la
-  maqueta (acento de Lino #9A6B3F → #8F6239, textos secundarios y el verde,
-  ámbar y rojo de estado). Falta el selector en Ajustes.
-- Hecho (paso 5): piezas comunes en `src/ui`: botón (48 px, 54 el
-  principal, efecto al tocar), botón fijo al pie, campo numérico (coma o
-  punto, aviso con icono y texto), lectura de columnas pegadas con vista
-  previa y aviso de "1.234" ambiguo, sigla tocable con su definición, hoja
-  inferior modal y aviso con "Deshacer".
-- Hecho (paso 6): barra inferior flotante (Proyectos · Herramientas ·
-  Capturar · Referencia · Ajustes) y menú lateral en pantallas anchas
-  (≥ 768 px). Rutas con almohadilla. Pantallas provisionales.
-- Hecho (paso 7): registro central `src/tools/registry.ts` y plantilla única
-  `src/ui/ToolTemplate.tsx` (Datos → Resultado → Cómo leerlo → Acciones, dos
-  columnas en pantallas anchas). Herramienta de muestra "Media de una
-  columna" en `src/tools/muestra` y `src/calc/muestra.ts`: BORRARLA en la
-  Fase 1.
-- Hecho (paso 8): base local Dexie (`src/data`) con todas las tablas y los
-  campos de sincronización (id, createdAt, updatedAt que nunca se repite,
-  deleted 0/1, origin app/hoja). Toda escritura pasa por `src/data/repo.ts`.
-  Ajustes guardados: idioma, tema, modo, favoritas. Se pide almacenamiento
-  protegido y se muestra su estado en Ajustes.
-- Hecho (paso 9): PWA con vite-plugin-pwa 2.0 en modo "prompt" (avisa de
-  versión nueva con botón Actualizar), funciona sin conexión (20 archivos
-  precargados, solo fuentes latinas), icono provisional (barras de Pareto)
-  generado con `npm run icons`, versión visible en Ajustes.
-- Herramienta de revisión visual: `npm run build && npm run screens -- <carpeta> 360`
-  saca capturas de todas las pantallas en claro y oscuro con el Chrome del
-  equipo y avisa si la página es más ancha que la pantalla o si un texto
-  queda recortado. Revisado a 320, 360 y 1280 px: sin problemas.
-- Pruebas: 83, todas pasan. Compilación correcta.
-- Hecho (paso 10, parada 2 aprobada el 2026-11-13): repositorio público
-  https://github.com/pasqualebf/gemba-kit, app publicada en
-  https://pasqualebf.github.io/gemba-kit/ por GitHub Actions
-  (`.github/workflows/publicar.yml`: tipos + pruebas + compilación; solo
-  publica si todo pasa). `npm run check:live` comprueba la app publicada:
-  carga, manifiesto, modo sin conexión y apertura sin red. Todo OK.
-- Las confirmaciones de este repositorio usan la dirección privada de GitHub
-  (236227593+pasqualebf@users.noreply.github.com, configurada solo en este
-  repositorio) para no publicar el correo del dueño.
-- Incidencia resuelta: el package-lock.json generado en Windows no incluía
-  @emnapi/core y @emnapi/runtime (dependencias de un paquete opcional de
-  rolldown) y `npm ci` fallaba en Linux. Se regeneró desde cero. Si vuelve
-  a pasar tras instalar algo, borrar node_modules y package-lock.json y
-  ejecutar `npm install`.
-- Aviso de GitHub: actions/checkout@v4 y setup-node@v4 usan Node 20, que
-  GitHub ya ejecuta con Node 24. Funciona; actualizar cuando haya versión.
-- Hecho (paso 11, 2026-11-13): el dueño instaló la app en su Android y
-  confirmó que funciona sin conexión y que el almacenamiento protegido está
-  concedido (capturas de Referencia y Ajustes). No comentó expresamente la
-  prueba de la herramienta de muestra con una mano.
-- Cambio pedido por el dueño: el glosario de Referencia se pliega y
-  despliega por término y tiene buscador. El glosario vive en
-  `src/reference/glossary.ts` (categoría, sigla, nombre completo y
-  definición en es/en; prueba de que nada falta). El dueño ofreció un PDF con
-  su glosario: usarlo como lista y fuente, pero redactar las definiciones con
-  palabras propias porque el código es público, y que el dueño las valide.
-- **Fase 0 cerrada.** Siguiente: prueba de viabilidad de Google (paradas 3 y
-  4 del plan), que necesita al dueño para crear el proyecto en Google Cloud.
+- 2026-11-13: encargo, plan de ejecución, tres rondas de maqueta visual,
+  todas las decisiones de la sección 6, Fase 0 construida y publicada,
+  comprobada por el dueño en su Android. Glosario plegable a petición suya.
