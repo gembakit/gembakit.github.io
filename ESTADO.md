@@ -92,7 +92,9 @@ Notas técnicas que costó descubrir:
 2. **package-lock.json:** si `npm ci` falla en GitHub por paquetes que
    "faltan en el lock file", borrar `node_modules` y `package-lock.json` y
    ejecutar `npm install` de nuevo (npm a veces no anota las dependencias de
-   paquetes opcionales de otras plataformas).
+   paquetes opcionales de otras plataformas). Pasa **cada vez que se añade
+   un paquete** (volvió a pasar con jStat): regenerar el lock antes de
+   publicar.
 3. **Git Bash cambia las rutas:** `BASE_PATH=/gemba-kit/` se convierte en una
    ruta de Windows. Para probar la compilación de GitHub Pages en local, usar
    `MSYS_NO_PATHCONV=1 BASE_PATH=/gemba-kit/ npx vite build`.
