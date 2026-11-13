@@ -1,15 +1,16 @@
 import { useCallback, useState } from 'react';
-import { useI18n, type Messages } from '../i18n';
+import { useI18n } from '../i18n';
+import { findTerm } from '../reference/glossary';
 import { Sheet } from './Sheet';
 
-export type GlossaryKey = keyof Messages['glossary'];
-
 /** Sigla tocable: al tocarla se abre su definición (CLAUDE.md, diseño móvil). */
-export function Acronym({ k }: { k: GlossaryKey }) {
-  const { t } = useI18n();
+export function Acronym({ id }: { id: string }) {
+  const { lang } = useI18n();
   const [open, setOpen] = useState(false);
   const close = useCallback(() => setOpen(false), []);
-  const entry = t.glossary[k];
+  const entry = findTerm(id);
+  if (!entry) return <>{id}</>;
+  const e = entry[lang];
   return (
     <>
       <button
@@ -17,10 +18,11 @@ export function Acronym({ k }: { k: GlossaryKey }) {
         onClick={() => setOpen(true)}
         className="inline cursor-help font-[inherit] text-[inherit] underline decoration-dotted decoration-[1.5px] underline-offset-[3px]"
       >
-        {entry.term}
+        {e.term}
       </button>
-      <Sheet open={open} onClose={close} title={entry.term}>
-        <p className="text-[16px] leading-relaxed">{entry.def}</p>
+      <Sheet open={open} onClose={close} title={e.term}>
+        <p className="font-semibold text-muted">{e.name}</p>
+        <p className="text-[16px] leading-relaxed">{e.def}</p>
       </Sheet>
     </>
   );

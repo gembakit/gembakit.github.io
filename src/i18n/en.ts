@@ -86,20 +86,15 @@ export const en: Messages = {
   reference: {
     title: 'Reference',
     glossary: 'Glossary',
-    more: 'The glossary grows with each tool. Formulas and decision trees arrive with their tools.',
-  },
-  glossary: {
-    DMAIC: {
-      term: 'DMAIC',
-      def: 'Define, Measure, Analyze, Improve and Control. Six Sigma method for solving problems whose cause is not yet known, phase by phase.',
-    },
-    OEE: {
-      term: 'OEE',
-      def: 'Overall Equipment Effectiveness. It is availability × performance × quality: the share of planned time that becomes good parts at ideal speed.',
-    },
-    Cpk: {
-      term: 'Cpk',
-      def: 'Process capability index that accounts for centering. It compares the distance from the mean to the nearest specification limit with three process standard deviations. The higher, the fewer parts out of tolerance.',
+    search: 'Search terms',
+    count: (n) => (n === 1 ? '1 term' : `${n} terms`),
+    noResults: (q) => `No term matches “${q}”.`,
+    more: 'Tap a term to see its definition. The glossary grows with each tool.',
+    categories: {
+      metodo: 'Method',
+      lean: 'Lean',
+      indicador: 'Indicator',
+      estadistica: 'Statistics',
     },
   },
   settings: {

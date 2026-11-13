@@ -168,5 +168,15 @@ al final. Los pasos de construcción son:
   ejecutar `npm install`.
 - Aviso de GitHub: actions/checkout@v4 y setup-node@v4 usan Node 20, que
   GitHub ya ejecuta con Node 24. Funciona; actualizar cuando haya versión.
-- Pendiente: paso 11, comprobación del dueño en su Android. Después,
-  prueba de viabilidad de Google (paradas 3 y 4).
+- Hecho (paso 11, 2026-11-13): el dueño instaló la app en su Android y
+  confirmó que funciona sin conexión y que el almacenamiento protegido está
+  concedido (capturas de Referencia y Ajustes). No comentó expresamente la
+  prueba de la herramienta de muestra con una mano.
+- Cambio pedido por el dueño: el glosario de Referencia se pliega y
+  despliega por término y tiene buscador. El glosario vive en
+  `src/reference/glossary.ts` (categoría, sigla, nombre completo y
+  definición en es/en; prueba de que nada falta). El dueño ofreció un PDF con
+  su glosario: usarlo como lista y fuente, pero redactar las definiciones con
+  palabras propias porque el código es público, y que el dueño las valide.
+- **Fase 0 cerrada.** Siguiente: prueba de viabilidad de Google (paradas 3 y
+  4 del plan), que necesita al dueño para crear el proyecto en Google Cloud.

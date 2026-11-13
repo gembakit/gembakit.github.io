@@ -86,20 +86,15 @@ export const es = {
   reference: {
     title: 'Referencia',
     glossary: 'Glosario',
-    more: 'El glosario crece con cada herramienta. Las fórmulas y los árboles de decisión llegan con sus herramientas.',
-  },
-  glossary: {
-    DMAIC: {
-      term: 'DMAIC',
-      def: 'Definir, Medir, Analizar, Mejorar y Controlar. Método de Six Sigma para resolver problemas cuya causa todavía no se conoce, fase a fase.',
-    },
-    OEE: {
-      term: 'OEE',
-      def: 'Eficiencia general de los equipos (Overall Equipment Effectiveness). Es disponibilidad × rendimiento × calidad: la parte del tiempo planificado que se convierte en piezas buenas a la velocidad ideal.',
-    },
-    Cpk: {
-      term: 'Cpk',
-      def: 'Índice de capacidad del proceso que tiene en cuenta el centrado. Compara la distancia de la media al límite de especificación más cercano con tres desviaciones típicas del proceso. Cuanto mayor, menos piezas fuera de tolerancia.',
+    search: 'Buscar término',
+    count: (n: number) => (n === 1 ? '1 término' : `${n} términos`),
+    noResults: (q: string) => `Ningún término coincide con «${q}».`,
+    more: 'Toca un término para ver su definición. El glosario crece con cada herramienta.',
+    categories: {
+      metodo: 'Método',
+      lean: 'Lean',
+      indicador: 'Indicador',
+      estadistica: 'Estadística',
     },
   },
   settings: {

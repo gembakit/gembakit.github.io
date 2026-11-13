@@ -19,6 +19,7 @@ const SHOTS = [
   { name: 'muestra-vacia', hash: '#/herramientas/muestra' },
   { name: 'muestra-ejemplo', hash: '#/herramientas/muestra', click: /Cargar ejemplo|Load example/, full: true },
   { name: 'referencia', hash: '#/referencia' },
+  { name: 'referencia-abierta', hash: '#/referencia', click: /^DMAIC/ },
   { name: 'ajustes', hash: '#/ajustes', full: true },
   { name: 'capturar', hash: '#/proyectos', click: /^(Capturar|Capture)$/, byLabel: true },
 ];
