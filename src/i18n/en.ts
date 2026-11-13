@@ -86,6 +86,8 @@ export const en: Messages = {
   reference: {
     title: 'Reference',
     glossary: 'Glossary',
+    guide: 'User guide',
+    guideMore: 'Each tool also has its own guide, inside the tool.',
     search: 'Search terms',
     count: (n) => (n === 1 ? '1 term' : `${n} terms`),
     noResults: (q) => `No term matches “${q}”.`,
@@ -95,6 +97,7 @@ export const en: Messages = {
       lean: 'Lean',
       indicador: 'Indicator',
       estadistica: 'Statistics',
+      finanzas: 'Finance',
     },
   },
   settings: {

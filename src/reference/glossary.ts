@@ -4,7 +4,7 @@ import type { Language } from '../i18n/types';
 // Cada término lleva su texto en los dos idiomas (una prueba lo comprueba).
 // Las definiciones se redactan con palabras propias: el código es público.
 
-export const GLOSSARY_CATEGORIES = ['metodo', 'lean', 'indicador', 'estadistica'] as const;
+export const GLOSSARY_CATEGORIES = ['metodo', 'lean', 'indicador', 'estadistica', 'finanzas'] as const;
 export type GlossaryCategory = (typeof GLOSSARY_CATEGORIES)[number];
 
 export interface GlossaryText {
@@ -63,6 +63,424 @@ export const GLOSSARY: readonly GlossaryEntry[] = [
       term: 'Cpk',
       name: 'Process capability index, accounting for centering',
       def: 'Compares the distance from the mean to the nearest specification limit with three process standard deviations. The higher, the fewer parts out of tolerance.',
+    },
+  },
+
+  // Método y lugar
+  {
+    id: 'seis-sigma',
+    category: 'metodo',
+    es: {
+      term: 'Seis Sigma',
+      name: 'Six Sigma',
+      def: 'Método de mejora que reduce la variación y los defectos apoyándose en datos y estadística. Su meta de referencia es 3,4 defectos por millón de oportunidades.',
+    },
+    en: {
+      term: 'Six Sigma',
+      name: 'Six Sigma',
+      def: 'Improvement method that reduces variation and defects using data and statistics. Its reference goal is 3.4 defects per million opportunities.',
+    },
+  },
+  {
+    id: 'kaizen',
+    category: 'metodo',
+    es: {
+      term: 'Kaizen',
+      name: 'Mejora continua',
+      def: 'Mejorar poco a poco y de forma constante, con la gente que hace el trabajo. Un evento Kaizen concentra esa mejora en unos pocos días sobre un problema concreto.',
+    },
+    en: {
+      term: 'Kaizen',
+      name: 'Continuous improvement',
+      def: 'Improving little by little and constantly, with the people who do the work. A Kaizen event concentrates that improvement into a few days on one specific problem.',
+    },
+  },
+  {
+    id: 'gemba',
+    category: 'lean',
+    es: {
+      term: 'Gemba',
+      name: 'El lugar real',
+      def: 'Donde se crea el valor: la planta, la línea, el puesto de trabajo. Ir al gemba es ver el problema allí, con los propios ojos, en lugar de en una sala de reuniones.',
+    },
+    en: {
+      term: 'Gemba',
+      name: 'The real place',
+      def: 'Where value is created: the shop floor, the line, the workstation. Going to the gemba means seeing the problem there, with your own eyes, instead of in a meeting room.',
+    },
+  },
+
+  // Defectos y nivel sigma
+  {
+    id: 'dpmo',
+    category: 'indicador',
+    es: {
+      term: 'DPMO',
+      name: 'Defectos por millón de oportunidades',
+      def: 'Defectos encontrados ÷ (unidades × oportunidades de defecto por unidad) × 1.000.000. Sirve para comparar procesos de distinta complejidad.',
+    },
+    en: {
+      term: 'DPMO',
+      name: 'Defects per million opportunities',
+      def: 'Defects found ÷ (units × defect opportunities per unit) × 1,000,000. Lets you compare processes of different complexity.',
+    },
+  },
+  {
+    id: 'dpu',
+    category: 'indicador',
+    es: {
+      term: 'DPU',
+      name: 'Defectos por unidad',
+      def: 'Defectos encontrados ÷ unidades revisadas. Como una unidad puede tener varios defectos, puede ser mayor que 1.',
+    },
+    en: {
+      term: 'DPU',
+      name: 'Defects per unit',
+      def: 'Defects found ÷ units inspected. Since one unit can have several defects, it can be greater than 1.',
+    },
+  },
+  {
+    id: 'dpo',
+    category: 'indicador',
+    es: {
+      term: 'DPO',
+      name: 'Defectos por oportunidad',
+      def: 'Defectos ÷ (unidades × oportunidades por unidad). Es el DPMO dividido entre un millón.',
+    },
+    en: {
+      term: 'DPO',
+      name: 'Defects per opportunity',
+      def: 'Defects ÷ (units × opportunities per unit). It is the DPMO divided by one million.',
+    },
+  },
+  {
+    id: 'oportunidad',
+    category: 'indicador',
+    es: {
+      term: 'Oportunidad de defecto',
+      name: 'Punto donde puede fallar una unidad',
+      def: 'Cada característica de una unidad que puede salir mal, que importa al cliente y que se puede comprobar. Hay que definirlas igual en todas las mediciones para poder compararlas.',
+    },
+    en: {
+      term: 'Defect opportunity',
+      name: 'A point where a unit can fail',
+      def: 'Each characteristic of a unit that can go wrong, matters to the customer and can be checked. They must be defined the same way in every measurement for results to be comparable.',
+    },
+  },
+  {
+    id: 'defecto',
+    category: 'indicador',
+    es: {
+      term: 'Defecto y defectuoso',
+      name: 'No son lo mismo',
+      def: 'Un defecto es cada fallo concreto; una unidad defectuosa es la que tiene uno o más. Una pieza con tres arañazos es una unidad defectuosa con tres defectos.',
+    },
+    en: {
+      term: 'Defect and defective',
+      name: 'Not the same thing',
+      def: 'A defect is each specific failure; a defective unit is one that has one or more. A part with three scratches is one defective unit with three defects.',
+    },
+  },
+  {
+    id: 'nivel-sigma',
+    category: 'indicador',
+    es: {
+      term: 'Nivel sigma',
+      name: 'DPMO en la escala de Seis Sigma',
+      def: 'Forma de expresar los defectos en la escala de Seis Sigma. Por convención incluye un desplazamiento de 1,5: 6 sigma equivale a 3,4 DPMO y 3 sigma a 66.807 DPMO.',
+    },
+    en: {
+      term: 'Sigma level',
+      name: 'DPMO on the Six Sigma scale',
+      def: 'A way of expressing defects on the Six Sigma scale. By convention it includes a 1.5 shift: 6 sigma equals 3.4 DPMO and 3 sigma equals 66,807 DPMO.',
+    },
+  },
+  {
+    id: 'z-proceso',
+    category: 'estadistica',
+    es: {
+      term: 'Z del proceso',
+      name: 'Nivel sigma a largo plazo',
+      def: 'Punto de la normal estándar que deja a su derecha la proporción de defectos. Es el nivel sigma sin el desplazamiento de 1,5, tal como lo da Minitab.',
+    },
+    en: {
+      term: 'Process Z',
+      name: 'Long-term sigma level',
+      def: 'Point on the standard normal distribution with the defect proportion to its right. It is the sigma level without the 1.5 shift, as Minitab reports it.',
+    },
+  },
+  {
+    id: 'desplazamiento',
+    category: 'estadistica',
+    es: {
+      term: 'Desplazamiento de 1,5 sigma',
+      name: '1,5 sigma shift',
+      def: 'Convención de Seis Sigma: se supone que a largo plazo la media del proceso se aleja 1,5 desviaciones típicas de donde estaba en un estudio corto. Nivel sigma = Z a largo plazo + 1,5. Es una convención, no una ley.',
+    },
+    en: {
+      term: '1.5 sigma shift',
+      name: '1.5 sigma shift',
+      def: 'Six Sigma convention: in the long run the process mean is assumed to drift 1.5 standard deviations from where it was in a short study. Sigma level = long-term Z + 1.5. It is a convention, not a law.',
+    },
+  },
+
+  // Rendimientos
+  {
+    id: 'fpy',
+    category: 'indicador',
+    es: {
+      term: 'FPY',
+      name: 'Rendimiento a la primera (First Pass Yield)',
+      def: 'Unidades buenas a la primera ÷ unidades que entran en un paso. Las unidades retrabajadas no cuentan como buenas.',
+    },
+    en: {
+      term: 'FPY',
+      name: 'First Pass Yield',
+      def: 'Units good the first time ÷ units entering a step. Reworked units do not count as good.',
+    },
+  },
+  {
+    id: 'rty',
+    category: 'indicador',
+    es: {
+      term: 'RTY',
+      name: 'Rendimiento acumulado (Rolled Throughput Yield)',
+      def: 'Producto de los FPY de todos los pasos: la parte de las unidades que atraviesa todo el proceso sin ningún retrabajo ni desecho.',
+    },
+    en: {
+      term: 'RTY',
+      name: 'Rolled Throughput Yield',
+      def: 'Product of the FPY of every step: the share of units that go through the whole process without any rework or scrap.',
+    },
+  },
+  {
+    id: 'fabrica-oculta',
+    category: 'lean',
+    es: {
+      term: 'Fábrica oculta',
+      name: 'Retrabajo que no se ve',
+      def: 'Todo el trabajo de retrabajos, reparaciones y reinspecciones que no aparece en el rendimiento final. Se mide con 1 − RTY.',
+    },
+    en: {
+      term: 'Hidden factory',
+      name: 'Rework nobody sees',
+      def: 'All the rework, repairs and re-inspections that do not show up in the final yield. Measured as 1 − RTY.',
+    },
+  },
+
+  // Ritmo y flujo
+  {
+    id: 'takt',
+    category: 'lean',
+    es: {
+      term: 'Takt',
+      name: 'Ritmo del cliente (takt time)',
+      def: 'Tiempo disponible ÷ demanda del cliente en ese tiempo. Dice cada cuánto hay que terminar una unidad para cumplir la demanda, ni más rápido ni más lento.',
+    },
+    en: {
+      term: 'Takt',
+      name: 'Customer pace (takt time)',
+      def: 'Available time ÷ customer demand in that time. It says how often one unit must be finished to meet demand, no faster and no slower.',
+    },
+  },
+  {
+    id: 'tiempo-ciclo',
+    category: 'lean',
+    es: {
+      term: 'Tiempo de ciclo',
+      name: 'Lo que tarda una estación',
+      def: 'Tiempo que necesita una estación, o una persona, para completar su trabajo sobre una unidad. Se compara con el takt.',
+    },
+    en: {
+      term: 'Cycle time',
+      name: 'How long a station takes',
+      def: 'Time a station, or a person, needs to complete its work on one unit. It is compared with takt.',
+    },
+  },
+  {
+    id: 'cuello',
+    category: 'lean',
+    es: {
+      term: 'Cuello de botella',
+      name: 'La estación más lenta',
+      def: 'La estación con el tiempo de ciclo más largo. Marca lo máximo que puede producir toda la línea.',
+    },
+    en: {
+      term: 'Bottleneck',
+      name: 'The slowest station',
+      def: 'The station with the longest cycle time. It sets the most the whole line can produce.',
+    },
+  },
+  {
+    id: 'balanceo',
+    category: 'lean',
+    es: {
+      term: 'Balanceo de línea',
+      name: 'Repartir el trabajo',
+      def: 'Repartir el trabajo entre estaciones para que ninguna pase del takt y haya poco tiempo muerto. Eficiencia = suma de tiempos de ciclo ÷ (estaciones × takt).',
+    },
+    en: {
+      term: 'Line balancing',
+      name: 'Sharing out the work',
+      def: 'Sharing the work among stations so that none exceeds takt and there is little idle time. Efficiency = sum of cycle times ÷ (stations × takt).',
+    },
+  },
+  {
+    id: 'yamazumi',
+    category: 'lean',
+    es: {
+      term: 'Yamazumi',
+      name: 'Gráfico de carga por estación',
+      def: 'Gráfico de barras, una por estación, con su tiempo de ciclo y una línea horizontal en el takt. Muestra de un vistazo qué estación se pasa y cuál tiene holgura.',
+    },
+    en: {
+      term: 'Yamazumi',
+      name: 'Workload chart by station',
+      def: 'Bar chart, one bar per station, showing its cycle time with a horizontal line at takt. It shows at a glance which station runs over and which has slack.',
+    },
+  },
+  {
+    id: 'kanban',
+    category: 'lean',
+    es: {
+      term: 'Kanban',
+      name: 'Tarjeta de reposición',
+      def: 'Tarjeta o señal que autoriza a producir o reponer un contenedor de piezas. Con un número fijo de tarjetas se limita el inventario en circulación.',
+    },
+    en: {
+      term: 'Kanban',
+      name: 'Replenishment card',
+      def: 'Card or signal that authorizes producing or replenishing a container of parts. A fixed number of cards caps the inventory in circulation.',
+    },
+  },
+  {
+    id: 'reposicion',
+    category: 'lean',
+    es: {
+      term: 'Tiempo de reposición',
+      name: 'Del vacío al lleno',
+      def: 'Desde que un contenedor se vacía hasta que vuelve lleno: espera, proceso y transporte. Es el dato que más pesa al calcular las tarjetas kanban.',
+    },
+    en: {
+      term: 'Replenishment time',
+      name: 'From empty to full',
+      def: 'From the moment a container empties until it comes back full: waiting, processing and transport. It is the input that weighs most when sizing kanban cards.',
+    },
+  },
+
+  // OEE por partes
+  {
+    id: 'disponibilidad',
+    category: 'indicador',
+    es: {
+      term: 'Disponibilidad',
+      name: 'Primer factor del OEE',
+      def: 'Tiempo en marcha ÷ tiempo planificado. Lo que resta son las paradas no planificadas: averías, cambios de formato, esperas de material.',
+    },
+    en: {
+      term: 'Availability',
+      name: 'First OEE factor',
+      def: 'Run time ÷ planned time. What it loses are unplanned stops: breakdowns, changeovers, waiting for material.',
+    },
+  },
+  {
+    id: 'rendimiento',
+    category: 'indicador',
+    es: {
+      term: 'Rendimiento',
+      name: 'Segundo factor del OEE',
+      def: '(Tiempo de ciclo ideal × piezas producidas) ÷ tiempo en marcha. Lo que resta son las microparadas y trabajar por debajo de la velocidad ideal.',
+    },
+    en: {
+      term: 'Performance',
+      name: 'Second OEE factor',
+      def: '(Ideal cycle time × parts produced) ÷ run time. What it loses are minor stops and running below ideal speed.',
+    },
+  },
+  {
+    id: 'calidad-oee',
+    category: 'indicador',
+    es: {
+      term: 'Calidad',
+      name: 'Tercer factor del OEE',
+      def: 'Piezas buenas ÷ piezas producidas. Lo que resta son los rechazos y los retrabajos.',
+    },
+    en: {
+      term: 'Quality',
+      name: 'Third OEE factor',
+      def: 'Good parts ÷ parts produced. What it loses are rejects and rework.',
+    },
+  },
+  {
+    id: 'ciclo-ideal',
+    category: 'indicador',
+    es: {
+      term: 'Tiempo de ciclo ideal',
+      name: 'La mejor velocidad posible',
+      def: 'El menor tiempo por pieza que el equipo consigue en condiciones óptimas. Si se usa el tiempo habitual en su lugar, el OEE sale inflado.',
+    },
+    en: {
+      term: 'Ideal cycle time',
+      name: 'The best possible speed',
+      def: 'The shortest time per part the equipment achieves under optimal conditions. Using the usual time instead inflates OEE.',
+    },
+  },
+
+  // Finanzas
+  {
+    id: 'roi',
+    category: 'finanzas',
+    es: {
+      term: 'ROI',
+      name: 'Retorno de la inversión',
+      def: '(Ahorro acumulado en el periodo − inversión) ÷ inversión. Un ROI del 50 % a un año quiere decir que cada euro invertido devuelve 1,50 € en ese año.',
+    },
+    en: {
+      term: 'ROI',
+      name: 'Return on investment',
+      def: '(Savings accumulated over the period − investment) ÷ investment. A 50% one-year ROI means each euro invested returns 1.50 in that year.',
+    },
+  },
+  {
+    id: 'payback',
+    category: 'finanzas',
+    es: {
+      term: 'Payback',
+      name: 'Periodo de recuperación',
+      def: 'Tiempo que tarda el ahorro acumulado en igualar la inversión. En su forma simple no descuenta el valor del dinero en el tiempo.',
+    },
+    en: {
+      term: 'Payback',
+      name: 'Payback period',
+      def: 'Time it takes accumulated savings to equal the investment. In its simple form it does not discount the time value of money.',
+    },
+  },
+  {
+    id: 'ahorro-duro',
+    category: 'finanzas',
+    es: {
+      term: 'Ahorro duro',
+      name: 'Baja un coste real',
+      def: 'Ahorro que se ve en la cuenta de resultados: menos material, menos horas extra, menos desecho. Es el que entra en el ROI y en el payback.',
+    },
+    en: {
+      term: 'Hard savings',
+      name: 'Lowers a real cost',
+      def: 'Savings that show up in the profit and loss account: less material, less overtime, less scrap. These are the ones used for ROI and payback.',
+    },
+  },
+  {
+    id: 'ahorro-blando',
+    category: 'finanzas',
+    es: {
+      term: 'Ahorro blando',
+      name: 'Beneficio sin coste que baje',
+      def: 'Tiempo liberado, costes evitados o capacidad extra que no bajan ningún gasto directo. Es real, pero no entra en el ROI hasta que se convierte en ahorro duro.',
+    },
+    en: {
+      term: 'Soft savings',
+      name: 'Benefit with no cost going down',
+      def: 'Freed-up time, avoided costs or extra capacity that do not lower any direct expense. It is real, but it does not count toward ROI until it turns into hard savings.',
     },
   },
 ];

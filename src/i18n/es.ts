@@ -86,6 +86,8 @@ export const es = {
   reference: {
     title: 'Referencia',
     glossary: 'Glosario',
+    guide: 'Guía de uso',
+    guideMore: 'Cada herramienta tiene además su propia guía, dentro de la herramienta.',
     search: 'Buscar término',
     count: (n: number) => (n === 1 ? '1 término' : `${n} términos`),
     noResults: (q: string) => `Ningún término coincide con «${q}».`,
@@ -95,6 +97,7 @@ export const es = {
       lean: 'Lean',
       indicador: 'Indicador',
       estadistica: 'Estadística',
+      finanzas: 'Finanzas',
     },
   },
   settings: {

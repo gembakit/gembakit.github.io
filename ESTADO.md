@@ -199,7 +199,13 @@ PLAN.md, sección 5.
       ejemplo → exportación.
 - [ ] Borrar la herramienta de muestra (`src/tools/muestra`,
       `src/calc/muestra.ts` y sus textos `tools.muestra`).
-- [ ] Añadir al glosario los términos de cada herramienta nueva.
+- [x] Glosario ampliado con los términos de las seis calculadoras (31
+      términos, categoría nueva «Finanzas») y guía de uso general en
+      Referencia (`src/reference/guide.ts`), pedidos por el dueño el
+      2026-11-13.
+- [ ] Cada calculadora, al construirse, lleva su propia guía («Cómo usarla»)
+      dentro de la herramienta y sus términos en el glosario.
+- [ ] Incorporar el glosario en PDF del dueño cuando lo envíe (sección 7).
 
 ### Fase 2 — Gráficos
 

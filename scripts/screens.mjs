@@ -20,6 +20,8 @@ const SHOTS = [
   { name: 'muestra-ejemplo', hash: '#/herramientas/muestra', click: /Cargar ejemplo|Load example/, full: true },
   { name: 'referencia', hash: '#/referencia' },
   { name: 'referencia-abierta', hash: '#/referencia', click: /^DMAIC/ },
+  { name: 'referencia-guia', hash: '#/referencia', click: /^Cómo es cada herramienta/ },
+  { name: 'referencia-glosario', hash: '#/referencia', full: true },
   { name: 'ajustes', hash: '#/ajustes', full: true },
   { name: 'prueba-google', hash: '#/prueba-google', full: true },
   { name: 'capturar', hash: '#/proyectos', click: /^(Capturar|Capture)$/, byLabel: true },
