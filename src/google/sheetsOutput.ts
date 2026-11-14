@@ -262,23 +262,20 @@ export function buildTab(def: SheetDef, grid: Grid, palette: Palette, sheetId = 
 
   // El valor más bajo de la tabla, resaltado por la propia hoja: si el
   // usuario cambia un dato, el resaltado se mueve solo.
-  const conditionalFormats = grid.highlightMin
-    ? (() => {
-        const range = gridRange(grid.highlightMin, sheetId);
-        const [first, last] = grid.highlightMin.split(':');
-        const abs = (a: string) => a.replace(/^([A-Z]+)(\d+)$/, '$$$1$$$2');
-        return [
-          {
-            ranges: [range],
-            booleanRule: {
-              condition: { type: 'CUSTOM_FORMULA', values: [{ userEnteredValue: `=${first}=MIN(${abs(first!)}:${abs(last!)})` }] },
-              // Texto ámbar sobre fondo ámbar claro: se distingue de las celdas de datos (color suave del tema).
-              format: { backgroundColor: c.warnSoft, textFormat: { bold: true, foregroundColor: c.warn } },
-            },
-          },
-        ];
-      })()
-    : [];
+  const highlight = (target: string, fn: 'MIN' | 'MAX') => {
+    const range = gridRange(target, sheetId);
+    const [first, last] = target.split(':');
+    const abs = (a: string) => a.replace(/^([A-Z]+)(\d+)$/, '$$$1$$$2');
+    return {
+      ranges: [range],
+      booleanRule: {
+        condition: { type: 'CUSTOM_FORMULA', values: [{ userEnteredValue: `=${first}=${fn}(${abs(first!)}:${abs(last!)})` }] },
+        // Texto ámbar sobre fondo ámbar claro: se distingue de las celdas de datos (color suave del tema).
+        format: { backgroundColor: c.warnSoft, textFormat: { bold: true, foregroundColor: c.warn } },
+      },
+    };
+  };
+  const conditionalFormats = [...(grid.highlightMin ? [highlight(grid.highlightMin, 'MIN')] : []), ...(grid.highlightMax ? [highlight(grid.highlightMax, 'MAX')] : [])];
   const rowMetadata = grid.rows.map((row) => (HEIGHTS[row.kind] ? { pixelSize: HEIGHTS[row.kind] } : {}));
   if (rowMetadata.length) {
     const kpiMain = grid.rows.findIndex((r) => r.kind === 'kpi' && r.main);

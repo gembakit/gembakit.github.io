@@ -117,7 +117,7 @@ export async function desiredTabs(projectId: string, ctx: SheetContext, database
               name: m.name,
               tool: findTool(m.toolId)?.text(t).name ?? m.toolId,
               phase: hasPhases ? phaseName(m.phase) : '',
-              indicator: v.headline ? headlineLabel(v.headline, t) : '',
+              indicator: v.headline ? `${headlineLabel(v.headline, t)}${v.headline.unit ? ` (${v.headline.unit})` : ''}` : '',
               value: v.headline?.value ?? null,
               kind: v.headline?.kind ?? 'number',
               decimals: v.headline?.decimals ?? 0,

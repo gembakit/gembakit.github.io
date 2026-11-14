@@ -54,6 +54,8 @@ export function headlineLabel(h: Headline, t: Messages): string {
       return 'DPMO';
     case 'rty':
       return 'RTY';
+    case 'takt':
+      return 'Takt';
     default:
       return h.key;
   }
@@ -62,7 +64,7 @@ export function headlineLabel(h: Headline, t: Messages): string {
 /** «RTY 83 %», «Nivel sigma 3,83». */
 export function formatHeadline(h: Headline, t: Messages, lang: 'es' | 'en'): string {
   const v = h.kind === 'percent' ? `${formatNumber(h.value * 100, lang, h.decimals)} %` : formatNumber(h.value, lang, h.decimals);
-  return `${headlineLabel(h, t)} ${v}`;
+  return `${headlineLabel(h, t)} ${v}${h.unit ? ` ${h.unit}` : ''}`;
 }
 
 export function formatDateTime(ms: number, lang: 'es' | 'en'): string {

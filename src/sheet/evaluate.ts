@@ -147,6 +147,28 @@ const FUNCTIONS: Record<string, (args: Lazy[]) => Value> = {
     const n = numbers(args);
     return n.length ? Math.min(...n) : 0;
   },
+  MAX: (args) => {
+    const n = numbers(args);
+    return n.length ? Math.max(...n) : 0;
+  },
+  SUM: (args) => numbers(args).reduce((a, b) => a + b, 0),
+  COUNT: (args) => numbers(args).length,
+  // Redondea alejándose de cero, con los decimales pedidos (como en la hoja).
+  ROUNDUP: ([x, d]) => {
+    const v = num(x!());
+    const f = 10 ** (d ? num(d()) : 0);
+    // Un pelo por debajo, para que 4,0000000001 (error de coma flotante) no suba a 5.
+    return (Math.sign(v) * Math.ceil(Math.abs(v) * f - 1e-9)) / f;
+  },
+  IFERROR: ([x, alt]) => {
+    try {
+      const v = x!();
+      if (Array.isArray(v)) throw new FormulaError('#VALUE!');
+      return v;
+    } catch {
+      return alt!() as Value;
+    }
+  },
   // Solo la coincidencia exacta (tercer argumento 0), que es la que usan las hojas de la app.
   MATCH: ([x, range, type]) => {
     if (!type || num(type()) !== 0) throw new FormulaError('#N/A solo se admite MATCH exacto');

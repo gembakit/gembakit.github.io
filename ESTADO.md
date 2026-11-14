@@ -272,6 +272,17 @@ PLAN.md, sección 5.
     ExcelJS compensa para escribir.
   - Por comprobar con el dueño: un .xlsx real suyo y un .csv descargado
     de Google Sheets en su Android.
+- [x] **Calculadora 3, takt y cuello de botella** (2026-11-14):
+      `src/calc/takt.ts` con los tres casos de la ficha (LEI 2 min, Roser
+      28 s, MS 800 50,4 s / 4 estaciones / 77 %), pantalla en
+      `src/tools/takt` (unidad del tiempo disponible y del takt, s/min/h,
+      con conversión; estaciones opcionales con importar; barras frente a la
+      línea del takt), explicación de cada valor, hoja con el ciclo más alto
+      resaltado (`SheetTable.highlightMax`) y hoja del proyecto
+      (`savedSheet`). El evaluador de pruebas conoce MAX, SUM, COUNT,
+      ROUNDUP e IFERROR. Los resultados guardados llevan unidad
+      (`Headline.unit`). Del caso MS 800 no está publicado el reparto entre
+      las cinco estaciones; la prueba usa uno cualquiera que suma 195 s.
 - [ ] La salida .xlsx, cuando el dueño la pida, se añade sobre la misma
       definición de hoja sin tocar las herramientas.
 - [ ] Calculadoras 2 a 6: FPY y RTY, takt, OEE, kanban, ahorro con ROI y

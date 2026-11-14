@@ -54,6 +54,8 @@ export interface SheetTable {
   rows: { label: string; values: Record<string, number> }[];
   /** Columna en la que se resalta el valor más bajo. */
   highlightMin?: string;
+  /** Columna en la que se resalta el valor más alto (por ejemplo, el cuello de botella). */
+  highlightMax?: string;
 }
 
 /** Una frase de «Cómo leerlo», con su tono. */

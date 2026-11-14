@@ -31,6 +31,13 @@ const SHOTS = [
   { name: 'explica-rty', hash: '#/herramientas/fpy', click: [/Cargar ejemplo/, /^RTY/], full: true },
   { name: 'explica-oculta', hash: '#/herramientas/fpy', click: [/Cargar ejemplo/, /^[\d,]+ %\s*Fábrica oculta/], full: true },
   { name: 'explica-paso', hash: '#/herramientas/fpy', click: [/Cargar ejemplo/, /^Paso 1/], full: true },
+  { name: 'takt-vacia', hash: '#/herramientas/takt', full: true },
+  { name: 'takt-ejemplo', hash: '#/herramientas/takt', click: /Cargar ejemplo/, full: true },
+  { name: 'takt-resultado', hash: '#/herramientas/takt', click: /Cargar ejemplo/, scrollTo: '2 · ' },
+  { name: 'explica-takt', hash: '#/herramientas/takt', click: [/Cargar ejemplo/, /^Takt/], full: true },
+  { name: 'explica-minimo', hash: '#/herramientas/takt', click: [/Cargar ejemplo/, /^Mínimo de estaciones/], full: true },
+  { name: 'explica-eficiencia', hash: '#/herramientas/takt', click: [/Cargar ejemplo/, /^Eficiencia del balanceo/], full: true },
+  { name: 'explica-capacidad', hash: '#/herramientas/takt', click: [/Cargar ejemplo/, /^Capacidad/], full: true },
   { name: 'fpy-vacia', hash: '#/herramientas/fpy', full: true },
   { name: 'fpy-ejemplo', hash: '#/herramientas/fpy', click: /Cargar ejemplo|Load example/, full: true },
   { name: 'fpy-resultado', hash: '#/herramientas/fpy', click: /Cargar ejemplo|Load example/, scrollTo: '2 · ' },
@@ -105,6 +112,9 @@ const SHOTS = [
 ];
 
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, args: ['--lang=es-ES'] });
+// Sin descargas de verdad: la captura «datos-descargada» pulsa «Descargar copia»
+// y, si no, el archivo acabaría en la carpeta Descargas del ordenador.
+await (await browser.target().createCDPSession()).send('Browser.setDownloadBehavior', { behavior: 'deny' });
 const problems = [];
 for (const mode of ['light', 'dark']) {
   const page = await browser.newPage();

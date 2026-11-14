@@ -29,6 +29,8 @@ export interface Headline {
   value: number;
   kind: 'percent' | 'number';
   decimals: number;
+  /** Unidad que acompaña al número («min», «piezas»…), si la tiene. */
+  unit?: string;
 }
 
 /** Una versión de los datos de una medición. La 1 es la original. */

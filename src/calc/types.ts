@@ -24,7 +24,23 @@ export type CalcWarning =
   | { code: 'step-no-input'; step: number }
   | { code: 'step-negative'; step: number }
   | { code: 'good-exceed-entering'; step: number }
-  | { code: 'fpy-out-of-range'; step: number };
+  | { code: 'fpy-out-of-range'; step: number }
+  /** Una fila de una lista (estación, año…) debe ser mayor que cero y no lo es. */
+  | { code: 'step-not-positive'; step: number }
+  /** Takt: alguna estación tarda más que el takt (la línea no llega a la demanda). */
+  | { code: 'over-takt' }
+  /** OEE: el rendimiento pasa del 100 % (el tiempo de ciclo ideal es más lento que lo real). */
+  | { code: 'performance-over-100' }
+  /** OEE: las paradas superan el tiempo disponible. */
+  | { code: 'stops-exceed-time' }
+  /** OEE: más piezas rechazadas que producidas. */
+  | { code: 'rejects-exceed-total' }
+  /** Kanban: sin margen de seguridad. */
+  | { code: 'no-safety' }
+  /** ROI: el ahorro neto es cero o negativo; la inversión no se recupera. */
+  | { code: 'no-payback' }
+  /** ROI: la inversión no se recupera dentro del horizonte. */
+  | { code: 'payback-beyond-horizon' };
 
 export interface CalcOutput<T> {
   result: T | null;

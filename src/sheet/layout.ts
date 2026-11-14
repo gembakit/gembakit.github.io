@@ -43,6 +43,8 @@ export interface Grid {
   address: Record<string, string>;
   /** Rango en el que se resalta el valor más bajo. */
   highlightMin?: string;
+  /** Rango en el que se resalta el valor más alto. */
+  highlightMax?: string;
 }
 
 const E: GridCell = {};
@@ -67,6 +69,7 @@ export function layoutSheet(def: SheetDef): Grid {
   const place = (key: string) => setAddress(key, `C${rows.length + 1}`);
   const gap = () => rows.push({ kind: 'gap', cells: empty() });
   let highlightMin: string | undefined;
+  let highlightMax: string | undefined;
 
   rows.push(wide('title', def.heading), wide('sub', def.subheading));
   gap();
@@ -112,6 +115,7 @@ export function layoutSheet(def: SheetDef): Grid {
     setAddress('label[]', `B${first}:B${last}`);
     table.columns.forEach((c, i) => setAddress(`${c.key}[]`, `${TABLE_COLUMNS[i]}${first}:${TABLE_COLUMNS[i]}${last}`));
     if (table.highlightMin) highlightMin = address[`${table.highlightMin}[]`];
+    if (table.highlightMax) highlightMax = address[`${table.highlightMax}[]`];
     table.rows.forEach((tr, n) => {
       const r = rows.length + 1;
       const own: Record<string, string> = {};
@@ -166,5 +170,5 @@ export function layoutSheet(def: SheetDef): Grid {
       return a;
     });
   }
-  return { rows, address, highlightMin };
+  return { rows, address, highlightMin, highlightMax };
 }
