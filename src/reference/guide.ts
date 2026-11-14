@@ -161,6 +161,7 @@ export const GUIDE: readonly GuideTopic[] = [
     es: {
       title: 'Cómo es cada herramienta',
       body: [
+        'Ahora hay seis calculadoras, en Herramientas: DPMO y nivel sigma, FPY y RTY, takt y cuello de botella, OEE, kanban, y ahorro con ROI y payback. Las demás herramientas del catálogo llegan en las fases siguientes.',
         'Todas tienen los mismos cuatro bloques, siempre en este orden: Datos (lo que metes), Resultado (el número o gráfico principal), Cómo leerlo (la conclusión en una frase, los avisos y el error típico) y Acciones (guardar, exportar y ver la fórmula).',
         'Si no sabes por dónde empezar, pulsa «Cargar ejemplo»: verás un caso resuelto y publicado, con el resultado que se espera.',
         'Arriba de cada herramienta, «Cómo usarla» se despliega con los pasos para usarla bien.',
@@ -171,6 +172,7 @@ export const GUIDE: readonly GuideTopic[] = [
     en: {
       title: 'How every tool works',
       body: [
+        'There are six calculators now, under Tools: DPMO and sigma level, FPY and RTY, takt and bottleneck, OEE, kanban, and savings with ROI and payback. The other tools in the catalogue arrive in the next phases.',
         'They all have the same four blocks, always in this order: Data (what you enter), Result (the main number or chart), How to read it (the conclusion in one sentence, the warnings and the typical mistake) and Actions (save, export and see the formula).',
         'If you do not know where to start, tap “Load example”: you will see a solved, published case with the expected result.',
         'At the top of every tool, “How to use it” opens with the steps to use it well.',
@@ -187,7 +189,7 @@ export const GUIDE: readonly GuideTopic[] = [
         'Puedes teclear los valores o pegar una columna de Excel o de Google Sheets: copia la columna, toca el campo y pega. Un valor por línea.',
         'Sirven la coma y el punto decimal. Antes de calcular verás cuántos valores se han leído y qué líneas se han ignorado y por qué.',
         'Si pegas algo como «1.234», la app avisa: puede ser mil doscientos treinta y cuatro o uno con doscientos treinta y cuatro. Revísalo. En datos que solo pueden ser enteros (unidades), «1.200» se lee como mil doscientos.',
-        'Las herramientas que piden una lista (por ejemplo, los pasos de FPY y RTY) tienen el botón «Importar»: eliges un Excel (.xlsx) o un .csv del teléfono o de Drive, o pegas las filas copiadas de Excel o Sheets.',
+        'Las herramientas que piden una lista (los pasos de FPY y RTY, las estaciones del takt) tienen el botón «Importar»: eliges un Excel (.xlsx) o un .csv del teléfono o de Drive, o pegas las filas copiadas de Excel o Sheets.',
         'Al importar, la app busca la fila de títulos y qué columna es cada dato; si se equivoca, lo cambias en los desplegables. Antes de aceptar ves una vista previa y las filas que no se usarán, con el motivo. Lo importado sustituye los datos que había, y se puede deshacer.',
       ],
     },
@@ -197,7 +199,7 @@ export const GUIDE: readonly GuideTopic[] = [
         'You can type the values or paste a column from Excel or Google Sheets: copy the column, tap the field and paste. One value per line.',
         'Both decimal comma and decimal point work. Before calculating you will see how many values were read and which lines were ignored, and why.',
         'If you paste something like “1.234”, the app warns you: it could be one thousand two hundred thirty-four or one point two three four. Check it. In data that can only be whole numbers (units), “1.200” is read as one thousand two hundred.',
-        'Tools that take a list (for example, the steps in FPY and RTY) have an “Import” button: choose an Excel (.xlsx) or .csv file from the phone or Drive, or paste rows copied from Excel or Sheets.',
+        'Tools that take a list (the steps in FPY and RTY, the takt stations) have an “Import” button: choose an Excel (.xlsx) or .csv file from the phone or Drive, or paste rows copied from Excel or Sheets.',
         'When importing, the app finds the title row and which column is each piece of data; if it gets it wrong, change it in the drop-downs. Before accepting you see a preview and the rows that will not be used, with the reason. Imported data replace what was there, and you can undo it.',
       ],
     },
@@ -262,17 +264,17 @@ export const GUIDE: readonly GuideTopic[] = [
     es: {
       title: 'Dónde están tus datos',
       body: [
-        'En tu teléfono, y en ningún otro sitio. La app no tiene servidor y no envía nada a nadie.',
-        'Conectar tu cuenta de Google es opcional y solo usa tu propio Drive: la app solo ve los archivos que ella misma crea. Ahora sirve para exportar a Google Sheets; más adelante, también para tener lo mismo en el móvil y en el ordenador.',
-        'Hasta que llegue la copia de seguridad, si desinstalas la app o borras los datos de Chrome, lo guardado se pierde.',
+        'En tu teléfono. La app no tiene servidor y no envía nada a nadie.',
+        'Conectar tu cuenta de Google es opcional y solo usa tu propio Drive: la app solo ve los archivos que ella misma crea, todos dentro de la carpeta Gemba Kit. Sirve para exportar hojas sueltas, para la hoja de Google de cada proyecto y para guardar copias de seguridad; más adelante, también para tener lo mismo en el móvil y en el ordenador.',
+        'Si desinstalas la app o borras los datos de Chrome, lo guardado en el teléfono se pierde. Por eso conviene hacer copias de seguridad (ver «Copia de seguridad»): la hoja de Google del proyecto es un reflejo para consultar, no sirve para recuperar.',
       ],
     },
     en: {
       title: 'Where your data lives',
       body: [
-        'On your phone, and nowhere else. The app has no server and sends nothing to anyone.',
-        'Connecting your Google account is optional and only uses your own Drive: the app only sees the files it creates itself. For now it is used to export to Google Sheets; later, also to have the same data on your phone and your computer.',
-        'Until backup arrives, if you uninstall the app or clear Chrome’s data, what you saved is lost.',
+        'On your phone. The app has no server and sends nothing to anyone.',
+        'Connecting your Google account is optional and only uses your own Drive: the app only sees the files it creates itself, all inside the Gemba Kit folder. It is used to export loose sheets, for each project’s Google sheet and to save backups; later, also to have the same data on your phone and your computer.',
+        'If you uninstall the app or clear Chrome’s data, what is saved on the phone is lost. That is why backups are worth making (see “Backup”): the project’s Google sheet is a mirror to look at, not a way to recover.',
       ],
     },
   },
