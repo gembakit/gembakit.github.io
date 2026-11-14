@@ -56,6 +56,8 @@ export function headlineLabel(h: Headline, t: Messages): string {
       return 'RTY';
     case 'takt':
       return 'Takt';
+    case 'oee':
+      return 'OEE';
     default:
       return h.key;
   }

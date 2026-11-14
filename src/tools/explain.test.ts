@@ -9,6 +9,8 @@ import { dpmoExplain } from './dpmo/explain';
 import { fpyExplain } from './fpy/explain';
 import { takt } from '../calc/takt';
 import { taktExplain } from './takt/explain';
+import { oee } from '../calc/oee';
+import { oeeExplain } from './oee/explain';
 
 // «De dónde sale cada valor»: la fórmula con letras, con los números y el
 // resultado, igual que en pantalla. `toText` es la versión en una línea.
@@ -78,6 +80,22 @@ describe('Takt: de dónde sale cada valor', () => {
     const ex = taktExplain(input, [], takt(input).result!, es, 'es');
     expect(txt(ex.takt)).toEqual(['T ÷ D', '480 min ÷ 240', '2 min']);
     expect(ex.capacity).toBeNull();
+  });
+});
+
+describe('OEE: de dónde sale cada valor (caso Vorne)', () => {
+  const input = { shift: 480, plannedStops: 60, unplannedStops: 47, idealCycle: 1, total: 19271, rejects: 423 };
+  const ex = oeeExplain(input, oee(input).result!, es, 'es');
+  test('los tres factores y el OEE', () => {
+    expect(txt(ex.availability)).toEqual(['Tm ÷ Tp', '373 min ÷ 420 min', '88,81 %']);
+    expect(txt(ex.performance)).toEqual(['(TCi × N) ÷ Tm', '(1 s × 19.271) ÷ 22.380 s', '86,11 %']);
+    expect(txt(ex.quality)).toEqual(['(N − R) ÷ N', '(19.271 − 423) ÷ 19.271', '18.848 ÷ 19.271', '97,8 %']);
+    expect(txt(ex.oee)).toEqual(['Disp × Rend × Cal', '88,81 % × 86,11 % × 97,8 %', '74,79 %']);
+  });
+  test('las pérdidas en minutos', () => {
+    expect(txt(ex.speed)).toEqual(['Tm − (TCi × N)', '373 min − (1 s × 19.271)', '51,8 min']);
+    expect(txt(ex.qualityLoss)).toEqual(['TCi × R', '1 s × 423', '7,1 min']);
+    expect(txt(ex.useful)).toEqual(['TCi × (N − R)', '1 s × 18.848', '314,1 min']);
   });
 });
 

@@ -283,6 +283,14 @@ PLAN.md, sección 5.
       ROUNDUP e IFERROR. Los resultados guardados llevan unidad
       (`Headline.unit`). Del caso MS 800 no está publicado el reparto entre
       las cinco estaciones; la prueba usa uno cualquiera que suma 195 s.
+- [x] **Calculadora 4, OEE** (2026-11-14): `src/calc/oee.ts` con el caso
+      de Vorne (88,81 / 86,11 / 97,80 / 74,79 %), pantalla en
+      `src/tools/oee` (los tres factores y una barra con el reparto del
+      tiempo planificado: útil y pérdidas por paradas, velocidad y calidad,
+      cada una tocable), hoja y hoja del proyecto. Referencia del 85 %
+      **sin desglose**: las fuentes no coinciden en la calidad (99 % en
+      Vorne, 99,9 % en otras) y el libro de Nakajima no está a mano; es lo
+      que decía la ficha aprobada si no se aclaraba.
 - [ ] La salida .xlsx, cuando el dueño la pida, se añade sobre la misma
       definición de hoja sin tocar las herramientas.
 - [ ] Calculadoras 2 a 6: FPY y RTY, takt, OEE, kanban, ahorro con ROI y
