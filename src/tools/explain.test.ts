@@ -11,6 +11,9 @@ import { takt } from '../calc/takt';
 import { taktExplain } from './takt/explain';
 import { oee } from '../calc/oee';
 import { oeeExplain } from './oee/explain';
+import { kanban } from '../calc/kanban';
+import { kanbanExplain } from './kanban/explain';
+import { calcInput as kanbanInput } from './kanban/reading';
 
 // «De dónde sale cada valor»: la fórmula con letras, con los números y el
 // resultado, igual que en pantalla. `toText` es la versión en una línea.
@@ -96,6 +99,16 @@ describe('OEE: de dónde sale cada valor (caso Vorne)', () => {
     expect(txt(ex.speed)).toEqual(['Tm − (TCi × N)', '373 min − (1 s × 19.271)', '51,8 min']);
     expect(txt(ex.qualityLoss)).toEqual(['TCi × R', '1 s × 423', '7,1 min']);
     expect(txt(ex.useful)).toEqual(['TCi × (N − R)', '1 s × 18.848', '314,1 min']);
+  });
+});
+
+describe('Kanban: de dónde sale cada valor', () => {
+  test('Westerville: D × L × (1 + α) ÷ C, redondeado hacia arriba', () => {
+    const s = { unit: 'day' as const, mode: 'split' as const, demand: 2000, wait: 0.08, process: 0.02, safetyPct: 10, size: 22 };
+    const ex = kanbanExplain(s, kanban(kanbanInput(s)).result!, es, 'es');
+    expect(txt(ex.cards)).toEqual(['(D × L × (1 + α)) ÷ C', '(2.000 × 0,1 × (1 + 10 %)) ÷ 22', '10', '10']);
+    expect(txt(ex.lead)).toEqual(['Te + Tp', '0,08 días + 0,02 días', '0,1 días']);
+    expect(txt(ex.pieces)).toEqual(['k × C', '10 × 22', '220']);
   });
 });
 

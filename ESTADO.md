@@ -291,6 +291,13 @@ PLAN.md, sección 5.
       **sin desglose**: las fuentes no coinciden en la calidad (99 % en
       Vorne, 99,9 % en otras) y el libro de Nakajima no está a mano; es lo
       que decía la ficha aprobada si no se aclaraba.
+- [x] **Calculadora 5, kanban** (2026-11-14): `src/calc/kanban.ts` con los
+      tres casos de la ficha (Westerville 10 y 8 contenedores, Fabrico 9,6 →
+      10), pantalla en `src/tools/kanban` (reposición por partes, espera +
+      proceso, o total; margen en %), hoja y hoja del proyecto. Desviación
+      de la ficha: no se convierte entre unidades; la demanda y los tiempos
+      van en una sola unidad (min, h o días), porque pasar de días a horas
+      exigiría suponer cuántas horas tiene la jornada.
 - [ ] La salida .xlsx, cuando el dueño la pida, se añade sobre la misma
       definición de hoja sin tocar las herramientas.
 - [ ] Calculadoras 2 a 6: FPY y RTY, takt, OEE, kanban, ahorro con ROI y

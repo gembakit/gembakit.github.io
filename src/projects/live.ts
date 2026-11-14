@@ -58,6 +58,8 @@ export function headlineLabel(h: Headline, t: Messages): string {
       return 'Takt';
     case 'oee':
       return 'OEE';
+    case 'kanban':
+      return 'Kanban';
     default:
       return h.key;
   }
