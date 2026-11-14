@@ -38,6 +38,35 @@ const SHOTS = [
   { name: 'proyecto-creado', hash: '#/proyectos/nuevo', fill: ['main input', 'Rechazo línea 3'], then: /^Crear proyecto$/, only: 'light' },
   { name: 'dpmo-guardar', hash: '#/herramientas/dpmo', click: [/Cargar ejemplo/, /^Guardar en un proyecto$/], full: true },
   { name: 'dpmo-guardado', hash: '#/herramientas/dpmo', click: [/Cargar ejemplo/, /^Guardar en un proyecto$/], then: /^Guardar$/ },
+  // Una segunda medición (FPY) en el mismo proyecto, para poder filtrar.
+  { name: 'fpy-guardado', hash: '#/herramientas/fpy', click: [/Cargar ejemplo/, /^Guardar en un proyecto$/], then: /^Guardar$/, only: 'light' },
+  {
+    name: 'hito-nuevo',
+    hash: '#/proyectos',
+    click: [/Rechazo línea 3/, /^Añadir hito$/],
+    fill: ['[role="dialog"] input', 'Implantación 5S en la llenadora'],
+    full: true,
+    only: 'light',
+  },
+  {
+    name: 'hito-guardado',
+    hash: '#/proyectos',
+    click: [/Rechazo línea 3/, /^Añadir hito$/],
+    fill: ['[role="dialog"] input', 'Cambio de turno: estándar de arranque nuevo en la etiquetadora'],
+    then: /^Guardar$/,
+    full: true,
+    only: 'light',
+  },
+  { name: 'filtrar', hash: '#/proyectos', click: [/Rechazo línea 3/, /^Filtrar y ordenar/], full: true },
+  {
+    name: 'filtrado',
+    hash: '#/proyectos',
+    click: [/Rechazo línea 3/, /^Filtrar y ordenar/],
+    fill: ['[role="dialog"] select', 'fpy'],
+    then: /^Ver /,
+  },
+  { name: 'proyecto-editar', hash: '#/proyectos', click: [/Rechazo línea 3/, { label: /^Editar proyecto$/ }], full: true },
+  { name: 'medicion-editar', hash: '#/proyectos', click: [/Rechazo línea 3/, /DPMO y nivel sigma/, { label: /^Editar información$/ }], full: true },
   // Un proyecto 5S: las fases con los nombres más largos.
   {
     name: 'proyecto-5s',
@@ -82,13 +111,17 @@ for (const mode of ['light', 'dark']) {
       if (click.fill) {
         await page.evaluate(([selector, text]) => {
           const el = document.querySelector(selector);
-          const proto = el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+          const proto =
+            el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : el instanceof HTMLSelectElement ? HTMLSelectElement.prototype : HTMLInputElement.prototype;
           Object.getOwnPropertyDescriptor(proto, 'value').set.call(el, text);
           el.dispatchEvent(new Event('input', { bubbles: true }));
+          el.dispatchEvent(new Event('change', { bubbles: true }));
         }, click.fill);
         await new Promise((r) => setTimeout(r, 200));
         continue;
       }
+      // {label: /…/} toca un botón solo con icono por su nombre accesible.
+      const re = click.label ?? click;
       const ok = await page.evaluate(
         (src, byLabel) => {
           const re = new RegExp(src);
@@ -98,10 +131,10 @@ for (const mode of ['light', 'dark']) {
           el?.click();
           return Boolean(el);
         },
-        click.source,
-        Boolean(s.byLabel),
+        re.source,
+        Boolean(s.byLabel || click.label),
       );
-      if (!ok) problems.push(`${mode}/${s.name}: no encontré el botón ${click}`);
+      if (!ok) problems.push(`${mode}/${s.name}: no encontré el botón ${re}`);
       await new Promise((r) => setTimeout(r, 400));
     }
     // Llevar a la vista un bloque intermedio (por su título) para revisarlo.

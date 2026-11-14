@@ -295,7 +295,7 @@ PLAN.md, sección 5.
 - [x] **Parte 1** (2026-11-14): proyectos y mediciones en la base local
       (`src/projects/model.ts`, `store.ts`, con pruebas): tipos y fases,
       campos de contexto propuestos y editables, crear proyecto
-      (`NewProjectScreen`), lista (`ProjectsScreen`), pantalla del proyecto
+      (`ProjectFormScreen`), lista (`ProjectsScreen`), pantalla del proyecto
       con fase actual y mediciones por fase (`ProjectScreen`), hoja
       «Guardar en un proyecto» (`SaveSheet`: último proyecto y su último
       contexto, valores ya usados como sugerencia, fecha y hora, nota,
@@ -304,8 +304,20 @@ PLAN.md, sección 5.
       congelar, borrar con deshacer), versión nueva al cambiar los datos.
       DPMO y FPY guardan datos y resultado principal (`save`, `useSavedInput`).
       Guía de uso: tema «Proyectos y mediciones».
-- [ ] Parte 2: hitos, filtros y orden de la lista de mediciones, editar el
-      proyecto (nombre, objetivo, campos) y los datos de una medición.
+- [x] Recorrido de fases como en la maqueta (`PhaseTrack`: completadas con ✓,
+      actual resaltada, pendientes apagadas; tira pequeña en la lista) y
+      explicación de «Congelar» en la medición.
+- [x] **Parte 2** (2026-11-14): hitos (tabla `milestones`, versión 2 de la
+      base; `MilestoneSheet`: qué, fecha y hora, nota; borrar con deshacer),
+      filtrar y ordenar las mediciones (`src/projects/filter.ts`, con pruebas;
+      `FilterSheet`: herramienta, fase y cada campo de contexto, por fecha o
+      por resultado solo si queda una herramienta con el mismo resultado; el
+      filtro se recuerda mientras la app está abierta), editar el proyecto
+      (`#/proyectos/{id}/editar`, `ProjectFormScreen`; cambiar el tipo
+      devuelve la fase a la primera si el tipo nuevo no la tiene) y la
+      información de una medición sin crear versión (`MeasurementInfoSheet`,
+      lápiz del panel). Los campos nuevos llevan identificador único para no
+      heredar lo apuntado en uno quitado. Guía de uso al día.
 - [ ] Parte 3: copia de seguridad (descargar, en Drive, restaurar) y espacio
       usado.
 - [ ] Parte 4: Google: carpetas ordenadas, archivo del proyecto, pestañas

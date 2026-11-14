@@ -11,7 +11,7 @@ import { ToolsScreen } from './screens/ToolsScreen';
 import { ReferenceScreen } from './screens/ReferenceScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { GoogleTestScreen } from './screens/GoogleTestScreen';
-import { NewProjectScreen } from './screens/NewProjectScreen';
+import { ProjectFormScreen } from './screens/ProjectFormScreen';
 import { ProjectScreen } from './screens/ProjectScreen';
 import { SavedProvider, useLive } from '../projects/live';
 import { getMeasurement, getProject } from '../projects/store';
@@ -69,7 +69,8 @@ export function AppShell({ persisted }: { persisted: boolean | null }) {
   else if (section === 'referencia') screen = <ReferenceScreen />;
   else if (section === 'ajustes') screen = <SettingsScreen persisted={persisted} />;
   else if (section === 'prueba-google') screen = <GoogleTestScreen />;
-  else if (sub === 'nuevo') screen = <NewProjectScreen />;
+  else if (sub === 'nuevo') screen = <ProjectFormScreen />;
+  else if (sub && kind === 'editar') screen = <ProjectFormScreen key={sub} id={sub} />;
   else if (sub && kind === 'm' && third) screen = <MeasurementRoute key={third} projectId={sub} id={third} />;
   else if (sub) screen = <ProjectScreen key={sub} id={sub} />;
   else screen = <ProjectsScreen />;

@@ -1,7 +1,7 @@
 import { useEffect, useId, useState, type ReactNode } from 'react';
 import { CircleAlert, Save } from 'lucide-react';
 import { useI18n } from '../i18n';
-import type { Headline, ProjectType } from '../data/db';
+import type { ContextField, Headline, ProjectType } from '../data/db';
 import { Button } from '../ui/Button';
 import { Sheet } from '../ui/Sheet';
 import { useToast } from '../ui/Toast';
@@ -32,6 +32,9 @@ export function fromLocalInput(s: string): number | null {
 export const inputClass =
   'h-12 w-full min-w-0 rounded-[13px] border-[1.5px] border-line bg-surface px-3 text-[16px] outline-none placeholder:text-muted focus:border-accent';
 
+export const textareaClass =
+  'min-h-24 w-full rounded-[13px] border-[1.5px] border-line bg-surface p-3 text-[16px] outline-none placeholder:text-muted focus:border-accent';
+
 export function Field({ label, children, htmlFor }: { label: string; children: ReactNode; htmlFor?: string }) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -40,6 +43,56 @@ export function Field({ label, children, htmlFor }: { label: string; children: R
       </label>
       {children}
     </div>
+  );
+}
+
+export function FormError({ children }: { children: ReactNode }) {
+  return (
+    <p role="alert" className="flex items-start gap-2.5 rounded-[14px] bg-bad-soft p-3 text-[14px]">
+      <CircleAlert aria-hidden size={18} className="mt-0.5 shrink-0 text-bad" />
+      <span>{children}</span>
+    </p>
+  );
+}
+
+/** Campos de contexto del proyecto (Equipo, Puesto…), cada uno con los valores ya usados para elegir con un toque. */
+export function ContextInputs({
+  fields,
+  value,
+  onChange,
+  suggestions,
+}: {
+  fields: ContextField[];
+  value: Record<string, string>;
+  onChange: (update: (c: Record<string, string>) => Record<string, string>) => void;
+  suggestions: Record<string, string[]>;
+}) {
+  const { t } = useI18n();
+  const ids = useId();
+  if (!fields.length) return null;
+  return (
+    <fieldset className="flex flex-col gap-3">
+      <legend className="mb-3 text-[15px] font-semibold">{t.save.context}</legend>
+      {fields.map((f) => (
+        <Field key={f.id} label={f.label} htmlFor={`${ids}c${f.id}`}>
+          <input
+            id={`${ids}c${f.id}`}
+            className={inputClass}
+            list={suggestions[f.id]?.length ? `${ids}l${f.id}` : undefined}
+            autoComplete="off"
+            value={value[f.id] ?? ''}
+            onChange={(e) => onChange((c) => ({ ...c, [f.id]: e.target.value }))}
+          />
+          {suggestions[f.id]?.length ? (
+            <datalist id={`${ids}l${f.id}`}>
+              {suggestions[f.id]!.map((v) => (
+                <option key={v} value={v} />
+              ))}
+            </datalist>
+          ) : null}
+        </Field>
+      ))}
+    </fieldset>
   );
 }
 
@@ -185,46 +238,11 @@ export function SaveSheet({
       <Field label={s.when} htmlFor={`${ids}w`}>
         <input id={`${ids}w`} type="datetime-local" className={inputClass} value={when} onChange={(e) => setWhen(e.target.value)} />
       </Field>
-      {fields.length > 0 && (
-        <fieldset className="flex flex-col gap-3">
-          <legend className="mb-3 text-[15px] font-semibold">{s.context}</legend>
-          {fields.map((f) => (
-            <Field key={f.id} label={f.label} htmlFor={`${ids}c${f.id}`}>
-              <input
-                id={`${ids}c${f.id}`}
-                className={inputClass}
-                list={suggestions[f.id]?.length ? `${ids}l${f.id}` : undefined}
-                autoComplete="off"
-                value={context[f.id] ?? ''}
-                onChange={(e) => setContext((c) => ({ ...c, [f.id]: e.target.value }))}
-              />
-              {suggestions[f.id]?.length ? (
-                <datalist id={`${ids}l${f.id}`}>
-                  {suggestions[f.id]!.map((v) => (
-                    <option key={v} value={v} />
-                  ))}
-                </datalist>
-              ) : null}
-            </Field>
-          ))}
-        </fieldset>
-      )}
+      <ContextInputs fields={fields} value={context} onChange={setContext} suggestions={suggestions} />
       <Field label={s.note} htmlFor={`${ids}no`}>
-        <textarea
-          id={`${ids}no`}
-          rows={3}
-          value={note}
-          placeholder={s.notePlaceholder}
-          onChange={(e) => setNote(e.target.value)}
-          className="min-h-24 w-full rounded-[13px] border-[1.5px] border-line bg-surface p-3 text-[16px] outline-none placeholder:text-muted focus:border-accent"
-        />
+        <textarea id={`${ids}no`} rows={3} value={note} placeholder={s.notePlaceholder} onChange={(e) => setNote(e.target.value)} className={textareaClass} />
       </Field>
-      {error && (
-        <p className="flex items-start gap-2.5 rounded-[14px] bg-bad-soft p-3 text-[14px]">
-          <CircleAlert aria-hidden size={18} className="mt-0.5 shrink-0 text-bad" />
-          <span>{error}</span>
-        </p>
-      )}
+      {error && <FormError>{error}</FormError>}
       <Button variant="primary" icon={Save} className="w-full" disabled={busy || !projects} onClick={() => void submit()}>
         {s.save}
       </Button>

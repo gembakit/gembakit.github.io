@@ -1,4 +1,4 @@
-import { db as defaultDb, type Analysis, type GembaDB, type Headline, type Project, type ProjectType, type ContextField } from '../data/db';
+import { db as defaultDb, type Analysis, type GembaDB, type Headline, type Milestone, type Project, type ProjectType, type ContextField } from '../data/db';
 import { create, listActive, restore, softDelete, update } from '../data/repo';
 import { now } from '../data/record';
 import { firstPhase } from './model';
@@ -111,7 +111,12 @@ export function updateMeasurementInfo(
   patch: Partial<Pick<Analysis, 'name' | 'phase' | 'measuredAt' | 'context' | 'note'>>,
   database: GembaDB = defaultDb,
 ) {
-  return update(database.analyses, id, { ...patch, ...(patch.context ? { context: cleanContext(patch.context) } : {}) });
+  return update(database.analyses, id, {
+    ...patch,
+    ...(patch.name !== undefined ? { name: patch.name.trim() } : {}),
+    ...(patch.note !== undefined ? { note: patch.note.trim() } : {}),
+    ...(patch.context ? { context: cleanContext(patch.context) } : {}),
+  });
 }
 
 export function deleteMeasurement(id: string, database: GembaDB = defaultDb) {
@@ -140,6 +145,41 @@ export async function contextSuggestions(projectId: string, database: GembaDB = 
     }
   }
   return Object.fromEntries(Object.entries(counts).map(([k, m]) => [k, [...m.entries()].sort((x, y) => y[1] - x[1] || x[0].localeCompare(y[0])).map(([v]) => v)]));
+}
+
+// ── Hitos ────────────────────────────────────────────────────────────────
+
+export interface NewMilestone {
+  projectId: string;
+  at: number;
+  title: string;
+  note: string;
+}
+
+export function addMilestone(m: NewMilestone, database: GembaDB = defaultDb): Promise<Milestone> {
+  return create(database.milestones, { projectId: m.projectId, at: m.at, title: m.title.trim(), note: m.note.trim() });
+}
+
+/** Hitos vivos de un proyecto, del más reciente al más antiguo. */
+export async function listMilestones(projectId: string, database: GembaDB = defaultDb): Promise<Milestone[]> {
+  const all = await database.milestones.where('projectId').equals(projectId).toArray();
+  return all.filter((m) => !m.deleted).sort((a, b) => b.at - a.at || b.createdAt - a.createdAt);
+}
+
+export function updateMilestone(id: string, patch: Partial<Pick<Milestone, 'at' | 'title' | 'note'>>, database: GembaDB = defaultDb) {
+  return update(database.milestones, id, {
+    ...patch,
+    ...(patch.title !== undefined ? { title: patch.title.trim() } : {}),
+    ...(patch.note !== undefined ? { note: patch.note.trim() } : {}),
+  });
+}
+
+export function deleteMilestone(id: string, database: GembaDB = defaultDb) {
+  return softDelete(database.milestones, id);
+}
+
+export function restoreMilestone(id: string, database: GembaDB = defaultDb) {
+  return restore(database.milestones, id);
 }
 
 // ── Lo último usado (para no volver a elegirlo) ──────────────────────────

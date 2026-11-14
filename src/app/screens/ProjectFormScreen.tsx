@@ -1,38 +1,65 @@
 import { useId, useState } from 'react';
-import { CircleAlert, FolderPlus, Plus, X } from 'lucide-react';
+import { FolderPlus, Plus, Save, X } from 'lucide-react';
 import { useI18n } from '../../i18n';
-import type { ContextField, ProjectType } from '../../data/db';
+import type { ContextField, Project, ProjectType } from '../../data/db';
 import { Button, IconButton } from '../../ui/Button';
 import { Card, DetailHeader, Label, Screen } from '../../ui/Layout';
-import { defaultFields, newFieldId, PROJECT_TYPES } from '../../projects/model';
-import { createProject } from '../../projects/store';
-import { Field, inputClass } from '../../projects/SaveSheet';
+import { useToast } from '../../ui/Toast';
+import { defaultFields, firstPhase, newFieldId, PHASES, PROJECT_TYPES } from '../../projects/model';
+import { createProject, getProject, updateProject } from '../../projects/store';
+import { Field, FormError, inputClass } from '../../projects/SaveSheet';
+import { useLive } from '../../projects/live';
 import { navigate } from '../router';
 
-/** Crear un proyecto: nombre, tipo (con sus fases), objetivo y campos de contexto. */
-export function NewProjectScreen() {
+/** Crear un proyecto (sin `id`) o editar uno: nombre, tipo, objetivo y campos de contexto. */
+export function ProjectFormScreen({ id }: { id?: string }) {
+  const { t } = useI18n();
+  const project = useLive(() => (id ? getProject(id) : Promise.resolve(null)), [id]);
+  if (id && project === undefined) return null;
+  if (id && !project) {
+    return (
+      <Screen>
+        <DetailHeader title={t.projects.notFound} onBack={() => navigate('/proyectos')} backLabel={t.common.back} />
+      </Screen>
+    );
+  }
+  return <ProjectForm project={id ? project! : null} />;
+}
+
+function ProjectForm({ project }: { project: Project | null }) {
   const { t } = useI18n();
   const p = t.projects;
   const f = p.form;
+  const toast = useToast();
   const ids = useId();
-  const [name, setName] = useState('');
-  const [type, setType] = useState<ProjectType>('dmaic');
-  const [goal, setGoal] = useState('');
-  const [fields, setFields] = useState<ContextField[]>(() => defaultFields(p.fields));
+  const [name, setName] = useState(project?.name ?? '');
+  const [type, setType] = useState<ProjectType>(project?.type ?? 'dmaic');
+  const [goal, setGoal] = useState(project?.goal ?? '');
+  const [fields, setFields] = useState<ContextField[]>(() => project?.fields ?? defaultFields(p.fields));
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const back = () => navigate(project ? `/proyectos/${project.id}` : '/proyectos');
 
-  const create = async () => {
+  const submit = async () => {
     if (!name.trim()) return setError(f.nameRequired);
     if (busy) return;
     setBusy(true);
-    const project = await createProject({ name, type, goal, fields: fields.map((x) => ({ ...x, label: x.label.trim() })).filter((x) => x.label) });
-    navigate(`/proyectos/${project.id}`);
+    const cleanFields = fields.map((x) => ({ ...x, label: x.label.trim() })).filter((x) => x.label);
+    if (!project) {
+      const created = await createProject({ name, type, goal, fields: cleanFields });
+      navigate(`/proyectos/${created.id}`);
+      return;
+    }
+    // Con otro tipo, la fase actual se queda si el tipo nuevo la tiene; si no, vuelve a la primera.
+    const phase = type === project.type || PHASES[type].includes(project.phase) ? project.phase : firstPhase(type);
+    await updateProject(project.id, { name: name.trim(), type, goal: goal.trim(), fields: cleanFields, phase });
+    toast(f.saved, { tone: 'ok' });
+    back();
   };
 
   return (
     <Screen>
-      <DetailHeader title={f.title} onBack={() => navigate('/proyectos')} backLabel={t.common.back} />
+      <DetailHeader title={project ? f.editTitle : f.title} subtitle={project?.name} onBack={back} backLabel={t.common.back} />
       <Card>
         <Field label={f.name} htmlFor={`${ids}n`}>
           <input
@@ -76,11 +103,13 @@ export function NewProjectScreen() {
             </label>
           ))}
         </fieldset>
+        {project && type !== project.type && <p className="text-[14px] leading-relaxed text-muted">{f.typeChangeHint}</p>}
       </Card>
 
       <Card>
         <Label>{f.fields}</Label>
         <p className="text-[14px] leading-relaxed text-muted">{f.fieldsHint}</p>
+        {project && <p className="text-[14px] leading-relaxed text-muted">{f.fieldsEditHint}</p>}
         <ul className="flex flex-col gap-2">
           {fields.map((fd, i) => (
             <li key={fd.id} className="flex items-center gap-2">
@@ -99,14 +128,9 @@ export function NewProjectScreen() {
         </Button>
       </Card>
 
-      {error && (
-        <p role="alert" className="flex items-start gap-2.5 rounded-[14px] bg-bad-soft p-3 text-[14.5px]">
-          <CircleAlert aria-hidden size={18} className="mt-0.5 shrink-0 text-bad" />
-          <span>{error}</span>
-        </p>
-      )}
-      <Button variant="primary" icon={FolderPlus} className="w-full" disabled={busy} onClick={() => void create()}>
-        {f.create}
+      {error && <FormError>{error}</FormError>}
+      <Button variant="primary" icon={project ? Save : FolderPlus} className="w-full" disabled={busy} onClick={() => void submit()}>
+        {project ? f.saveChanges : f.create}
       </Button>
     </Screen>
   );

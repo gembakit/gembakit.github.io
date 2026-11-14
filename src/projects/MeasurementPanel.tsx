@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { ChevronDown, History, Lock, LockOpen, Snowflake, Trash2 } from 'lucide-react';
+import { useCallback, useState } from 'react';
+import { ChevronDown, History, Lock, LockOpen, Pencil, Snowflake, Trash2 } from 'lucide-react';
 import { useI18n } from '../i18n';
-import { Button } from '../ui/Button';
+import { Button, IconButton } from '../ui/Button';
+import { MeasurementInfoSheet } from './MeasurementInfoSheet';
 import { useToast } from '../ui/Toast';
 import { navigate } from '../app/router';
 import { deleteMeasurement, restoreMeasurement, setFrozen } from './store';
@@ -14,6 +15,8 @@ export function MeasurementPanel({ saved }: { saved: SavedMeasurement }) {
   const toast = useToast();
   const { project, analysis: a } = saved;
   const [history, setHistory] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const closeEditing = useCallback(() => setEditing(false), []);
   const context = project.fields.filter((f) => a.context[f.id]).map((f) => ({ label: f.label, value: a.context[f.id]! }));
   const total = a.versions.length;
 
@@ -29,13 +32,17 @@ export function MeasurementPanel({ saved }: { saved: SavedMeasurement }) {
 
   return (
     <section className="raised flex flex-col gap-3 rounded-[20px] p-4">
-      <div className="flex flex-col gap-0.5">
-        <span className="text-[13px] font-semibold text-muted">{m.info}</span>
-        <h2 className="font-display text-[18px] leading-tight font-bold wrap-anywhere">{a.name}</h2>
-        <p className="text-[14px] text-muted">
-          {[a.phase ? t.projects.phases[a.phase] : null, formatDateTime(a.measuredAt, lang), m.version(total, total)].filter(Boolean).join(' · ')}
-        </p>
+      <div className="flex items-start gap-3">
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="text-[13px] font-semibold text-muted">{m.info}</span>
+          <h2 className="font-display text-[18px] leading-tight font-bold wrap-anywhere">{a.name}</h2>
+          <p className="text-[14px] text-muted">
+            {[a.phase ? (t.projects.phases[a.phase] ?? a.phase) : null, formatDateTime(a.measuredAt, lang), m.version(total, total)].filter(Boolean).join(' · ')}
+          </p>
+        </div>
+        <IconButton icon={Pencil} label={m.edit} onClick={() => setEditing(true)} />
       </div>
+      <MeasurementInfoSheet open={editing} onClose={closeEditing} project={project} analysis={a} />
       {context.length > 0 && (
         <ul className="flex flex-wrap gap-1.5">
           {context.map((c) => (

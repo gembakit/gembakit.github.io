@@ -25,9 +25,13 @@ export function firstPhase(type: ProjectType): string {
   return PHASES[type][0] ?? '';
 }
 
-/** Identificador para un campo nuevo que no choque con los existentes. */
+/**
+ * Identificador para un campo nuevo. Único de verdad (no «campo7»): si se
+ * quita un campo y se añade otro, el nuevo no hereda lo apuntado en el viejo.
+ */
 export function newFieldId(fields: ContextField[]): string {
-  let n = fields.length + 1;
-  while (fields.some((f) => f.id === `campo${n}`)) n++;
-  return `campo${n}`;
+  let id: string;
+  do id = `campo-${crypto.randomUUID().slice(0, 8)}`;
+  while (fields.some((f) => f.id === id));
+  return id;
 }

@@ -17,6 +17,12 @@ import {
   restoreMeasurement,
   saveMeasurement,
   setFrozen,
+  addMilestone,
+  deleteMilestone,
+  listMilestones,
+  restoreMilestone,
+  updateMeasurementInfo,
+  updateMilestone,
 } from './store';
 
 let database: GembaDB;
@@ -59,6 +65,22 @@ describe('proyectos', () => {
     expect(PHASES.seguimiento).toEqual([]);
     expect((await createProject({ name: 'S', type: 'seguimiento', goal: '', fields: [] }, database)).phase).toBe('');
     expect(await listProjects(database)).toHaveLength(2);
+  });
+});
+
+describe('hitos', () => {
+  test('del más reciente al más antiguo; se corrigen y se borran con deshacer', async () => {
+    const p = await project();
+    const a = await addMilestone({ projectId: p.id, at: Date.UTC(2026, 11, 3), title: ' Implantación 5S ', note: '' }, database);
+    await addMilestone({ projectId: p.id, at: Date.UTC(2026, 11, 10), title: 'Cambio de molde', note: 'SMED' }, database);
+    expect((await listMilestones(p.id, database)).map((m) => m.title)).toEqual(['Cambio de molde', 'Implantación 5S']);
+    await updateMilestone(a.id, { title: ' 5S en la llenadora ', note: ' turno de día ' }, database);
+    expect((await listMilestones(p.id, database))[1]).toMatchObject({ title: '5S en la llenadora', note: 'turno de día' });
+    await deleteMilestone(a.id, database);
+    expect(await listMilestones(p.id, database)).toHaveLength(1);
+    await restoreMilestone(a.id, database);
+    expect(await listMilestones(p.id, database)).toHaveLength(2);
+    expect(await listMilestones('otro', database)).toEqual([]);
   });
 });
 
@@ -116,6 +138,15 @@ describe('mediciones', () => {
     await measurement(p.id, { context: { equipo: 'Day shift 1' } });
     await measurement(p.id, { context: { equipo: 'Day shift 1', puesto: 'etiquetadora' } });
     expect(await contextSuggestions(p.id, database)).toEqual({ equipo: ['Day shift 1', 'Day shift 2'], puesto: ['etiquetadora'] });
+  });
+
+  test('los datos de la medición se pueden corregir sin crear una versión', async () => {
+    const p = await project();
+    const m = await measurement(p.id);
+    await updateMeasurementInfo(m.id, { name: ' FPY base ', note: ' turno corto ', context: { equipo: ' Day shift 2 ', puesto: '' } }, database);
+    const after = (await getMeasurement(m.id, database))!;
+    expect(after).toMatchObject({ name: 'FPY base', note: 'turno corto', context: { equipo: 'Day shift 2' } });
+    expect(after.versions).toHaveLength(1);
   });
 
   test('recuerda el último proyecto y el último contexto de cada proyecto', async () => {

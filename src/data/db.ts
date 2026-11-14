@@ -55,6 +55,14 @@ export interface Analysis extends SyncedRecord {
   frozen: 0 | 1;
   versions: MeasurementVersion[];
 }
+/** Hito de un proyecto: algo que se hizo y cuándo («3 dic · implantación 5S»). */
+export interface Milestone extends SyncedRecord {
+  projectId: string;
+  /** Cuándo pasó (lo pone el usuario). */
+  at: number;
+  title: string;
+  note: string;
+}
 export interface Capture extends SyncedRecord {
   projectId: string;
   kind: string;
@@ -75,6 +83,7 @@ export interface Setting {
 export class GembaDB extends Dexie {
   projects!: EntityTable<Project, 'id'>;
   analyses!: EntityTable<Analysis, 'id'>;
+  milestones!: EntityTable<Milestone, 'id'>;
   captures!: EntityTable<Capture, 'id'>;
   datasets!: EntityTable<Dataset, 'id'>;
   actions!: EntityTable<Action, 'id'>;
@@ -89,6 +98,10 @@ export class GembaDB extends Dexie {
       datasets: 'id, projectId, updatedAt, deleted',
       actions: 'id, projectId, updatedAt, deleted',
       settings: 'key',
+    });
+    // Versión 2: hitos de los proyectos. Las tablas anteriores no cambian.
+    this.version(2).stores({
+      milestones: 'id, projectId, updatedAt, deleted',
     });
   }
 }
