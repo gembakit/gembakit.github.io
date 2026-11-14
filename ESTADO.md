@@ -39,8 +39,8 @@ paso.
 **En curso, dos cosas a la vez:**
 
 1. **Fase 1:** calculadoras 1 (DPMO) y 2 (FPY y RTY) hechas, con su hoja de
-   Google. Siguiente: importar .xlsx/.csv para las calculadoras con lista y
-   después las calculadoras 3 a 6 (takt, OEE, kanban, ahorro con ROI).
+   Google, e importar .xlsx/.csv/pegado para las listas. Siguiente: las
+   calculadoras 3 a 6 (takt con balanceo, OEE, kanban, ahorro con ROI).
 2. **Cierre de la prueba de Google** (sección 4, Fase 0): ha salido bien.
    Falta que el dueño pulse el paso 3 al día siguiente (2026-11-14) y a los
    8 días (2026-11-21). Después se retira la pantalla provisional.
@@ -232,8 +232,24 @@ PLAN.md, sección 5.
       unidades» o «Escribir el FPY», pasos con nombre, añadir y quitar con
       deshacer, barras por paso con el que más resta marcado), guía, ejemplo
       de Fabrico (97, 94, 91 % → 83 %) y hoja de Google con tabla.
-- [ ] Importar .xlsx y .csv en las calculadoras con lista (FPY ya; takt y
-      ROI después): pieza común pendiente, siguiente paso.
+- [x] El dueño exportó la hoja de FPY (2026-11-14): funciona. El resaltado
+      del FPY más bajo se veía flojo; ahora lleva texto ámbar en negrita.
+- [x] **Importar** (2026-11-14), pieza común: panel «Importar datos»
+      (`src/ui/ImportDialog.tsx`) con archivo .xlsx/.csv o filas pegadas,
+      elección de hoja, fila de títulos y columna de cada dato, vista previa
+      y filas descartadas con su motivo; deshacer en la herramienta. Lectura
+      en `src/import`: `table.ts` (.csv con «;», «,» o tabulador; .csv de
+      Excel en codificación de Windows; números con coma o punto, miles,
+      porcentajes), `xlsx.ts` y `mapping.ts`. El separador decimal se deduce
+      del archivo; un .csv con «;» indica coma decimal; en datos enteros
+      «1.200» es mil doscientos. Usado en FPY; takt y ROI lo usarán igual.
+  - Desviación del plan: los .xlsx se leen con **fflate 0.8.3** (MIT, sin
+    dependencias, ~8 KB) y el lector de XML del navegador, no con ExcelJS
+    (~1 MB y dependencias con avisos de seguridad). Se carga solo al
+    importar un .xlsx. Si llega la salida .xlsx, decidir entonces si
+    ExcelJS compensa para escribir.
+  - Por comprobar con el dueño: un .xlsx real suyo y un .csv descargado
+    de Google Sheets en su Android.
 - [ ] La salida .xlsx, cuando el dueño la pida, se añade sobre la misma
       definición de hoja sin tocar las herramientas.
 - [ ] Calculadoras 2 a 6: FPY y RTY, takt, OEE, kanban, ahorro con ROI y
@@ -400,7 +416,7 @@ de Google, que se resuelve con la prueba de viabilidad. Licencias revisadas
 (leídas de cada package.json el 2026-11-13): React, React DOM, Vite,
 Tailwind, vite-plugin-pwa y workbox-window (MIT), Dexie (Apache-2.0),
 lucide-react (ISC), fuentes Inter e Inter Tight (OFL-1.1, permite incluirlas
-en la app). Ninguna obliga a publicar el código bajo sus condiciones. Revisar
+en la app). Añadidas después: jStat 1.9.6 (MIT) y fflate 0.8.3 (MIT). Ninguna obliga a publicar el código bajo sus condiciones. Revisar
 cada dependencia nueva antes de añadirla.
 
 ## 9. Riesgos que hay que vigilar

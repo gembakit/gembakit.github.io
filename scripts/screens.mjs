@@ -24,6 +24,15 @@ const SHOTS = [
   { name: 'fpy-vacia', hash: '#/herramientas/fpy', full: true },
   { name: 'fpy-ejemplo', hash: '#/herramientas/fpy', click: /Cargar ejemplo|Load example/, full: true },
   { name: 'fpy-resultado', hash: '#/herramientas/fpy', click: /Cargar ejemplo|Load example/, scrollTo: '2 · ' },
+  { name: 'fpy-importar', hash: '#/herramientas/fpy', click: /^Importar$/ },
+  {
+    name: 'fpy-importar-vista',
+    hash: '#/herramientas/fpy',
+    click: /^Importar$/,
+    fill: ['[role="dialog"] textarea', 'Paso\tEntran\tBuenas a la 1.ª\nSoldadura por ola de la placa base\t1.200\t1.150\nInspección\t1.150\t1.100\nTotal\t2.350\tn/d\nEmbalaje\t1.100\t1.098\n'],
+    then: /^Leer lo pegado$/,
+    full: true,
+  },
   { name: 'referencia', hash: '#/referencia' },
   { name: 'referencia-abierta', hash: '#/referencia', click: /^DMAIC/ },
   { name: 'referencia-guia', hash: '#/referencia', click: /^Cómo es cada herramienta/ },
@@ -48,8 +57,20 @@ for (const mode of ['light', 'dark']) {
     await page.waitForSelector('main h1');
     // Cambiar solo la almohadilla no recarga la página: empezar siempre arriba.
     await page.evaluate(() => window.scrollTo(0, 0));
-    // Uno o varios toques seguidos (por ejemplo, «Cargar ejemplo» y después «Exportar»).
-    for (const click of s.click ? [s.click].flat() : []) {
+    // Uno o varios toques seguidos (por ejemplo, «Cargar ejemplo» y después «Exportar»);
+    // con «fill», se escribe un texto en un campo y siguen los toques de «then».
+    const clicks = [...(s.click ? [s.click].flat() : []), ...(s.fill ? [{ fill: s.fill }] : []), ...(s.then ? [s.then].flat() : [])];
+    for (const click of clicks) {
+      if (click.fill) {
+        await page.evaluate(([selector, text]) => {
+          const el = document.querySelector(selector);
+          const proto = el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+          Object.getOwnPropertyDescriptor(proto, 'value').set.call(el, text);
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+        }, click.fill);
+        await new Promise((r) => setTimeout(r, 200));
+        continue;
+      }
       const ok = await page.evaluate(
         (src, byLabel) => {
           const re = new RegExp(src);
@@ -91,7 +112,11 @@ for (const mode of ['light', 'dark']) {
     for (const i of issues) problems.push(`${mode}/${s.name}: ${i}`);
     await page.screenshot({ path: `${outDir}/${s.name}-${mode}.png` });
     if (s.full) {
-      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+      await page.evaluate(() => {
+        window.scrollTo(0, document.documentElement.scrollHeight);
+        const dialog = document.querySelector('[role="dialog"]');
+        if (dialog) dialog.scrollTop = dialog.scrollHeight;
+      });
       await new Promise((r) => setTimeout(r, 200));
       await page.screenshot({ path: `${outDir}/${s.name}-${mode}-final.png` });
     }

@@ -86,6 +86,42 @@ test('FPY y RTY: añadir y quitar pasos, con deshacer', async () => {
   expect(screen.getAllByRole('textbox', { name: /^(Nombre del paso|Name of step) \d/ })).toHaveLength(4);
 });
 
+test('FPY y RTY: importar filas pegadas desde Sheets, con vista previa', async () => {
+  const user = userEvent.setup();
+  window.location.hash = '#/herramientas/fpy';
+  render(<App />);
+  await user.click(await screen.findByRole('button', { name: /^(Importar|Import)$/ }));
+  const dialog = await screen.findByRole('dialog');
+  await user.click(within(dialog).getByRole('textbox'));
+  await user.paste('Corte\t200\t186\nMontaje\t186\t180\n');
+  await user.click(within(dialog).getByRole('button', { name: /Leer lo pegado|Read pasted rows/ }));
+  expect(within(dialog).getByText(/2 filas listas|2 rows ready/)).toBeInTheDocument();
+  expect(within(dialog).getByRole('cell', { name: 'Montaje' })).toBeInTheDocument();
+  await user.click(within(dialog).getByRole('button', { name: /Usar 2 filas|Use 2 rows/ }));
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(screen.getAllByRole('textbox', { name: /^(Nombre del paso|Name of step) \d/ }).map((e) => (e as HTMLInputElement).value)).toEqual(['Corte', 'Montaje']);
+  // 186/200 × 180/186 = 180/200 = 90 %.
+  expect(await screen.findByText(/^90 %$/)).toBeInTheDocument();
+});
+
+test('FPY y RTY: importar un .csv de Excel en español (punto y coma, tildes de Windows)', async () => {
+  const user = userEvent.setup();
+  window.location.hash = '#/herramientas/fpy';
+  render(<App />);
+  await user.click(await screen.findByRole('button', { name: /^(Importar|Import)$/ }));
+  const dialog = await screen.findByRole('dialog');
+  // «Operación;Unidades que entran;Buenas» con la «ó» en windows-1252 (0xF3).
+  const text = 'Operación;Unidades que entran;Buenas\r\nSoldadura;1.200;1.150\r\nPintura;1.150;1.100\r\nTotal;;\r\n';
+  const bytes = Uint8Array.from(text, (ch) => ch.charCodeAt(0));
+  const input = dialog.querySelector('input[type="file"]') as HTMLInputElement;
+  await user.upload(input, new File([bytes], 'pasos.csv', { type: 'text/csv' }));
+  expect(await within(dialog).findByText(/2 filas listas|2 rows ready/)).toBeInTheDocument();
+  expect(within(dialog).getByText(/La fila 1 son títulos|Row 1 has the titles/)).toBeInTheDocument();
+  expect(within(dialog).getByRole('option', { name: 'A · Operación', selected: true })).toBeInTheDocument();
+  expect(within(dialog).getByRole('cell', { name: /^1[.,]?200$/ })).toBeInTheDocument();
+  expect(within(dialog).getByText(/Fila 4: falta|Row 4: /)).toBeInTheDocument();
+});
+
 test('Ajustes lleva a la prueba provisional de Google, con sus cinco pasos', async () => {
   const user = userEvent.setup();
   window.location.hash = '#/ajustes';

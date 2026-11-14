@@ -1,5 +1,7 @@
-import { useRef, useState, type ReactNode } from 'react';
-import { CircleAlert, Eraser, Plus, Trash2 } from 'lucide-react';
+import { useCallback, useRef, useState, type ReactNode } from 'react';
+import { CircleAlert, Eraser, FileUp, Plus, Trash2 } from 'lucide-react';
+import type { ImportedRow, ImportField } from '../../import/mapping';
+import { ImportDialog } from '../../ui/ImportDialog';
 import { useI18n } from '../../i18n';
 import { fpyRty, type FpyStep } from '../../calc/fpy';
 import type { CalcWarning } from '../../calc/types';
@@ -107,6 +109,42 @@ export default function FpyTool() {
     setState((s) => ({ ...s, rows: s.rows.filter((_, j) => j !== i) }));
     toast(d.removed(name), { action: { label: t.common.undo, onAction: () => setState(previous) } });
   };
+  // Importar: los datos que pide el modo elegido. Las palabras ayudan a
+  // reconocer cada columna por su título.
+  const importFields: ImportField[] = [
+    { key: 'name', label: d.sheet.stepHead, type: 'text', required: false, hints: ['paso', 'step', 'nombre', 'name', 'operacion', 'operation', 'proceso', 'process', 'estacion', 'station'] },
+    ...(mode === 'counts'
+      ? ([
+          { key: 'entering', label: d.entering, type: 'number', required: true, integer: true, hints: ['entran', 'entrada', 'in', 'input', 'unidades', 'units', 'total'] },
+          { key: 'good', label: d.good, type: 'number', required: true, integer: true, hints: ['buenas', 'good', 'ok', 'conformes', 'primera', 'first'] },
+        ] as const)
+      : ([{ key: 'fpy', label: d.fpyField, type: 'number', required: true, hints: ['fpy', 'fty', 'rendimiento', 'yield', '%'] }] as const)),
+  ];
+  const [importOpen, setImportOpen] = useState(false);
+  const closeImport = useCallback(() => setImportOpen(false), []);
+  // Números como texto del campo, sin separador de miles (que se leería como decimales).
+  const asField = (v: number) => {
+    const s = String(Number(v.toPrecision(12)));
+    return lang === 'es' ? s.replace('.', ',') : s;
+  };
+  const onImport = (imported: ImportedRow[]) => {
+    const previous = state;
+    // FPY: si todos vienen como fracción (0,97, o «97 %» leído así), se pasan a porcentaje.
+    const fractions = mode === 'direct' && imported.every((r) => typeof r.fpy === 'number' && r.fpy <= 1);
+    const num = (v: string | number | undefined, scale = 1) => (typeof v === 'number' ? asField(v * scale) : '');
+    setState({
+      mode,
+      rows: imported.map((r) => ({
+        id: nextId.current++,
+        name: typeof r.name === 'string' ? r.name : '',
+        entering: num(r.entering),
+        good: num(r.good),
+        fpy: num(r.fpy, fractions ? 100 : 1),
+      })),
+    });
+    toast(t.importing.imported(imported.length), { action: { label: t.common.undo, onAction: () => setState(previous) } });
+  };
+
   const clear = () => {
     const previous = state;
     setState({ ...EMPTY, mode });
@@ -160,18 +198,22 @@ export default function FpyTool() {
           </li>
         ))}
       </ol>
-      <div className="flex flex-wrap gap-2">
+      <div className="grid gap-2 sm:grid-cols-2">
         {rows.length < MAX_STEPS && (
           <Button icon={Plus} onClick={add}>
             {d.addStep}
           </Button>
         )}
-        {anyText && (
-          <Button variant="ghost" icon={Eraser} onClick={clear}>
-            {t.common.clear}
-          </Button>
-        )}
+        <Button icon={FileUp} onClick={() => setImportOpen(true)}>
+          {t.importing.button}
+        </Button>
       </div>
+      {anyText && (
+        <Button variant="ghost" icon={Eraser} className="self-start" onClick={clear}>
+          {t.common.clear}
+        </Button>
+      )}
+      <ImportDialog open={importOpen} onClose={closeImport} fields={importFields} max={MAX_STEPS} onImport={onImport} />
     </>
   );
 

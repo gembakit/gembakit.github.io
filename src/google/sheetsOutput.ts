@@ -101,6 +101,7 @@ export function buildSpreadsheet(def: SheetDef, grid: Grid, palette: Palette) {
     line: color(palette.line),
     white: color('#FFFFFF'),
     warnSoft: color(STATUS.light.warnSoft),
+    warn: color(STATUS.light.warn),
   };
   // Los valores calculados deciden los decimales de las celdas «auto».
   let computed: Record<string, Value> = {};
@@ -221,7 +222,8 @@ export function buildSpreadsheet(def: SheetDef, grid: Grid, palette: Palette) {
             ranges: [range],
             booleanRule: {
               condition: { type: 'CUSTOM_FORMULA', values: [{ userEnteredValue: `=${first}=MIN(${abs(first!)}:${abs(last!)})` }] },
-              format: { backgroundColor: c.warnSoft, textFormat: { bold: true } },
+              // Texto ámbar sobre fondo ámbar claro: se distingue de las celdas de datos (color suave del tema).
+              format: { backgroundColor: c.warnSoft, textFormat: { bold: true, foregroundColor: c.warn } },
             },
           },
         ];
