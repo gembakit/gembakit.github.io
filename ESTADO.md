@@ -343,6 +343,23 @@ PLAN.md, sección 5.
       Drive o archivo con resumen antes de aplicar. Probado de punta a punta
       con descarga y restauración en otro navegador limpio. **Falta que el
       dueño pruebe la parte de Drive en su teléfono.**
+- [x] Historial de versiones de cada proyecto (2026-11-14). El dueño vio que
+      «juntar» no servía para volver a una versión antigua; se rehízo como en
+      AutoCAD/Revit/Google Docs. `src/data/history.ts`: tabla
+      `projectVersions` (versión 3 de la base); antes de cualquier cambio
+      (`data/repo.ts`, en la misma transacción) se guarda cómo quedó el
+      proyecto si su último cambio fue otro día; «Guardar versión ahora»;
+      se quedan 30. «Volver a esta versión» reemplaza (lo de la versión vuelve
+      con `updatedAt` nuevo, lo añadido después queda borrado con marca) y
+      antes guarda cómo estaba, para deshacer. «Abrir como copia» crea un
+      proyecto aparte con ids nuevos. Pantalla `#/proyectos/{id}/historial`
+      (reloj en la cabecera del proyecto). La copia de seguridad pasa a la
+      versión 2 (lleva el historial; lee las de la versión 1) y restaurar va
+      proyecto por proyecto, con el plan a la vista antes: se añade el que
+      falta, vuelve el borrado, el que existe no se pisa (la copia más antigua
+      va a su historial; la más reciente pasa a ser la actual y la del
+      teléfono va al historial). Probado de punta a punta en Chrome sin
+      ventana: copia → cambios → restaurar → historial → volver → deshacer.
 - [ ] Parte 4: Google: carpetas ordenadas, archivo del proyecto, pestañas
       «Resumen» y una por medición, aviso al editar, detección de cambios,
       sincronizar; «Exportar» suelto a `Gemba Kit/Sueltas`.

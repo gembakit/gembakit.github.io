@@ -2,7 +2,19 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { CircleAlert, CircleCheck, CloudDownload, CloudUpload, Download, ExternalLink, FileUp, HardDrive, Loader2, RotateCcw, ShieldAlert, ShieldCheck, WifiOff } from 'lucide-react';
 import { useI18n } from '../../i18n';
 import { db } from '../../data/db';
-import { BackupError, backupFileName, localCounts, makeBackup, readBackup, restoreBackup, summarize, type Backup } from '../../data/backup';
+import {
+  BackupError,
+  backupFileName,
+  localCounts,
+  makeBackup,
+  planRestore,
+  readBackup,
+  restoreBackup,
+  summarize,
+  type Backup,
+  type RestoreAction,
+  type RestorePlanItem,
+} from '../../data/backup';
 import { gisReady, GoogleAuthError, loadGis } from '../../google/gis';
 import { GoogleApiError, type DriveItem } from '../../google/api';
 import { ensureToken, forgetToken } from '../../google/session';
@@ -51,10 +63,20 @@ export function DataScreen() {
   const [gis, setGis] = useState<'loading' | 'ready' | 'failed'>(gisReady() ? 'ready' : 'loading');
   const [op, setOp] = useState<Op>({ k: 'idle' });
   const [list, setList] = useState<DriveItem[] | null>(null);
-  const [pending, setPending] = useState<Backup | null>(null);
+  const [pending, setPendingBackup] = useState<Backup | null>(null);
+  const [plan, setPlan] = useState<RestorePlanItem[] | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const closeList = useCallback(() => setList(null), []);
-  const closePending = useCallback(() => setPending(null), []);
+  const closePending = useCallback(() => setPendingBackup(null), []);
+  /** Abre la confirmación y calcula qué pasará con cada proyecto. */
+  const setPending = (b: Backup) => {
+    setPendingBackup(b);
+    setPlan(null);
+    planRestore(db, b).then(setPlan, (err: unknown) => {
+      setPendingBackup(null);
+      fail('restore')(err);
+    });
+  };
 
   useEffect(() => {
     void navigator.storage?.estimate?.().then((e) => setStorage({ used: e.usage ?? 0, free: Math.max(0, (e.quota ?? 0) - (e.usage ?? 0)) }));
@@ -156,12 +178,14 @@ export function DataScreen() {
     if (!pending) return;
     try {
       const r = await restoreBackup(db, pending);
-      setOp({ k: 'done', at: 'restore', text: d.restored(r.added, r.updated) });
-      toast(d.restored(r.added, r.updated), { tone: 'ok' });
+      const count = (a: RestoreAction) => r.filter((x) => x.action === a).length;
+      const text = d.restored({ add: count('add'), revive: count('revive'), update: count('update'), history: count('history') });
+      setOp({ k: 'done', at: 'restore', text });
+      toast(r.every((x) => x.action === 'same') ? text : d.restoredShort, { tone: 'ok' });
     } catch (err) {
       fail('restore')(err);
     } finally {
-      setPending(null);
+      setPendingBackup(null);
     }
   };
 
@@ -291,8 +315,21 @@ export function DataScreen() {
             <p className="text-[15px]">{d.counts(summary.projects, summary.measurements, summary.milestones)}</p>
           </div>
         )}
-        <p className="text-[15px] leading-relaxed">{d.confirmBody}</p>
-        <Button variant="primary" icon={RotateCcw} className="w-full" onClick={() => void restore()}>
+        {!plan && <Status icon={Loader2} spin tone="muted" text={d.planning} />}
+        {plan && plan.length > 0 && (
+          <>
+            <p className="text-[15px] leading-relaxed">{d.confirmBody}</p>
+            <ul className="flex flex-col gap-2">
+              {plan.map((x) => (
+                <li key={x.id} className="flex flex-col gap-0.5 rounded-[14px] border border-line p-3">
+                  <span className="text-[15px] font-semibold wrap-anywhere">{x.name}</span>
+                  <span className={`text-[14px] leading-snug ${x.action === 'same' ? 'text-muted' : ''}`}>{d.actions[x.action]}</span>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        <Button variant="primary" icon={RotateCcw} className="w-full" disabled={!plan} onClick={() => void restore()}>
           {d.restoreNow}
         </Button>
       </Sheet>

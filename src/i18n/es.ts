@@ -146,6 +146,34 @@ export const es = {
     notFound: 'Este proyecto no existe o se ha borrado.',
     frozen: 'Congelada',
     version: (n: number) => `v${n}`,
+    history: {
+      open: 'Historial de versiones',
+      title: 'Historial',
+      intro: 'La app guarda sola cómo quedó el proyecto cada día que lo cambias. Se quedan las 30 versiones más recientes.',
+      saveNow: 'Guardar versión ahora',
+      saveHint: 'Antes de un cambio grande, guarda una versión para poder volver a ella.',
+      saved: 'Versión guardada',
+      same: 'Ya hay una versión guardada igual a como está ahora.',
+      now: 'Ahora',
+      versions: 'Versiones guardadas',
+      empty: 'Todavía no hay ninguna. La primera se guarda sola el próximo día que cambies este proyecto.',
+      reasons: {
+        auto: 'Automática',
+        manual: 'Guardada por ti',
+        'before-restore': 'Antes de volver atrás',
+      } as Record<string, string>,
+      fromCopy: (date: string) => `De la copia del ${date}`,
+      asOf: (date: string) => `Como estaba el ${date}`,
+      counts: (m: number, h: number) => [`${m} ${m === 1 ? 'medición' : 'mediciones'}`, `${h} ${h === 1 ? 'hito' : 'hitos'}`].join(' · '),
+      more: (n: number) => `y ${n} más`,
+      restore: 'Volver a esta versión',
+      restoreHint: 'El proyecto queda como estaba entonces: vuelve lo que se borró después y se quita lo que se añadió. Cómo está ahora se guarda en el historial, así que puedes deshacerlo.',
+      restored: (date: string) => `El proyecto volvió a como estaba el ${date}`,
+      copy: 'Abrir como copia',
+      copyHint: 'Crea un proyecto aparte con esta versión, para mirarlo o compararlo sin tocar el tuyo.',
+      copyName: (name: string, date: string) => `${name} (${date})`,
+      copied: (name: string) => `Copia creada: «${name}»`,
+    },
   },
   save: {
     title: 'Guardar en un proyecto',
@@ -492,7 +520,7 @@ export const es = {
     protectedYes: 'Protegido: el teléfono no lo borra aunque le falte espacio.',
     protectedNo: 'Sin proteger todavía: si el teléfono se queda sin espacio, Chrome podría borrarlo. Suele protegerse al instalar la app en la pantalla de inicio. Mientras tanto, haz copias.',
     backup: 'Copia de seguridad',
-    backupBody: 'Un archivo con todos tus proyectos, mediciones e hitos. Guárdalo fuera del teléfono: si lo pierdes o lo cambias, lo recuperas todo.',
+    backupBody: 'Un archivo con todos tus proyectos, mediciones e hitos, y el historial de versiones de cada proyecto. Guárdalo fuera del teléfono: si lo pierdes o lo cambias, lo recuperas todo.',
     lastNone: 'Todavía no has hecho ninguna copia.',
     last: (date: string, drive: boolean) => `Última copia: ${date}, ${drive ? 'en tu Drive' : 'descargada'}.`,
     toDrive: 'Guardar en mi Drive',
@@ -503,7 +531,7 @@ export const es = {
     downloaded: 'Copia descargada. Está en la carpeta Descargas del teléfono.',
     openFolder: 'Abrir la carpeta en Drive',
     restore: 'Restaurar',
-    restoreBody: 'Junta una copia con lo que hay en el teléfono: de cada proyecto, medición o hito se queda la versión más reciente. No se borra nada.',
+    restoreBody: 'Recupera tus proyectos de una copia. Los que no tienes se añaden. De los que ya tienes, la versión de la copia queda en su historial, para volver a ella cuando quieras. No se pierde nada.',
     fromDrive: 'Desde mi Drive',
     fromFile: 'Desde un archivo',
     listTitle: 'Copias en tu Drive',
@@ -512,17 +540,28 @@ export const es = {
     reading: 'Leyendo la copia…',
     confirmTitle: 'Restaurar esta copia',
     copyOf: (date: string) => `Copia del ${date}`,
-    confirmBody: 'Se junta con lo que hay en el teléfono. De cada cosa se queda la versión más reciente; no se borra nada.',
+    confirmBody: 'Esto pasará con cada proyecto de la copia. No se pierde nada: lo que se reemplaza queda en el historial del proyecto.',
+    planning: 'Comparando con lo que hay en el teléfono…',
+    actions: {
+      add: 'No lo tienes: se añade.',
+      revive: 'Lo borraste: vuelve como estaba en la copia.',
+      update: 'La copia es más reciente: pasa a ser la actual y la tuya queda en su historial.',
+      history: 'La copia es más antigua: queda en su historial.',
+      same: 'Ya lo tienes igual: no cambia.',
+    },
     restoreNow: 'Restaurar',
-    restored: (added: number, updated: number) =>
-      added + updated === 0
-        ? 'Nada que restaurar: el teléfono ya tenía todo eso, igual o más reciente.'
-        : `Restaurado: ${[
-            added ? `${added} ${added === 1 ? 'cosa nueva' : 'cosas nuevas'}` : '',
-            updated ? `${updated} ${updated === 1 ? 'actualizada' : 'actualizadas'}` : '',
-          ]
-            .filter(Boolean)
-            .join(' y ')}.`,
+    restoredShort: 'Copia restaurada',
+    restored: (c: { add: number; revive: number; update: number; history: number }) => {
+      const n = (k: number, one: string, many: string) => (k ? `${k} ${k === 1 ? one : many}` : '');
+      const parts = [
+        n(c.add, 'proyecto añadido', 'proyectos añadidos'),
+        n(c.revive, 'proyecto recuperado', 'proyectos recuperados'),
+        n(c.update, 'proyecto actualizado', 'proyectos actualizados'),
+        n(c.history, 'versión llevada al historial', 'versiones llevadas al historial'),
+      ].filter(Boolean);
+      if (!parts.length) return 'Nada que restaurar: ya tenías todo igual.';
+      return `Restaurado: ${parts.join(', ')}.${c.history ? ' Para volver a una versión, abre el proyecto y toca el reloj de arriba (Historial).' : ''}`;
+    },
     errors: {
       'not-json': 'Ese archivo no es una copia de Gemba Kit.',
       'not-backup': 'Ese archivo no es una copia de Gemba Kit.',

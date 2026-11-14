@@ -15,6 +15,7 @@ import { GoogleTestScreen } from './screens/GoogleTestScreen';
 import { DataScreen } from './screens/DataScreen';
 import { ProjectFormScreen } from './screens/ProjectFormScreen';
 import { ProjectScreen } from './screens/ProjectScreen';
+import { ProjectHistoryScreen } from './screens/ProjectHistoryScreen';
 import { SavedProvider, useLive } from '../projects/live';
 import { getMeasurement, getProject } from '../projects/store';
 
@@ -74,6 +75,7 @@ export function AppShell({ persisted }: { persisted: boolean | null }) {
   else if (section === 'prueba-google') screen = <GoogleTestScreen />;
   else if (sub === 'nuevo') screen = <ProjectFormScreen />;
   else if (sub && kind === 'editar') screen = <ProjectFormScreen key={sub} id={sub} />;
+  else if (sub && kind === 'historial') screen = <ProjectHistoryScreen key={sub} id={sub} />;
   else if (sub && kind === 'm' && third) screen = <MeasurementRoute key={third} projectId={sub} id={third} />;
   else if (sub) screen = <ProjectScreen key={sub} id={sub} />;
   else screen = <ProjectsScreen />;

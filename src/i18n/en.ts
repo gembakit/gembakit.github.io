@@ -146,6 +146,34 @@ export const en: Messages = {
     notFound: 'This project does not exist or was deleted.',
     frozen: 'Frozen',
     version: (n: number) => `v${n}`,
+    history: {
+      open: 'Version history',
+      title: 'History',
+      intro: 'The app saves on its own how the project ended up each day you change it. The 30 most recent versions are kept.',
+      saveNow: 'Save version now',
+      saveHint: 'Before a big change, save a version so you can go back to it.',
+      saved: 'Version saved',
+      same: 'There is already a saved version identical to how it is now.',
+      now: 'Now',
+      versions: 'Saved versions',
+      empty: 'None yet. The first one is saved on its own the next day you change this project.',
+      reasons: {
+        auto: 'Automatic',
+        manual: 'Saved by you',
+        'before-restore': 'Before going back',
+      } as Record<string, string>,
+      fromCopy: (date: string) => `From the backup of ${date}`,
+      asOf: (date: string) => `As it was on ${date}`,
+      counts: (m: number, h: number) => [`${m} ${m === 1 ? 'measurement' : 'measurements'}`, `${h} ${h === 1 ? 'milestone' : 'milestones'}`].join(' · '),
+      more: (n: number) => `and ${n} more`,
+      restore: 'Go back to this version',
+      restoreHint: 'The project goes back to how it was then: what was deleted later comes back and what was added is removed. How it is now is saved in the history, so you can undo it.',
+      restored: (date: string) => `The project went back to how it was on ${date}`,
+      copy: 'Open as a copy',
+      copyHint: 'Creates a separate project with this version, to look at it or compare without touching yours.',
+      copyName: (name: string, date: string) => `${name} (${date})`,
+      copied: (name: string) => `Copy created: “${name}”`,
+    },
   },
   save: {
     title: 'Save to a project',
@@ -491,7 +519,7 @@ export const en: Messages = {
     protectedYes: 'Protected: the phone will not delete it even if it runs out of space.',
     protectedNo: 'Not protected yet: if the phone runs out of space, Chrome could delete it. It is usually protected once the app is installed on the home screen. Until then, make backups.',
     backup: 'Backup',
-    backupBody: 'A file with all your projects, measurements and milestones. Keep it off the phone: if you lose or replace it, you get everything back.',
+    backupBody: 'A file with all your projects, measurements and milestones, and the version history of each project. Keep it off the phone: if you lose or replace it, you get everything back.',
     lastNone: 'You have not made a backup yet.',
     last: (date: string, drive: boolean) => `Last backup: ${date}, ${drive ? 'in your Drive' : 'downloaded'}.`,
     toDrive: 'Save to my Drive',
@@ -502,7 +530,7 @@ export const en: Messages = {
     downloaded: 'Backup downloaded. It is in the phone’s Downloads folder.',
     openFolder: 'Open the folder in Drive',
     restore: 'Restore',
-    restoreBody: 'Merges a backup with what is on the phone: for each project, measurement or milestone the most recent version is kept. Nothing is deleted.',
+    restoreBody: 'Gets your projects back from a backup. Those you do not have are added. For those you already have, the backup’s version goes into their history, so you can go back to it whenever you want. Nothing is lost.',
     fromDrive: 'From my Drive',
     fromFile: 'From a file',
     listTitle: 'Backups in your Drive',
@@ -511,12 +539,28 @@ export const en: Messages = {
     reading: 'Reading the backup…',
     confirmTitle: 'Restore this backup',
     copyOf: (date: string) => `Backup from ${date}`,
-    confirmBody: 'It is merged with what is on the phone. For each item the most recent version is kept; nothing is deleted.',
+    confirmBody: 'This is what will happen with each project in the backup. Nothing is lost: whatever is replaced stays in the project’s history.',
+    planning: 'Comparing with what is on the phone…',
+    actions: {
+      add: 'You do not have it: it is added.',
+      revive: 'You deleted it: it comes back as it was in the backup.',
+      update: 'The backup is newer: it becomes the current one and yours stays in its history.',
+      history: 'The backup is older: it goes into its history.',
+      same: 'You already have it the same: no change.',
+    },
     restoreNow: 'Restore',
-    restored: (added: number, updated: number) =>
-      added + updated === 0
-        ? 'Nothing to restore: the phone already had all of it, the same or newer.'
-        : `Restored: ${[added ? `${added} new ${added === 1 ? 'item' : 'items'}` : '', updated ? `${updated} updated` : ''].filter(Boolean).join(' and ')}.`,
+    restoredShort: 'Backup restored',
+    restored: (c: { add: number; revive: number; update: number; history: number }) => {
+      const n = (k: number, one: string, many: string) => (k ? `${k} ${k === 1 ? one : many}` : '');
+      const parts = [
+        n(c.add, 'project added', 'projects added'),
+        n(c.revive, 'project recovered', 'projects recovered'),
+        n(c.update, 'project updated', 'projects updated'),
+        n(c.history, 'version moved to the history', 'versions moved to the history'),
+      ].filter(Boolean);
+      if (!parts.length) return 'Nothing to restore: you already had all of it the same.';
+      return `Restored: ${parts.join(', ')}.${c.history ? ' To go back to a version, open the project and tap the clock at the top (History).' : ''}`;
+    },
     errors: {
       'not-json': 'That file is not a Gemba Kit backup.',
       'not-backup': 'That file is not a Gemba Kit backup.',

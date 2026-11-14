@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { ChevronRight, Flag, LayoutGrid, Pencil, Plus, SlidersHorizontal, Snowflake, Trash2, X } from 'lucide-react';
+import { ChevronRight, Flag, History, LayoutGrid, Pencil, Plus, SlidersHorizontal, Snowflake, Trash2, X } from 'lucide-react';
 import { useI18n } from '../../i18n';
 import type { Analysis, Milestone, Project } from '../../data/db';
 import { Button, IconButton } from '../../ui/Button';
@@ -72,7 +72,12 @@ export function ProjectScreen({ id }: { id: string }) {
         subtitle={p.types[project.type].name}
         onBack={() => navigate('/proyectos')}
         backLabel={t.common.back}
-        right={<IconButton icon={Pencil} label={p.edit} onClick={() => navigate(`/proyectos/${project.id}/editar`)} />}
+        right={
+          <div className="flex shrink-0 gap-1">
+            <IconButton icon={History} label={p.history.open} onClick={() => navigate(`/proyectos/${project.id}/historial`)} />
+            <IconButton icon={Pencil} label={p.edit} onClick={() => navigate(`/proyectos/${project.id}/editar`)} />
+          </div>
+        }
       />
 
       {(phases.length > 0 || project.goal) && (
