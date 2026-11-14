@@ -76,6 +76,7 @@ export function MeasurementPanel({ saved }: { saved: SavedMeasurement }) {
           )}
         </div>
       )}
+      {a.frozen === 0 && <p className="text-[13.5px] leading-relaxed text-muted">{m.freezeHint}</p>}
       <div className="grid grid-cols-2 gap-2">
         <Button icon={a.frozen ? LockOpen : Lock} onClick={() => void toggleFrozen()}>
           {a.frozen ? m.unfreeze : m.freeze}

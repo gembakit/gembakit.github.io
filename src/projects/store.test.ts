@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { GembaDB } from '../data/db';
 import { defaultFields, PHASES } from './model';
+import { phaseStates } from './PhaseTrack';
 import {
   addVersion,
   contextSuggestions,
@@ -58,6 +59,14 @@ describe('proyectos', () => {
     expect(PHASES.seguimiento).toEqual([]);
     expect((await createProject({ name: 'S', type: 'seguimiento', goal: '', fields: [] }, database)).phase).toBe('');
     expect(await listProjects(database)).toHaveLength(2);
+  });
+});
+
+describe('recorrido de fases', () => {
+  test('las anteriores a la actual, completadas; la actual; las siguientes, pendientes', () => {
+    expect(phaseStates('dmaic', 'analizar').map((s) => s.state)).toEqual(['done', 'done', 'current', 'todo', 'todo']);
+    expect(phaseStates('dmaic', 'definir')[0]!.state).toBe('current');
+    expect(phaseStates('seguimiento', '')).toEqual([]);
   });
 });
 

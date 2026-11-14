@@ -60,6 +60,17 @@ export const en: Messages = {
       sostener: 'Sustain',
     } as Record<string, string>,
     noPhase: 'No phase',
+    /** Letter of each phase in the track (DMAIC keeps its acronym). */
+    letters: {
+      dmaic: ['D', 'M', 'A', 'I', 'C'],
+      kaizen: ['P', 'E', 'F'],
+      a3: ['P', 'D', 'C', 'A'],
+      '5s': ['1S', '2S', '3S', '4S', '5S'],
+      seguimiento: [],
+    } as Record<string, string[]>,
+    phaseNow: (p: string) => `Current phase: ${p}`,
+    phaseDone: 'completed',
+    phaseHint: 'Tap a phase to make it the current one. The earlier ones show as completed, and new measurements are saved to the current one by default.',
     fields: {
       equipo: 'Crew',
       puesto: 'Station',
@@ -117,6 +128,7 @@ export const en: Messages = {
     version: (n: number, total: number) => (total > 1 ? `Version ${n} of ${total}` : 'Version 1'),
     frozen: 'Frozen: its data do not change. Unfreeze it to save changes.',
     freeze: 'Freeze',
+    freezeHint: 'Freezing fixes this measurement, for example as a baseline: its data can no longer change until you unfreeze it.',
     unfreeze: 'Unfreeze',
     frozenToast: 'Measurement frozen',
     unfrozenToast: 'Measurement unfrozen',

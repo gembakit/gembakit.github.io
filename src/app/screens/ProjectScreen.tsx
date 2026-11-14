@@ -6,6 +6,7 @@ import { Card, DetailHeader, Label, Screen } from '../../ui/Layout';
 import { useToast } from '../../ui/Toast';
 import { findTool } from '../../tools/registry';
 import { PHASES } from '../../projects/model';
+import { PhaseTrack } from '../../projects/PhaseTrack';
 import { formatDateTime, formatHeadline, useLive } from '../../projects/live';
 import { deleteProject, getProject, latest, listMeasurements, restoreProject, updateProject } from '../../projects/store';
 import { navigate } from '../router';
@@ -35,6 +36,7 @@ export function ProjectScreen({ id }: { id: string }) {
   }
 
   const setPhase = async (ph: string) => {
+    if (ph === project.phase) return;
     await updateProject(project.id, { phase: ph });
     toast(p.phaseChanged(p.phases[ph] ?? ph));
   };
@@ -57,21 +59,10 @@ export function ProjectScreen({ id }: { id: string }) {
             </div>
           )}
           {phases.length > 0 && (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2.5">
               <Label>{p.phase}</Label>
-              <div role="group" aria-label={p.phase} className="flex flex-wrap gap-2">
-                {phases.map((ph) => (
-                  <button
-                    key={ph}
-                    type="button"
-                    aria-pressed={project.phase === ph}
-                    onClick={() => void setPhase(ph)}
-                    className={`press min-h-11 rounded-full px-4 text-[14.5px] font-semibold ${project.phase === ph ? 'btn-primary text-on-accent' : 'bg-surface-2 text-text'}`}
-                  >
-                    {p.phases[ph] ?? ph}
-                  </button>
-                ))}
-              </div>
+              <PhaseTrack type={project.type} phase={project.phase} onPick={(ph) => void setPhase(ph)} />
+              <p className="text-[13px] leading-relaxed text-muted">{p.phaseHint}</p>
             </div>
           )}
         </Card>

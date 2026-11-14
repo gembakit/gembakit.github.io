@@ -5,6 +5,7 @@ import { Button, IconButton } from '../../ui/Button';
 import { BigHeader, Card, Screen } from '../../ui/Layout';
 import { useLive } from '../../projects/live';
 import { listProjects } from '../../projects/store';
+import { PhaseTrack } from '../../projects/PhaseTrack';
 import { navigate } from '../router';
 
 export function ProjectsScreen() {
@@ -49,11 +50,12 @@ export function ProjectsScreen() {
                 onClick={() => navigate(`/proyectos/${pr.id}`)}
                 className="press raised grid min-h-20 w-full grid-cols-[minmax(0,1fr)_20px] items-center gap-3 rounded-[20px] p-4 text-left"
               >
-                <span className="flex min-w-0 flex-col gap-1">
+                <span className="flex min-w-0 flex-col gap-1.5">
                   <span className="font-display text-[18px] leading-tight font-bold wrap-anywhere">{pr.name}</span>
                   <span className="text-[14px] text-muted">
                     {[p.types[pr.type].name, pr.phase ? p.phases[pr.phase] : null].filter(Boolean).join(' · ')}
                   </span>
+                  <PhaseTrack type={pr.type} phase={pr.phase} compact />
                   <span className="text-[13.5px] text-muted">
                     {p.count(counts?.[pr.id] ?? 0)} · {date(pr.updatedAt)}
                   </span>

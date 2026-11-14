@@ -38,6 +38,14 @@ const SHOTS = [
   { name: 'proyecto-creado', hash: '#/proyectos/nuevo', fill: ['main input', 'Rechazo línea 3'], then: /^Crear proyecto$/, only: 'light' },
   { name: 'dpmo-guardar', hash: '#/herramientas/dpmo', click: [/Cargar ejemplo/, /^Guardar en un proyecto$/], full: true },
   { name: 'dpmo-guardado', hash: '#/herramientas/dpmo', click: [/Cargar ejemplo/, /^Guardar en un proyecto$/], then: /^Guardar$/ },
+  // Un proyecto 5S: las fases con los nombres más largos.
+  {
+    name: 'proyecto-5s',
+    hash: '#/proyectos/nuevo',
+    fill: ['main input', 'Orden almacén'],
+    then: [/^Implantación 5S/, /^Crear proyecto$/, /^4S/],
+    only: 'light',
+  },
   { name: 'proyectos-lista', hash: '#/proyectos' },
   { name: 'proyecto-mediciones', hash: '#/proyectos', click: /Rechazo línea 3/, full: true },
   { name: 'medicion', hash: '#/proyectos', click: [/Rechazo línea 3/, /DPMO y nivel sigma/], full: true },
@@ -84,7 +92,7 @@ for (const mode of ['light', 'dark']) {
       const ok = await page.evaluate(
         (src, byLabel) => {
           const re = new RegExp(src);
-          const el = [...document.querySelectorAll('button')].find((b) =>
+          const el = [...document.querySelectorAll('button, label')].find((b) =>
             re.test(byLabel ? b.getAttribute('aria-label') ?? '' : b.textContent?.trim() ?? ''),
           );
           el?.click();

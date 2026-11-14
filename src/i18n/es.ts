@@ -60,6 +60,17 @@ export const es = {
       sostener: 'Sostener',
     } as Record<string, string>,
     noPhase: 'Sin fase',
+    /** Letra de cada fase en el recorrido (DMAIC se queda con sus siglas). */
+    letters: {
+      dmaic: ['D', 'M', 'A', 'I', 'C'],
+      kaizen: ['P', 'E', 'S'],
+      a3: ['P', 'H', 'V', 'A'],
+      '5s': ['1S', '2S', '3S', '4S', '5S'],
+      seguimiento: [],
+    } as Record<string, string[]>,
+    phaseNow: (p: string) => `Fase actual: ${p}`,
+    phaseDone: 'completada',
+    phaseHint: 'Toca una fase para marcarla como la actual. Las anteriores quedan como completadas, y las mediciones nuevas se guardan por defecto en la actual.',
     fields: {
       equipo: 'Equipo',
       puesto: 'Puesto',
@@ -117,6 +128,7 @@ export const es = {
     version: (n: number, total: number) => (total > 1 ? `Versión ${n} de ${total}` : 'Versión 1'),
     frozen: 'Congelada: sus datos no cambian. Descongélala para guardar cambios.',
     freeze: 'Congelar',
+    freezeHint: 'Congelar deja esta medición fija, por ejemplo como línea base: sus datos ya no se pueden cambiar hasta que la descongeles.',
     unfreeze: 'Descongelar',
     frozenToast: 'Medición congelada',
     unfrozenToast: 'Medición descongelada',
