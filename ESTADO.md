@@ -172,8 +172,24 @@ PLAN.md, sección 5.
         sí la enseña (todavía no conoce la cuenta). Conclusión: renovar es un
         parpadeo dentro de un toque que el usuario ya hace; no hace falta
         servidor.
-  - [ ] Al día siguiente: abrir la app y pulsar el paso 3 (permiso caducado
-        hace horas). Ver si sigue siendo un parpadeo.
+  - [x] Al día siguiente (2026-11-14, 13:23, permiso caducado desde la
+        víspera): renovado en 0,8 s indicando la cuenta. Sigue siendo un
+        parpadeo.
+  - [x] Pasos 6 y 7 (2026-11-14, Android, app instalada): carpeta, hoja
+        dentro de la carpeta, presentación con gráfico vinculado y PDF
+        (89 KB) funcionan con `drive.file` y la API de Slides activada. El
+        aviso de pestaña protegida («You're trying to edit part of this
+        sheet that shouldn't be changed accidentally. Edit anyway?») **sale
+        en la app de Sheets de Android, en cada edición**. La presentación
+        no se actualiza sola al cambiar la hoja (esperado: el gráfico
+        vinculado se actualiza a mano en Slides web, y la tabla y el texto
+        los escribe la app desde sus datos). Actualizar un gráfico por la API
+        (`RefreshSheetsChartRequest`) exige `spreadsheets.readonly` o más
+        (documentación de Slides): en su lugar, la app borrará el gráfico y
+        lo creará de nuevo vinculado, que sí funciona con `drive.file`.
+  - Opinión del dueño sobre la presentación de prueba: portada «muy
+    básica», gráficos marrones «no me gustan». Pide colores estándar,
+    profesionales y mucho más cuidados (ver sección 6).
   - [ ] A los 8 días: lo mismo. En modo pruebas Google puede retirar los
         permisos concedidos a los 7 días; si pasa, decidir con el dueño si
         se pasa la app a producción (con solo permisos no confidenciales no
@@ -410,7 +426,10 @@ Todas del 2026-11-13. No reabrirlas sin él.
 | Presentación de Google | Sí, fase 6 (con Informe y A3): portada, problema y objetivo, indicador, una diapositiva por análisis con gráfico **vinculado a la hoja** (se actualiza en Slides) y conclusión, causas, acciones. Una vez creada es del usuario; regenerar crea otra versión. Permiso: `drive.file` basta (documentación de la API de Slides, comprobado 2026-11-14); hay que activar la API de Slides en Google Cloud. Prueba en la pantalla provisional (pasos 6 y 7). |
 | PDF | Sí. Dos vías: desde la presentación o la hoja de Google (Drive la exporta a PDF; prueba en el paso 7) y, para usar sin conexión en planta, informe PDF generado en la propia app (fase 6). |
 | Protección y contexto | Pestañas de la app con **aviso para todos** (Google no permite aviso para el dueño y bloqueo para los demás a la vez: `ProtectedRange.warningOnly` ignora los editores). Campos de contexto por defecto: Equipo, Puesto, Línea, Producto, Supervisor, Operario; todos opcionales; se pueden añadir. Lista de mediciones con filtros por contexto y orden por fecha o resultado. |
-| Espacio y Firebase (pendiente de respuesta del dueño) | Propuesta: no usar Firebase; la nube es el Drive del propio usuario (gratis, privado, sin servidor). Liberar espacio con «Archivar proyecto» en Drive, con comprobación antes de borrar del teléfono (llega con las fotos). Copia de seguridad descargable o en Drive en el proyecto mínimo. |
+| Espacio y Firebase | **Aceptado** (2026-11-14): sin Firebase; la nube es el Drive del propio usuario. Copia de seguridad descargable o en Drive en el proyecto mínimo. «Archivar proyecto» en Drive, con comprobación antes de borrar del teléfono, cuando lleguen las fotos. |
+| Carpetas en Drive | Ordenadas desde el principio (lo pide el dueño): `Gemba Kit/Proyectos/{proyecto}/` (hoja del proyecto; `Presentaciones/` e `Informes/` solo cuando haga falta), `Gemba Kit/Sueltas/`, `Gemba Kit/Copias de seguridad/` (se guardan las 10 últimas). La app encuentra sus carpetas por identificador: moverlas o renombrarlas en Drive no rompe nada. |
+| Presentaciones y gráficos: diseño | Colores **estándar y profesionales**, no los del tema de la app; portada y diapositivas mucho más cuidadas. Antes de construirlas, ronda de propuestas visuales para que el dueño elija (como con la app). |
+| Orden después del proyecto mínimo | Calculadoras 3 a 6 y después «Evolución» (decidido 2026-11-14). |
 | Orden | **Adelantar un proyecto mínimo** antes de las calculadoras 3 a 6: crear proyecto, guardar análisis, carpeta y archivo en Drive, sincronizar pestañas de la app, aviso de edición. Antes, ficha para que el dueño la apruebe. |
 
 **Técnicas (las toma el agente, se anotan)**

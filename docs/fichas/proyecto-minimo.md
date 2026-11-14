@@ -81,9 +81,23 @@ base de Medir). Borrar va a la papelera, con deshacer.
 
 ### 6. Google: carpeta, archivo y pestañas
 
-- La primera vez que un proyecto se sincroniza, la app crea
-  **Gemba Kit / {proyecto}** en tu Drive y dentro **un único archivo de
-  Sheets** con el nombre del proyecto.
+- Carpetas ordenadas desde el principio:
+
+  ```
+  Mi unidad
+  └─ Gemba Kit/
+     ├─ Proyectos/
+     │   └─ Rechazo línea 3/
+     │       ├─ Rechazo línea 3     ← la hoja del proyecto
+     │       ├─ Presentaciones/     ← solo cuando haga falta
+     │       └─ Informes/           ← solo cuando haga falta
+     ├─ Sueltas/                    ← «Exportar» sin proyecto
+     └─ Copias de seguridad/        ← las 10 últimas
+  ```
+
+  Si mueves o renombras una carpeta en Drive, la app la sigue encontrando.
+- La primera vez que un proyecto se sincroniza, la app crea su carpeta y
+  dentro **un único archivo de Sheets** con el nombre del proyecto.
 - Pestaña **«Resumen»**: datos del proyecto, fase, objetivo y una tabla con
   todas las mediciones (fecha, herramienta, resultado, contexto, nota) e
   hitos. Es también la que leerán Claude o Gemini.
@@ -184,5 +198,8 @@ Hasta ahora no se guardaba nada real; con los proyectos sí.
 - **C. Campos de contexto:** decidido: **los propuestos** (Equipo, Puesto,
   Línea, Producto, Supervisor, Operario), todos opcionales, y se pueden
   añadir más.
-- **D. Orden de lo que viene después:** ¿calculadoras 3 a 6 primero y luego
-  «Evolución», o «Evolución» antes?
+- **D. Orden de lo que viene después:** decidido: **calculadoras 3 a 6** y
+  después «Evolución».
+- **E. Cuenta de Google:** ¿la de siempre o una cuenta nueva solo para
+  Gemba Kit? Decidirlo antes de crear proyectos reales: las carpetas viven
+  en el Drive de la cuenta conectada.
