@@ -66,6 +66,17 @@ describe('copia de seguridad', () => {
     expect((await getProject(p.id, b))?.name).toBe('Cambiado en el otro');
   });
 
+  test('restaurar una copia vieja no revive lo que se borró después de hacerla', async () => {
+    const { m } = await fill(a);
+    const old = readBackup(JSON.stringify(await makeBackup(a, '0.1.0')));
+    // Después de la copia se borra la medición que estaba viva en ella…
+    await deleteMeasurement(m.id, a);
+    expect(await localCounts(a)).toMatchObject({ measurements: 0 });
+    // …y la copia vieja no la trae de vuelta: el borrado es más reciente.
+    expect(await restoreBackup(a, old)).toMatchObject({ added: 0, updated: 0 });
+    expect(await localCounts(a)).toMatchObject({ measurements: 0 });
+  });
+
   test('rechaza lo que no es una copia, una copia de una versión más nueva o dañada', () => {
     const code = (text: string) => {
       try {
