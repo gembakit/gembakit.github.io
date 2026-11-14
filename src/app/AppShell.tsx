@@ -5,6 +5,7 @@ import { Sheet } from '../ui/Sheet';
 import { Screen, DetailHeader } from '../ui/Layout';
 import { findTool } from '../tools/registry';
 import { BottomNav, SideNav } from './Nav';
+import { HealthBanner } from './HealthBanner';
 import { navigate, useRoute } from './router';
 import { ProjectsScreen } from './screens/ProjectsScreen';
 import { ToolsScreen } from './screens/ToolsScreen';
@@ -80,7 +81,10 @@ export function AppShell({ persisted }: { persisted: boolean | null }) {
   return (
     <div className="min-h-dvh bg-bg text-text">
       <SideNav active={navSection} onCapture={openCapture} />
-      <main className="pb-(--nav-h) md:pl-(--side-w)">{screen}</main>
+      <main className="pb-(--nav-h) md:pl-(--side-w)">
+        <HealthBanner />
+        {screen}
+      </main>
       <BottomNav active={navSection} onCapture={openCapture} />
       <Sheet open={capture} onClose={closeCapture} title={t.capture.title}>
         <div className="flex items-start gap-3">

@@ -318,6 +318,15 @@ PLAN.md, sección 5.
       información de una medición sin crear versión (`MeasurementInfoSheet`,
       lápiz del panel). Los campos nuevos llevan identificador único para no
       heredar lo apuntado en uno quitado. Guía de uso al día.
+- [x] Diagnóstico del almacenamiento (2026-11-14), tras un atasco en el
+      Android del dueño (fases que no cambiaban, lista de proyectos vacía; no
+      reproducido en el ordenador): `src/data/health.ts` mide cada operación
+      de la base (capa de Dexie), registra apertura, bloqueos, cierres,
+      otras ventanas abiertas y ciclo de vida (solo datos técnicos, nunca
+      contenido); `useLive` ya no oculta errores y avisa si una pantalla
+      espera más de 4 s; `HealthBanner` (Recargar / Copiar detalles) y
+      Ajustes → Diagnóstico. **Pendiente:** leer el registro del dueño y
+      arreglar la causa.
 - [ ] Parte 3: copia de seguridad (descargar, en Drive, restaurar) y espacio
       usado.
 - [ ] Parte 4: Google: carpetas ordenadas, archivo del proyecto, pestañas

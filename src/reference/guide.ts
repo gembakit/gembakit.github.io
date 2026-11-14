@@ -68,6 +68,7 @@ export const GUIDE: readonly GuideTopic[] = [
         'En «Hitos» apunta lo que hiciste y cuándo, por ejemplo «implantación 5S en la llenadora», con una nota. Más adelante se verán marcados en los gráficos de Evolución, para comparar el antes y el después.',
         'El lápiz de arriba edita el proyecto: nombre, objetivo, tipo y campos de contexto. En una medición guardada, el lápiz corrige su nombre, fase, fecha, contexto y nota sin crear una versión nueva, también si está congelada.',
         'Por ahora todo se guarda solo en este aparato. La copia de seguridad y la hoja de Google del proyecto llegan en los próximos pasos.',
+        'Si el almacenamiento del teléfono tarda o no responde, aparece un aviso arriba con «Recargar» y «Copiar detalles»; tus datos no se pierden. El mismo registro técnico está en Ajustes → Diagnóstico: cópialo y pégalo en el chat si algo va lento.',
       ],
     },
     en: {
@@ -82,6 +83,7 @@ export const GUIDE: readonly GuideTopic[] = [
         'Under “Milestones”, note what you did and when, for example “5S rollout on the filler”, with a note. Later they will be marked on the Evolution charts, to compare before and after.',
         'The pencil at the top edits the project: name, goal, type and context fields. In a saved measurement, the pencil corrects its name, phase, date, context and note without creating a new version, even when it is frozen.',
         'For now everything is saved only on this device. Backup and the project’s Google sheet come in the next steps.',
+        'If the phone storage is slow or stops responding, a notice appears at the top with “Reload” and “Copy details”; your data is not lost. The same technical log is in Settings → Diagnostics: copy it and paste it in the chat if something is slow.',
       ],
     },
   },

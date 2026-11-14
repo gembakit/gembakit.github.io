@@ -1,5 +1,7 @@
-import { Check, ChevronRight, Cloud, Monitor, Moon, ShieldCheck, ShieldAlert, Sun } from 'lucide-react';
+import { Check, ChevronRight, Cloud, Copy, Monitor, Moon, ShieldCheck, ShieldAlert, Sun } from 'lucide-react';
 import { navigate } from '../router';
+import { Button } from '../../ui/Button';
+import { useCopyHealth } from '../HealthBanner';
 import type { ReactNode } from 'react';
 import { useI18n } from '../../i18n';
 import { BigHeader, Card, Label, Screen } from '../../ui/Layout';
@@ -33,6 +35,7 @@ function Segmented<T extends string>({ value, options, onChange, label }: { valu
 export function SettingsScreen({ persisted }: { persisted: boolean | null }) {
   const { t, choice, setChoice } = useI18n();
   const { theme, setTheme, modeChoice, setModeChoice, mode } = useTheme();
+  const copyHealth = useCopyHealth();
 
   return (
     <Screen>
@@ -134,6 +137,16 @@ export function SettingsScreen({ persisted }: { persisted: boolean | null }) {
           </span>
           <ChevronRight aria-hidden size={20} className="text-muted" />
         </button>
+      </section>
+
+      <section className="flex flex-col gap-2.5">
+        <Label>{t.settings.diagnostics}</Label>
+        <Card>
+          <p className="text-[15px] leading-relaxed">{t.settings.diagnosticsBody}</p>
+          <Button icon={Copy} className="self-start" onClick={() => void copyHealth()}>
+            {t.settings.diagnosticsCopy}
+          </Button>
+        </Card>
       </section>
 
       <section className="flex flex-col gap-2.5">

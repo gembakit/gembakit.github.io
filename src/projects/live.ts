@@ -4,6 +4,7 @@ import type { Analysis, Headline, Project } from '../data/db';
 import type { Messages } from '../i18n';
 import { formatNumber } from '../ui/number';
 import { latest } from './store';
+import { clearProblem, pendingCount, record, reportProblem, STUCK_MS } from '../data/health';
 
 /**
  * Consulta a la base local que se repite sola cuando cambian los datos que
@@ -13,8 +14,32 @@ export function useLive<T>(query: () => Promise<T>, deps: readonly unknown[]): T
   const [value, setValue] = useState<T | undefined>(undefined);
   useEffect(() => {
     setValue(undefined);
-    const sub = liveQuery(query).subscribe({ next: setValue, error: () => setValue(undefined) });
-    return () => sub.unsubscribe();
+    let got = false;
+    const started = Date.now();
+    const watchdog = setInterval(() => {
+      if (got || document.visibilityState !== 'visible' || Date.now() - started < STUCK_MS) return;
+      clearInterval(watchdog);
+      reportProblem(`una pantalla lleva más de ${STUCK_MS / 1000} s esperando sus datos (${pendingCount()} operaciones de la base pendientes)`);
+    }, 1000);
+    const sub = liveQuery(query).subscribe({
+      next: (v) => {
+        if (!got && Date.now() - started >= STUCK_MS) {
+          record(`la pantalla recibió sus datos a los ${Math.round((Date.now() - started) / 1000)} s`);
+          clearProblem();
+        }
+        got = true;
+        setValue(v);
+      },
+      // Nunca en silencio: el aviso de arriba lo enseña y queda en el diagnóstico.
+      error: (e: unknown) => {
+        reportProblem(`consulta de pantalla falló · ${e instanceof Error ? `${e.name}: ${e.message}` : String(e)}`);
+        setValue(undefined);
+      },
+    });
+    return () => {
+      clearInterval(watchdog);
+      sub.unsubscribe();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
   return value;
