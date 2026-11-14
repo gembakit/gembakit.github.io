@@ -6,8 +6,10 @@ import {
   Clock,
   Copy,
   ExternalLink,
+  FileDown,
   FilePlus2,
   FolderLock,
+  FolderPlus,
   Link2,
   Loader2,
   LogIn,
@@ -28,6 +30,7 @@ import { navigate } from '../router';
 import { gisReady, GoogleAuthError, loadGis, requestToken, revokeToken, type GoogleToken } from '../../google/gis';
 import {
   createSpreadsheet,
+  exportDriveFile,
   getAccountEmail,
   GoogleApiError,
   listAppSpreadsheets,
@@ -39,6 +42,9 @@ import {
   type SheetRef,
   type TestRead,
 } from '../../google/api';
+import { createDemoFolder, createDemoPresentation, createDemoSheet } from '../../google/projectTest';
+import { THEMES } from '../../ui/theme/themes';
+import { useTheme } from '../../ui/theme/ThemeProvider';
 
 // PANTALLA PROVISIONAL de la prueba de viabilidad de Google (PLAN.md, Fase 0,
 // punto 4). Se retira al terminar la prueba, con su enlace en Ajustes, sus
@@ -49,6 +55,14 @@ const KEY_TOKEN = 'gk.googleTest.token';
 const KEY_SHEET = 'gk.googleTest.sheet';
 const KEY_LOG = 'gk.googleTest.log';
 const KEY_HINT = 'gk.googleTest.account';
+const KEY_PROJECT = 'gk.googleTest.project';
+
+interface DemoProject {
+  folderUrl: string;
+  sheetUrl: string;
+  presId: string;
+  presUrl: string;
+}
 
 function load<T>(key: string): T | null {
   try {
@@ -74,7 +88,7 @@ interface LogEntry {
   text: string;
 }
 
-type Busy = null | 'connect' | 'create' | 'write' | 'appdata' | 'find';
+type Busy = null | 'connect' | 'create' | 'write' | 'appdata' | 'find' | 'project' | 'pdf';
 
 function deviceName(): string {
   const ua = navigator.userAgent;
@@ -140,6 +154,8 @@ export function GoogleTestScreen() {
   const [busy, setBusy] = useState<Busy>(null);
   const [read, setRead] = useState<{ r: TestRead; match: boolean } | null>(null);
   const [found, setFound] = useState<DriveFile[] | null>(null);
+  const [project, setProject] = useState<DemoProject | null>(() => load(KEY_PROJECT));
+  const { theme } = useTheme();
   const [now, setNow] = useState(() => Date.now());
 
   const add = useCallback((ok: boolean, text: string) => {
@@ -184,6 +200,7 @@ export function GoogleTestScreen() {
   useEffect(() => store(KEY_SHEET, sheet), [sheet]);
   useEffect(() => store(KEY_LOG, log), [log]);
   useEffect(() => store(KEY_HINT, hint), [hint]);
+  useEffect(() => store(KEY_PROJECT, project), [project]);
 
   const valid = !!token && token.expiresAt - now > 0;
   const minutesLeft = token ? Math.max(0, Math.round((token.expiresAt - now) / 60_000)) : 0;
@@ -299,6 +316,46 @@ export function GoogleTestScreen() {
       setFound(files);
       add(true, g.ev.found(files.length));
     });
+
+  // Cada parte se anota por separado, para saber cuál falla si algo falla.
+  const phase = async <T,>(name: string, job: () => Promise<T>, ok: string): Promise<T> => {
+    try {
+      const out = await job();
+      add(true, ok);
+      return out;
+    } catch (e) {
+      add(false, g.ev.phaseFail(name));
+      throw e;
+    }
+  };
+
+  const createProject = () =>
+    run('project', async (tk) => {
+      const palette = THEMES[theme].light;
+      const folder = await phase(g.ev.phaseFolder, () => createDemoFolder(tk.accessToken, g.demo), g.ev.folderOk);
+      const sheetRef = await phase(g.ev.phaseSheet, () => createDemoSheet(tk.accessToken, folder.id, g.demo, palette, lang === 'es' ? 'es_ES' : 'en_US'), g.ev.sheetOk);
+      const pres = await phase(g.ev.phasePres, () => createDemoPresentation(tk.accessToken, folder.id, sheetRef, g.demo, palette), g.ev.presOk);
+      setProject({ folderUrl: folder.url, sheetUrl: sheetRef.url, presId: pres.id, presUrl: pres.url });
+    });
+
+  const downloadPdf = () => {
+    if (!project) {
+      toast(g.needProject);
+      return;
+    }
+    run('pdf', async (tk) => {
+      const blob = await exportDriveFile(tk.accessToken, project.presId, 'application/pdf');
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${g.demo.presentation}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      add(true, g.ev.pdfOk(Math.round(blob.size / 1024)));
+    });
+  };
 
   const time = (ms: number, seconds = false) =>
     new Date(ms).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', ...(seconds ? { second: '2-digit' } : {}) });
@@ -424,6 +481,38 @@ export function GoogleTestScreen() {
             ))}
           </ul>
         )}
+      </Step>
+
+      <Step n={6} label={g.stepLabel(6)} title={g.step6} body={g.step6Body}>
+        <Button icon={icon('project', FolderPlus)} onClick={createProject} disabled={!canAct} className="w-full sm:w-auto sm:self-start">
+          {g.createProject}
+        </Button>
+        {project && (
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+            {[
+              [project.folderUrl, g.openFolder],
+              [project.sheetUrl, g.openSheet],
+              [project.presUrl, g.openPresentation],
+            ].map(([href, text]) => (
+              <a
+                key={text}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="press raised-sm inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[15px] px-4 text-[15px] font-semibold text-accent-ink sm:w-auto"
+              >
+                <ExternalLink aria-hidden size={20} strokeWidth={1.9} className="shrink-0" />
+                <span>{text}</span>
+              </a>
+            ))}
+          </div>
+        )}
+      </Step>
+
+      <Step n={7} label={g.stepLabel(7)} title={g.step7} body={g.step7Body}>
+        <Button icon={icon('pdf', FileDown)} onClick={downloadPdf} disabled={!canAct} className="w-full sm:w-auto sm:self-start">
+          {g.pdf}
+        </Button>
       </Step>
 
       <section className="flex flex-col gap-2.5">

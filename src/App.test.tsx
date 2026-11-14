@@ -122,13 +122,13 @@ test('FPY y RTY: importar un .csv de Excel en español (punto y coma, tildes de 
   expect(within(dialog).getByText(/Fila 4: falta|Row 4: /)).toBeInTheDocument();
 });
 
-test('Ajustes lleva a la prueba provisional de Google, con sus cinco pasos', async () => {
+test('Ajustes lleva a la prueba provisional de Google, con sus siete pasos', async () => {
   const user = userEvent.setup();
   window.location.hash = '#/ajustes';
   render(<App />);
   await user.click(await screen.findByRole('button', { name: /Prueba de conexión con Google|Google connection test/ }));
   expect(await screen.findByRole('heading', { level: 1, name: /Prueba de Google|Google test/ })).toBeInTheDocument();
-  expect(screen.getAllByRole('heading', { level: 2, name: /^(Paso|Step) \d/ })).toHaveLength(5);
+  expect(screen.getAllByRole('heading', { level: 2, name: /^(Paso|Step) \d/ })).toHaveLength(7);
   // Al abrir anota en el registro dónde se está usando.
   expect(screen.getByText(/Pantalla abierta como|Screen opened as/)).toBeInTheDocument();
 });

@@ -39,8 +39,11 @@ paso.
 **En curso, dos cosas a la vez:**
 
 1. **Fase 1:** calculadoras 1 (DPMO) y 2 (FPY y RTY) hechas, con su hoja de
-   Google, e importar .xlsx/.csv/pegado para las listas. Siguiente: las
-   calculadoras 3 a 6 (takt con balanceo, OEE, kanban, ahorro con ROI).
+   Google, e importar .xlsx/.csv/pegado para las listas. **Flujo de
+   proyectos diseñado con el dueño el 2026-11-14** (sección 6). Siguiente:
+   prueba de presentación, carpeta y aviso (pasos 6 y 7 de la pantalla de
+   prueba; el dueño activa antes la API de Slides) y la ficha del
+   **proyecto mínimo**, que va antes de las calculadoras 3 a 6.
 2. **Cierre de la prueba de Google** (sección 4, Fase 0): ha salido bien.
    Falta que el dueño pulse el paso 3 al día siguiente (2026-11-14) y a los
    8 días (2026-11-21). Después se retira la pantalla provisional.
@@ -379,8 +382,8 @@ Todas del 2026-11-13. No reabrirlas sin él.
 | Tema | Decisión |
 |---|---|
 | Dónde viven los datos | En el teléfono (IndexedDB de Chrome, almacenamiento protegido). Sincronización opcional entre dispositivos a través del Drive del propio usuario. Sin servidor propio. |
-| Google Sheets | Una hoja por proyecto, creada por la app con un toque. Pestañas de la app (las escribe la app; en Google, protegidas y comentables), pestaña «Entrada» y pestañas libres del usuario. |
-| Quién edita qué | Lo que nace en la app se edita en la app. «Entrada» se edita en la app y en Google; si la misma celda cambió en los dos sitios, la app enseña los dos valores y el usuario elige. Las pestañas del usuario se ven en la app como tabla, solo lectura. |
+| Google Sheets | **Sustituido el 2026-11-14 por «Flujo de proyectos», abajo.** Antes: una hoja por proyecto con pestañas de la app, pestaña «Entrada» de doble edición y pestañas libres. |
+| Quién edita qué | **Sustituido el 2026-11-14:** ya no hay pestaña «Entrada» de doble edición. Ver «Flujo de proyectos». |
 | Hoja dentro de la app | A pantalla completa, columnas que caben sin desplazarse a los lados, edición por filas con un editor grande debajo (nunca encima), flechas a la fila siguiente y zoom (− / +). Colores del tema elegido. |
 | App y hoja | Mismos datos y mismos números, cada una con su presentación. Los gráficos de la app son interactivos (tocar muestra el valor y la celda de la hoja, con la marca "coincide"). Los gráficos que el usuario dibuje en Sheets no se copian a la app. |
 | Sincronizar | Un botón que envía y trae; además se ejecuta solo. Resumen corto al terminar. |
@@ -388,6 +391,25 @@ Todas del 2026-11-13. No reabrirlas sin él.
 | Microsoft | Sin conexión directa; para Excel, archivo exportado. |
 | Excel y exportar (2026-11-13) | Excel **en espera** por decisión del dueño (no tiene licencia): sale como «Próximamente». Se le explicó que un .xlsx también se abre gratis en Google Sheets. **«Exportar» crea una hoja de Google** en su Drive con datos, fórmulas vivas, resultado, «Cómo leerlo» y notas (elegido por el dueño). PDF e imagen, con los proyectos. |
 | Archivos Excel | ExcelJS. Se guarda el valor calculado junto a cada fórmula para que las vistas previas del móvil no salgan vacías. |
+
+**Flujo de proyectos (2026-11-14, diseñado con el dueño; manda sobre PLAN.md 4.5 y 4.6)**
+
+| Tema | Decisión |
+|---|---|
+| Dónde vive cada cosa | La app es donde nacen y viven los datos (en el teléfono). Google es el escaparate y la mesa de trabajo del proyecto. |
+| En Drive | Carpeta «Gemba Kit» → una carpeta por proyecto → **un único archivo de Sheets por proyecto**, creado una vez. Lo demás del proyecto (presentaciones, PDF) va en la misma carpeta. Los cálculos sin proyecto van a «Gemba Kit/Sueltas». |
+| Alimentar la hoja | Guardar en el proyecto (sin red también) → al sincronizar, la app crea o reescribe la pestaña de cada análisis en el mismo archivo. Nunca archivos nuevos. |
+| Un solo dueño por pestaña | Pestañas **de la app** (Resumen, cada análisis, tablas capturadas): se editan solo en la app (móvil u ordenador); en Sheets se ven, se comentan y sus fórmulas funcionan, con **aviso al editar** (protección «solo aviso»: Google no deja bloquear a su dueño). Pestañas **tuyas**: libres; la app nunca escribe en ellas, solo las lee. Se quita la pestaña «Entrada» de doble edición: era la fuente de conflictos. |
+| Si edita una pestaña de la app en Sheets | No se rompe nada: la app no lee sus propias pestañas. Al sincronizar detecta el cambio y pregunta antes: ofrece guardar su versión como pestaña suya y después reescribe. Nunca se pierde nada sin avisar. |
+| Visor en la app | Se mantiene: ver todas las pestañas del proyecto a pantalla completa con zoom; editar por filas las tablas de la app; las pestañas del usuario, solo lectura. |
+| Pestañas del usuario | La app las ve y sugiere herramientas según sus columnas (categorías + cantidades → Pareto; mediciones → histograma/Cpk; fechas + valores → corrida/control; pasos con entradas y buenas → FPY; estaciones con tiempos → takt). |
+| Importar | Por pestañas (no archivos enteros). Orígenes: pestaña del archivo del proyecto (recomendado), archivo .xlsx/.csv, filas pegadas. La app guarda una copia (foto) con su origen; el origen nunca se modifica. En el proyecto, sección «Datos» con las tablas **agrupadas por archivo de origen** (pueden ser varios archivos por proyecto). |
+| Cambios en el origen | Para pestañas de Google que la app puede leer: al sincronizar detecta sola y avisa («cambió: 5 filas nuevas», «ya no existe», «ahora se llama…»; identifica las pestañas por su número interno). Se actualiza **con un toque del usuario**. Archivos del teléfono: no se vigilan; se reimporta. Coste: ninguno (API gratis, pocos KB). |
+| Origen borrado | El usuario elige: aceptar la eliminación (se borra también en la app) o **conservar la copia** con un indicador «ya no existe en Google». Desde la copia, botón para **volver a crearla en Google**: pasa a ser pestaña de la app (la app es su dueña). |
+| Versiones y congelar | Cada actualización de una tabla de datos crea una **versión** (v1, v2… con fecha); los análisis que la usan se recalculan como versión nueva, para comparar las métricas en el tiempo. Un análisis se puede **congelar** (por ejemplo, la línea base de Medir) y no cambia aunque llegue una versión nueva. |
+| Presentación de Google | Sí, fase 6 (con Informe y A3): portada, problema y objetivo, indicador, una diapositiva por análisis con gráfico **vinculado a la hoja** (se actualiza en Slides) y conclusión, causas, acciones. Una vez creada es del usuario; regenerar crea otra versión. Permiso: `drive.file` basta (documentación de la API de Slides, comprobado 2026-11-14); hay que activar la API de Slides en Google Cloud. Prueba en la pantalla provisional (pasos 6 y 7). |
+| PDF | Sí. Dos vías: desde la presentación o la hoja de Google (Drive la exporta a PDF; prueba en el paso 7) y, para usar sin conexión en planta, informe PDF generado en la propia app (fase 6). |
+| Orden | **Adelantar un proyecto mínimo** antes de las calculadoras 3 a 6: crear proyecto, guardar análisis, carpeta y archivo en Drive, sincronizar pestañas de la app, aviso de edición. Antes, ficha para que el dueño la apruebe. |
 
 **Técnicas (las toma el agente, se anotan)**
 

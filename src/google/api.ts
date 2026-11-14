@@ -132,6 +132,54 @@ export async function listAppSpreadsheets(token: string, f: Fetch = fetch): Prom
   return body.files ?? [];
 }
 
+export const MIME = {
+  folder: 'application/vnd.google-apps.folder',
+  spreadsheet: 'application/vnd.google-apps.spreadsheet',
+  presentation: 'application/vnd.google-apps.presentation',
+} as const;
+
+/** Crea en Drive una carpeta o un archivo de Google vacío, dentro de una carpeta si se indica. */
+export async function createDriveFile(token: string, name: string, mimeType: string, parent?: string, f: Fetch = fetch): Promise<{ id: string; url: string }> {
+  const q = new URLSearchParams({ fields: 'id,webViewLink' });
+  const res = await call(token, `${DRIVE}?${q}`, { method: 'POST', headers: json, body: JSON.stringify({ name, mimeType, ...(parent ? { parents: [parent] } : {}) }) }, f);
+  const body = (await res.json()) as { id: string; webViewLink?: string };
+  return { id: body.id, url: body.webViewLink ?? '' };
+}
+
+/** Lee la estructura de una hoja de cálculo (pestañas, gráficos…) con los campos pedidos. */
+export async function sheetsGet<T>(token: string, id: string, fields: string, f: Fetch = fetch): Promise<T> {
+  const q = new URLSearchParams({ fields });
+  return (await call(token, `${SHEETS}/${id}?${q}`, {}, f)).json() as Promise<T>;
+}
+
+/** Cambios en una hoja de cálculo (batchUpdate). Devuelve las respuestas de cada cambio. */
+export async function sheetsBatch(token: string, id: string, requests: unknown[], f: Fetch = fetch): Promise<unknown[]> {
+  const res = await call(token, `${SHEETS}/${id}:batchUpdate`, { method: 'POST', headers: json, body: JSON.stringify({ requests }) }, f);
+  return ((await res.json()) as { replies?: unknown[] }).replies ?? [];
+}
+
+/** Escribe valores (y fórmulas en inglés) como si los tecleara el usuario. */
+export async function sheetsWrite(token: string, id: string, data: { range: string; values: unknown[][] }[], f: Fetch = fetch): Promise<void> {
+  await call(token, `${SHEETS}/${id}/values:batchUpdate`, { method: 'POST', headers: json, body: JSON.stringify({ valueInputOption: 'USER_ENTERED', data }) }, f);
+}
+
+/** Exporta un archivo de Google (hoja, presentación) a otro formato, por ejemplo PDF. */
+export async function exportDriveFile(token: string, id: string, mimeType: string, f: Fetch = fetch): Promise<Blob> {
+  const q = new URLSearchParams({ mimeType });
+  return (await call(token, `${DRIVE}/${id}/export?${q}`, {}, f)).blob();
+}
+
+const SLIDES = 'https://slides.googleapis.com/v1/presentations';
+
+export async function slidesGet<T>(token: string, id: string, fields: string, f: Fetch = fetch): Promise<T> {
+  const q = new URLSearchParams({ fields });
+  return (await call(token, `${SLIDES}/${id}?${q}`, {}, f)).json() as Promise<T>;
+}
+
+export async function slidesBatch(token: string, id: string, requests: unknown[], f: Fetch = fetch): Promise<void> {
+  await call(token, `${SLIDES}/${id}:batchUpdate`, { method: 'POST', headers: json, body: JSON.stringify({ requests }) }, f);
+}
+
 const APPDATA_NAME = 'prueba-conexion.json';
 
 async function findAppDataFile(token: string, f: Fetch): Promise<DriveFile | null> {
