@@ -11,6 +11,10 @@ import { ToolsScreen } from './screens/ToolsScreen';
 import { ReferenceScreen } from './screens/ReferenceScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { GoogleTestScreen } from './screens/GoogleTestScreen';
+import { NewProjectScreen } from './screens/NewProjectScreen';
+import { ProjectScreen } from './screens/ProjectScreen';
+import { SavedProvider, useLive } from '../projects/live';
+import { getMeasurement, getProject } from '../projects/store';
 
 function ToolRoute({ id }: { id: string }) {
   const { t } = useI18n();
@@ -29,9 +33,32 @@ function ToolRoute({ id }: { id: string }) {
   );
 }
 
+/** Una medición guardada: su herramienta, arrancando con sus datos y con el panel de la medición. */
+function MeasurementRoute({ projectId, id }: { projectId: string; id: string }) {
+  const { t } = useI18n();
+  const project = useLive(() => getProject(projectId), [projectId]);
+  const analysis = useLive(() => getMeasurement(id), [id]);
+  if (project === undefined || analysis === undefined) return null;
+  const tool = analysis ? findTool(analysis.toolId) : undefined;
+  if (!project || !analysis || !tool || analysis.projectId !== project.id) {
+    return (
+      <Screen>
+        <DetailHeader title={t.measurement.notFound} onBack={() => navigate(project ? `/proyectos/${project.id}` : '/proyectos')} backLabel={t.common.back} />
+      </Screen>
+    );
+  }
+  return (
+    <SavedProvider value={{ project, analysis }}>
+      <Suspense fallback={null}>
+        <tool.Screen key={analysis.id} />
+      </Suspense>
+    </SavedProvider>
+  );
+}
+
 export function AppShell({ persisted }: { persisted: boolean | null }) {
   const { t } = useI18n();
-  const [section = 'proyectos', sub] = useRoute();
+  const [section = 'proyectos', sub, kind, third] = useRoute();
   const [capture, setCapture] = useState(false);
   const closeCapture = useCallback(() => setCapture(false), []);
   const openCapture = useCallback(() => setCapture(true), []);
@@ -42,6 +69,9 @@ export function AppShell({ persisted }: { persisted: boolean | null }) {
   else if (section === 'referencia') screen = <ReferenceScreen />;
   else if (section === 'ajustes') screen = <SettingsScreen persisted={persisted} />;
   else if (section === 'prueba-google') screen = <GoogleTestScreen />;
+  else if (sub === 'nuevo') screen = <NewProjectScreen />;
+  else if (sub && kind === 'm' && third) screen = <MeasurementRoute key={third} projectId={sub} id={third} />;
+  else if (sub) screen = <ProjectScreen key={sub} id={sub} />;
   else screen = <ProjectsScreen />;
   // La prueba de Google cuelga de Ajustes: la barra marca Ajustes.
   const navSection = section === 'prueba-google' ? 'ajustes' : section;

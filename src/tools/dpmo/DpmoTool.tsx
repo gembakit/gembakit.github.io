@@ -3,7 +3,9 @@ import { CircleAlert, Eraser } from 'lucide-react';
 import { useI18n } from '../../i18n';
 import { dpmo, type DpmoInput } from '../../calc/dpmo';
 import type { CalcWarning } from '../../calc/types';
-import { formatNumber, parseDecimal } from '../../ui/number';
+import { formatNumber, parseDecimal, toFieldText } from '../../ui/number';
+import { useSavedInput } from '../../projects/live';
+import type { SavePayload } from '../../projects/SaveSheet';
 import { NumberField } from '../../ui/NumberField';
 import { ToolTemplate } from '../../ui/ToolTemplate';
 import { Button } from '../../ui/Button';
@@ -32,7 +34,13 @@ export default function DpmoTool() {
   const { t, lang } = useI18n();
   const d = t.tools.dpmo;
   const toast = useToast();
-  const [raw, setRaw] = useState(EMPTY);
+  // Medición guardada: arranca con sus datos.
+  const savedInput = useSavedInput<DpmoInput>();
+  const [raw, setRaw] = useState(() =>
+    savedInput
+      ? { units: toFieldText(savedInput.units, lang), opportunities: toFieldText(savedInput.opportunities, lang), defects: toFieldText(savedInput.defects, lang) }
+      : EMPTY,
+  );
 
   const parsed = useMemo(() => {
     const p = FIELDS.map((f) => parseDecimal(raw[f]));
@@ -161,6 +169,18 @@ export default function DpmoTool() {
         })
       : null;
 
+  // Para guardar en un proyecto: los datos y el número principal (el nivel sigma o, sin él, el DPMO).
+  const save = (): SavePayload | null =>
+    parsed && r
+      ? {
+          input: parsed,
+          headline:
+            r.sigmaLevel !== null
+              ? { key: 'sigmaLevel', value: r.sigmaLevel, kind: 'number', decimals: 2 }
+              : { key: 'dpmo', value: r.dpmo, kind: 'number', decimals: r.dpmo >= 100 ? 0 : 2 },
+        }
+      : null;
+
   const stepLabel = (key: string) => (key in d.steps ? d.steps[key as keyof typeof d.steps] : key);
   const stepValue = (key: string, v: number) =>
     key === 'opportunitiesTotal' ? num(v, 0) : key === 'dpmo' ? fmtDpmo(v) : key === 'dpu' || key === 'dpo' ? sig(v) : num(v, 4);
@@ -196,6 +216,8 @@ export default function DpmoTool() {
       reading={reading}
       formula={formula}
       sheet={sheet}
+      toolId="dpmo"
+      save={save}
     />
   );
 }

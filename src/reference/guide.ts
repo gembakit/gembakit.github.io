@@ -42,7 +42,7 @@ export const GUIDE: readonly GuideTopic[] = [
       body: [
         'Abajo tienes la barra con Proyectos (el inicio), Herramientas, el botón central Capturar, Referencia y Ajustes. En el ordenador, la misma barra está a la izquierda.',
         'Para volver atrás desde una herramienta, usa la flecha de arriba a la izquierda o el botón Atrás del teléfono.',
-        'Los proyectos y la captura en planta llegan más adelante. Mientras tanto, las herramientas se pueden usar sin guardar.',
+        'Las herramientas se pueden usar sin guardar. Para guardar un resultado, va dentro de un proyecto (ver «Proyectos y mediciones»). La captura en planta llega más adelante.',
       ],
     },
     en: {
@@ -50,7 +50,32 @@ export const GUIDE: readonly GuideTopic[] = [
       body: [
         'At the bottom you have the bar with Projects (the home screen), Tools, the central Capture button, Reference and Settings. On a computer, the same bar is on the left.',
         'To go back from a tool, use the arrow at the top left or the phone’s Back button.',
-        'Projects and shop-floor capture arrive later. Meanwhile, the tools can be used without saving.',
+        'The tools can be used without saving. To save a result, it goes inside a project (see “Projects and measurements”). Shop-floor capture arrives later.',
+      ],
+    },
+  },
+  {
+    id: 'proyectos',
+    es: {
+      title: 'Proyectos y mediciones',
+      body: [
+        'Crea un proyecto desde Proyectos: nombre, tipo (DMAIC, Kaizen rápido, A3 · PDCA, 5S o Seguimiento de proceso, que da las fases) y, si quieres, el objetivo. También eliges los datos de contexto que apuntarás en cada medición: Equipo, Puesto, Línea… Puedes renombrarlos, quitarlos o añadir otros.',
+        'Con un resultado en pantalla, pulsa «Guardar en un proyecto». El último proyecto usado ya viene elegido, con su fase actual. Pon el nombre, la fecha y hora y el contexto (todo opcional; la app te ofrece los valores que ya usaste, para escribirlos siempre igual) y una nota.',
+        'Cada vez que mides de nuevo es una medición nueva. Si cambias los datos de una medición ya guardada, se guarda como versión 2, 3…; las anteriores quedan en su historial.',
+        '«Congelar» deja una medición fija, por ejemplo la línea base de la fase Medir: sus datos ya no cambian hasta que la descongeles.',
+        'En el proyecto cambias la fase actual con un toque y ves las mediciones agrupadas por fase. Borrar un proyecto o una medición se puede deshacer al momento.',
+        'Por ahora todo se guarda solo en este aparato. La copia de seguridad y la hoja de Google del proyecto llegan en los próximos pasos.',
+      ],
+    },
+    en: {
+      title: 'Projects and measurements',
+      body: [
+        'Create a project from Projects: name, type (DMAIC, Quick Kaizen, A3 · PDCA, 5S or Process monitoring, which sets the phases) and, if you like, the goal. You also choose the context details you will note with each measurement: Crew, Station, Line… You can rename them, remove them or add others.',
+        'With a result on screen, tap “Save to a project”. The last project used is already selected, with its current phase. Enter the name, date and time and the context (all optional; the app offers the values you already used, so they are always written the same way) and a note.',
+        'Every time you measure again it is a new measurement. If you change the data of a saved measurement, it is saved as version 2, 3…; the earlier ones stay in its history.',
+        '“Freeze” fixes a measurement, for example the Measure-phase baseline: its data no longer change until you unfreeze it.',
+        'In the project you change the current phase with one tap and see the measurements grouped by phase. Deleting a project or a measurement can be undone straight away.',
+        'For now everything is saved only on this device. Backup and the project’s Google sheet come in the next steps.',
       ],
     },
   },

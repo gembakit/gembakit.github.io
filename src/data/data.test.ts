@@ -5,6 +5,8 @@ import { now } from './record';
 import { DEFAULT_SETTINGS, loadSettings, saveSetting } from './settings';
 
 let database: GembaDB;
+// Proyecto mínimo para probar las reglas de los registros.
+const P = (name: string) => ({ name, type: 'seguimiento' as const, goal: '', phase: '', fields: [] });
 beforeEach(() => {
   database = new GembaDB(`test-${crypto.randomUUID()}`);
 });
@@ -14,7 +16,7 @@ afterEach(async () => {
 
 describe('registros', () => {
   test('cada registro nace con identificador, fechas, origen y sin borrar', async () => {
-    const p = await create(database.projects, { name: 'Soldadura línea 3' });
+    const p = await create(database.projects, P('Soldadura línea 3'));
     expect(p.id).toMatch(/^[0-9a-f-]{36}$/);
     expect(p.createdAt).toBe(p.updatedAt);
     expect(p.deleted).toBe(0);
@@ -22,7 +24,7 @@ describe('registros', () => {
   });
 
   test('editar sube la fecha de cambio', async () => {
-    const p = await create(database.projects, { name: 'A' });
+    const p = await create(database.projects, P('A'));
     await update(database.projects, p.id, { name: 'B' });
     const after = await database.projects.get(p.id);
     expect(after?.name).toBe('B');
@@ -30,8 +32,8 @@ describe('registros', () => {
   });
 
   test('borrar marca el registro y deshacer lo recupera', async () => {
-    const a = await create(database.projects, { name: 'A' });
-    const b = await create(database.projects, { name: 'B' });
+    const a = await create(database.projects, P('A'));
+    const b = await create(database.projects, P('B'));
     await softDelete(database.projects, a.id);
     expect((await listActive(database.projects)).map((p) => p.name)).toEqual(['B']);
     expect(await database.projects.get(a.id)).toMatchObject({ deleted: 1 });

@@ -290,6 +290,28 @@ PLAN.md, sección 5.
       (categorías nuevas: Proyecto y Símbolo).
 - [ ] El dueño valida la adaptación y la traducción del glosario.
 
+### Proyecto mínimo (adelantado; ficha `docs/fichas/proyecto-minimo.md`)
+
+- [x] **Parte 1** (2026-11-14): proyectos y mediciones en la base local
+      (`src/projects/model.ts`, `store.ts`, con pruebas): tipos y fases,
+      campos de contexto propuestos y editables, crear proyecto
+      (`NewProjectScreen`), lista (`ProjectsScreen`), pantalla del proyecto
+      con fase actual y mediciones por fase (`ProjectScreen`), hoja
+      «Guardar en un proyecto» (`SaveSheet`: último proyecto y su último
+      contexto, valores ya usados como sugerencia, fecha y hora, nota,
+      proyecto nuevo ahí mismo), medición abierta en su herramienta
+      (`#/proyectos/{id}/m/{id}`, `MeasurementPanel`: versión, historial,
+      congelar, borrar con deshacer), versión nueva al cambiar los datos.
+      DPMO y FPY guardan datos y resultado principal (`save`, `useSavedInput`).
+      Guía de uso: tema «Proyectos y mediciones».
+- [ ] Parte 2: hitos, filtros y orden de la lista de mediciones, editar el
+      proyecto (nombre, objetivo, campos) y los datos de una medición.
+- [ ] Parte 3: copia de seguridad (descargar, en Drive, restaurar) y espacio
+      usado.
+- [ ] Parte 4: Google: carpetas ordenadas, archivo del proyecto, pestañas
+      «Resumen» y una por medición, aviso al editar, detección de cambios,
+      sincronizar; «Exportar» suelto a `Gemba Kit/Sueltas`.
+
 ### Fase 2 — Gráficos
 
 - [ ] Estadística descriptiva con histograma, Pareto, gráfico de corrida.

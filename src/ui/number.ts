@@ -51,6 +51,15 @@ export function parseColumn(text: string): ParsedColumn {
   return out;
 }
 
+/**
+ * Número como texto de un campo para volver a editarlo: sin separador de
+ * miles (que se leería como decimales) y con la coma o el punto del idioma.
+ */
+export function toFieldText(v: number, lang: 'es' | 'en'): string {
+  const s = String(Number(v.toPrecision(12)));
+  return lang === 'es' ? s.replace('.', ',') : s;
+}
+
 /** Formato de número para mostrar según el idioma (coma en español, punto en inglés). */
 export function formatNumber(n: number, lang: 'es' | 'en', maxDecimals = 2): string {
   return new Intl.NumberFormat(lang === 'es' ? 'es-ES' : 'en-US', {

@@ -5,12 +5,55 @@ import type { SyncedRecord } from './record';
 // conjuntos de datos y acciones existen desde ya para que su forma no cambie;
 // sus campos propios se añaden con cada fase.
 
+export type ProjectType = 'dmaic' | 'kaizen' | 'a3' | '5s' | 'seguimiento';
+
+/** Campo de contexto de las mediciones (Equipo, Puesto…). El nombre lo pone el usuario. */
+export interface ContextField {
+  id: string;
+  label: string;
+}
+
 export interface Project extends SyncedRecord {
   name: string;
+  type: ProjectType;
+  goal: string;
+  /** Fase actual (identificador de PHASES[type]); vacía si el tipo no tiene fases. */
+  phase: string;
+  fields: ContextField[];
 }
+
+/** Resultado principal de una medición, para listas y para ordenar. */
+export interface Headline {
+  /** Qué es (clave de la herramienta: «sigmaLevel», «rty»…). */
+  key: string;
+  value: number;
+  kind: 'percent' | 'number';
+  decimals: number;
+}
+
+/** Una versión de los datos de una medición. La 1 es la original. */
+export interface MeasurementVersion {
+  n: number;
+  at: number;
+  /** Datos de la herramienta, en su propio formato. */
+  input: unknown;
+  headline: Headline | null;
+}
+
+/** Medición guardada en un proyecto (un análisis hecho con una herramienta). */
 export interface Analysis extends SyncedRecord {
   projectId: string;
   toolId: string;
+  name: string;
+  phase: string;
+  /** Cuándo se midió (lo pone el usuario; por defecto, al guardar). */
+  measuredAt: number;
+  /** Valor de cada campo de contexto del proyecto: {equipo: 'Day shift 1'}. */
+  context: Record<string, string>;
+  note: string;
+  /** 1 = congelada: sus datos ya no cambian (línea base). */
+  frozen: 0 | 1;
+  versions: MeasurementVersion[];
 }
 export interface Capture extends SyncedRecord {
   projectId: string;

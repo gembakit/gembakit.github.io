@@ -1,7 +1,11 @@
 import { useCallback, useId, useState, type ReactNode } from 'react';
 import type { SheetDef } from '../sheet/types';
 import { ExportPanel } from './ExportPanel';
-import { BookOpenText, ChevronDown, FolderPlus, Share, SquareFunction, TriangleAlert, Lightbulb } from 'lucide-react';
+import { BookOpenText, ChevronDown, ChevronLeft, FolderPlus, Save, Share, SquareFunction, TriangleAlert, Lightbulb } from 'lucide-react';
+import { useSaved } from '../projects/live';
+import { addVersion, FrozenError, latest } from '../projects/store';
+import { SaveSheet, type SavePayload } from '../projects/SaveSheet';
+import { MeasurementPanel } from '../projects/MeasurementPanel';
 import { useI18n } from '../i18n';
 import { Button } from './Button';
 import { BottomAction, Card, DetailHeader, Label, Screen } from './Layout';
@@ -30,6 +34,8 @@ export function ToolTemplate({
   formula,
   guide,
   sheet,
+  toolId,
+  save,
 }: {
   name: string;
   subtitle?: string;
@@ -43,18 +49,74 @@ export function ToolTemplate({
   guide?: string[];
   /** Hoja de la herramienta con los datos actuales, para exportarla. */
   sheet?: () => SheetDef | null;
+  /** Identificador de la herramienta en el registro (para guardar en un proyecto). */
+  toolId?: string;
+  /** Datos actuales y resultado principal, para guardarlos en un proyecto. */
+  save?: () => SavePayload | null;
 }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const toast = useToast();
+  const saved = useSaved();
   const [showFormula, setShowFormula] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const closeExport = useCallback(() => setExportOpen(false), []);
+  const [saveOpen, setSaveOpen] = useState(false);
+  const closeSave = useCallback(() => setSaveOpen(false), []);
   const [showGuide, setShowGuide] = useState(false);
   const guideId = useId();
 
+  // Dentro de una medición guardada: ¿han cambiado los datos respecto a la última versión?
+  const current = saved && save ? save() : null;
+  const last = saved ? latest(saved.analysis) : null;
+  const changed = !!(current && last && JSON.stringify(current.input) !== JSON.stringify(last.input));
+  const projectPath = saved ? `/proyectos/${saved.project.id}` : '';
+  const saveVersion = async () => {
+    if (!saved || !current) return;
+    try {
+      const n = await addVersion(saved.analysis.id, current.input, current.headline);
+      toast(t.measurement.savedVersion(n), { tone: 'ok' });
+    } catch (e) {
+      if (e instanceof FrozenError) toast(t.measurement.frozen);
+      else throw e;
+    }
+  };
+  const today = new Date().toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB', { day: 'numeric', month: 'short' });
+
+  let bottom;
+  if (saved) {
+    bottom =
+      changed && !saved.analysis.frozen ? (
+        <Button variant="primary" icon={Save} className="w-full" onClick={() => void saveVersion()}>
+          {t.measurement.saveVersion(saved.analysis.versions.length + 1)}
+        </Button>
+      ) : (
+        <Button variant="primary" icon={ChevronLeft} className="w-full" onClick={() => navigate(projectPath)}>
+          {t.measurement.back}
+        </Button>
+      );
+  } else if (hasData) {
+    bottom = (
+      <Button variant="primary" icon={FolderPlus} className="w-full" onClick={() => (save && toolId ? setSaveOpen(true) : toast(t.template.saveLater))}>
+        {t.template.saveToProject}
+      </Button>
+    );
+  } else {
+    bottom = (
+      <Button variant="primary" className="w-full" onClick={onLoadExample}>
+        {t.common.loadExample}
+      </Button>
+    );
+  }
+
   return (
     <Screen wide>
-      <DetailHeader title={name} subtitle={subtitle} onBack={() => navigate('/herramientas')} backLabel={t.common.back} />
+      <DetailHeader
+        title={name}
+        subtitle={saved ? saved.project.name : subtitle}
+        onBack={() => navigate(saved ? projectPath : '/herramientas')}
+        backLabel={t.common.back}
+      />
+      {saved && <MeasurementPanel saved={saved} />}
       {guide && guide.length > 0 && (
         <section className="raised overflow-hidden rounded-[20px]">
           <button
@@ -125,17 +187,8 @@ export function ToolTemplate({
         </div>
       </div>
       {sheet && <ExportPanel open={exportOpen} onClose={closeExport} build={sheet} />}
-      <BottomAction>
-        {hasData ? (
-          <Button variant="primary" icon={FolderPlus} className="w-full" onClick={() => toast(t.template.saveLater)}>
-            {t.template.saveToProject}
-          </Button>
-        ) : (
-          <Button variant="primary" className="w-full" onClick={onLoadExample}>
-            {t.common.loadExample}
-          </Button>
-        )}
-      </BottomAction>
+      {save && toolId && !saved && <SaveSheet open={saveOpen} onClose={closeSave} toolId={toolId} defaultName={`${name} · ${today}`} payload={save} />}
+      <BottomAction>{bottom}</BottomAction>
     </Screen>
   );
 }

@@ -5,7 +5,9 @@ import { ImportDialog } from '../../ui/ImportDialog';
 import { useI18n } from '../../i18n';
 import { fpyRty, type FpyStep } from '../../calc/fpy';
 import type { CalcWarning } from '../../calc/types';
-import { formatNumber, parseDecimal } from '../../ui/number';
+import { formatNumber, parseDecimal, toFieldText } from '../../ui/number';
+import { useSavedInput } from '../../projects/live';
+import type { SavePayload } from '../../projects/SaveSheet';
 import { NumberField } from '../../ui/NumberField';
 import { ToolTemplate } from '../../ui/ToolTemplate';
 import { Button, IconButton } from '../../ui/Button';
@@ -15,6 +17,12 @@ import { APP_VERSION } from '../../version';
 import { fpySheet, type NamedStep } from './sheet';
 
 type Mode = 'counts' | 'direct';
+
+/** Datos de FPY guardados en un proyecto: el modo y cada paso (FPY de 0 a 1). */
+export interface FpySaved {
+  mode: Mode;
+  steps: { name: string; entering?: number; good?: number; fpy?: number }[];
+}
 interface Row {
   id: number;
   name: string;
@@ -49,7 +57,22 @@ export default function FpyTool() {
   const { t, lang } = useI18n();
   const d = t.tools.fpy;
   const toast = useToast();
-  const [state, setState] = useState<State>(EMPTY);
+  // Medición guardada: arranca con sus pasos.
+  const savedInput = useSavedInput<FpySaved>();
+  const [state, setState] = useState<State>(() =>
+    savedInput
+      ? {
+          mode: savedInput.mode,
+          rows: savedInput.steps.map((s, i) => ({
+            id: i + 1,
+            name: s.name,
+            entering: s.entering === undefined ? '' : toFieldText(s.entering, lang),
+            good: s.good === undefined ? '' : toFieldText(s.good, lang),
+            fpy: s.fpy === undefined ? '' : toFieldText(s.fpy * 100, lang),
+          })),
+        }
+      : EMPTY,
+  );
   const nextId = useRef(100);
   const { mode, rows } = state;
 
@@ -59,6 +82,8 @@ export default function FpyTool() {
   // Pasos con datos, en orden. Si alguno está a medias, no hay cálculo.
   const parsed = (() => {
     const steps: NamedStep[] = [];
+    // Lo que se guarda en el proyecto: el nombre tal como se escribió (vacío = «Paso n»).
+    const own: FpySaved['steps'] = [];
     let incomplete: string | null = null;
     rows.forEach((r, i) => {
       if (!used(r)) return;
@@ -67,14 +92,20 @@ export default function FpyTool() {
         const entering = parseDecimal(r.entering);
         const good = parseDecimal(r.good);
         if (entering === null || good === null) incomplete ??= name;
-        else steps.push({ name, step: { entering, good } });
+        else {
+          steps.push({ name, step: { entering, good } });
+          own.push({ name: r.name.trim(), entering, good });
+        }
       } else {
         const v = parseDecimal(r.fpy);
         if (v === null) incomplete ??= name;
-        else steps.push({ name, step: { fpy: v / 100 } });
+        else {
+          steps.push({ name, step: { fpy: v / 100 } });
+          own.push({ name: r.name.trim(), fpy: v / 100 });
+        }
       }
     });
-    return { steps, incomplete };
+    return { steps, own, incomplete };
   })();
 
   const out = parsed.steps.length && !parsed.incomplete ? fpyRty(parsed.steps.map((s): FpyStep => s.step)) : null;
@@ -122,11 +153,7 @@ export default function FpyTool() {
   ];
   const [importOpen, setImportOpen] = useState(false);
   const closeImport = useCallback(() => setImportOpen(false), []);
-  // Números como texto del campo, sin separador de miles (que se leería como decimales).
-  const asField = (v: number) => {
-    const s = String(Number(v.toPrecision(12)));
-    return lang === 'es' ? s.replace('.', ',') : s;
-  };
+  const asField = (v: number) => toFieldText(v, lang);
   const onImport = (imported: ImportedRow[]) => {
     const previous = state;
     // FPY: si todos vienen como fracción (0,97, o «97 %» leído así), se pasan a porcentaje.
@@ -325,6 +352,8 @@ export default function FpyTool() {
       reading={reading}
       formula={formula}
       sheet={sheet}
+      toolId="fpy"
+      save={(): SavePayload | null => (r ? { input: { mode, steps: parsed.own } satisfies FpySaved, headline: { key: 'rty', value: r.rty, kind: 'percent', decimals: 1 } } : null)}
     />
   );
 }

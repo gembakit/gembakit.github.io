@@ -33,6 +33,14 @@ const SHOTS = [
     then: /^Leer lo pegado$/,
     full: true,
   },
+  // Proyectos: los datos se quedan en el navegador entre capturas, así que van encadenadas.
+  { name: 'proyecto-nuevo', hash: '#/proyectos/nuevo', full: true },
+  { name: 'proyecto-creado', hash: '#/proyectos/nuevo', fill: ['main input', 'Rechazo línea 3'], then: /^Crear proyecto$/, only: 'light' },
+  { name: 'dpmo-guardar', hash: '#/herramientas/dpmo', click: [/Cargar ejemplo/, /^Guardar en un proyecto$/], full: true },
+  { name: 'dpmo-guardado', hash: '#/herramientas/dpmo', click: [/Cargar ejemplo/, /^Guardar en un proyecto$/], then: /^Guardar$/ },
+  { name: 'proyectos-lista', hash: '#/proyectos' },
+  { name: 'proyecto-mediciones', hash: '#/proyectos', click: /Rechazo línea 3/, full: true },
+  { name: 'medicion', hash: '#/proyectos', click: [/Rechazo línea 3/, /DPMO y nivel sigma/], full: true },
   { name: 'referencia', hash: '#/referencia' },
   { name: 'referencia-abierta', hash: '#/referencia', click: /^DMAIC/ },
   { name: 'referencia-guia', hash: '#/referencia', click: /^Cómo es cada herramienta/ },
@@ -51,6 +59,8 @@ for (const mode of ['light', 'dark']) {
   await page.setViewport({ width, height: 780, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
   await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: mode }]);
   for (const s of SHOTS) {
+    // Capturas que cambian datos y solo deben hacerse una vez (por ejemplo, crear el proyecto).
+    if (s.only && s.only !== mode) continue;
     // Página nueva en cada captura: sin datos ni desplazamiento de la anterior.
     await page.goto('about:blank');
     await page.goto(base + s.hash, { waitUntil: 'networkidle0' });

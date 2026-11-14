@@ -122,6 +122,52 @@ test('FPY y RTY: importar un .csv de Excel en español (punto y coma, tildes de 
   expect(within(dialog).getByText(/Fila 4: falta|Row 4: /)).toBeInTheDocument();
 });
 
+test('proyecto: crearlo, guardar una medición de DPMO, abrirla, guardar la versión 2 y congelarla', async () => {
+  const user = userEvent.setup();
+  window.location.hash = '#/proyectos/nuevo';
+  render(<App />);
+  await user.type(await screen.findByRole('textbox', { name: /^(Nombre|Name)$/ }), 'Rechazo línea 3');
+  await user.click(screen.getByRole('radio', { name: /Seguimiento de proceso|Process monitoring/ }));
+  await user.click(screen.getByRole('button', { name: /Crear proyecto|Create project/ }));
+  expect(await screen.findByRole('heading', { level: 1, name: 'Rechazo línea 3' })).toBeInTheDocument();
+  expect(screen.getByText(/Todavía no hay mediciones|No measurements yet/)).toBeInTheDocument();
+
+  // Guardar desde DPMO: el proyecto (el único) ya viene elegido.
+  window.location.hash = '#/herramientas/dpmo';
+  await user.click(await screen.findByRole('button', { name: /Cargar ejemplo|Load example/ }));
+  await user.click(screen.getByRole('button', { name: /Guardar en un proyecto|Save to a project/ }));
+  const dialog = await screen.findByRole('dialog');
+  await within(dialog).findByRole('option', { name: 'Rechazo línea 3', selected: true });
+  await user.type(within(dialog).getByRole('textbox', { name: /^(Equipo|Crew)$/ }), 'Day shift 1');
+  await user.click(within(dialog).getByRole('button', { name: /^(Guardar|Save)$/ }));
+  expect(await screen.findByText(/Guardado en «Rechazo línea 3»|Saved to “Rechazo línea 3”/)).toBeInTheDocument();
+
+  // En el proyecto aparece con su resultado y su contexto.
+  await user.click(screen.getByRole('button', { name: /^(Ver|View)$/ }));
+  const item = await screen.findByRole('button', { name: /DPMO y nivel sigma|DPMO and sigma level/ });
+  expect(within(item).getByText(/3[,.]83/)).toBeInTheDocument();
+  expect(within(item).getByText('Day shift 1')).toBeInTheDocument();
+
+  // Abrirla: arranca con sus datos; cambiar uno ofrece guardar la versión 2.
+  await user.click(item);
+  expect(await screen.findByText(/Medición guardada|Saved measurement/)).toBeInTheDocument();
+  const units = screen.getByRole('textbox', { name: /Unidades revisadas|Units inspected/ });
+  expect(units).toHaveValue('1000');
+  await user.clear(units);
+  await user.type(units, '2000');
+  await user.click(await screen.findByRole('button', { name: /Guardar como versión 2|Save as version 2/ }));
+  expect(await screen.findByText(/Guardada la versión 2|Version 2 saved/)).toBeInTheDocument();
+  expect(await screen.findByText(/Versión 2 de 2|Version 2 of 2/)).toBeInTheDocument();
+
+  // Congelada: ya no ofrece guardar cambios.
+  await user.click(screen.getByRole('button', { name: /^(Congelar|Freeze)$/ }));
+  expect(await screen.findByRole('button', { name: /^(Descongelar|Unfreeze)$/ })).toBeInTheDocument();
+  await user.clear(units);
+  await user.type(units, '3000');
+  expect(screen.queryByRole('button', { name: /Guardar como versión 3|Save as version 3/ })).toBeNull();
+  expect(screen.getByRole('button', { name: /Volver al proyecto|Back to the project/ })).toBeInTheDocument();
+});
+
 test('Ajustes lleva a la prueba provisional de Google, con sus siete pasos', async () => {
   const user = userEvent.setup();
   window.location.hash = '#/ajustes';
