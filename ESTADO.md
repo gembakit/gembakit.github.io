@@ -298,10 +298,20 @@ PLAN.md, sección 5.
       de la ficha: no se convierte entre unidades; la demanda y los tiempos
       van en una sola unidad (min, h o días), porque pasar de días a horas
       exigiría suponer cuántas horas tiene la jornada.
+- [x] **Calculadora 6, ahorro, ROI y payback** (2026-11-14):
+      `src/calc/roi.ts` con los cuatro casos de la ficha (Lumen 5 años y
+      3,67 años, CFI 100 % y 25 %), pantalla en `src/tools/roi` (moneda,
+      líneas de ahorro duras o blandas, directas, por unidades o por horas;
+      «distinto cada año»; costes nuevos y horizonte), gráfico del ahorro
+      acumulado frente a la inversión, aviso fijo de cálculo sin descontar,
+      hoja y hoja del proyecto. En la hoja, el payback con ahorro distinto
+      cada año lo escribe la app como número (acumular e interpolar en
+      fórmulas no merece la pena); lo demás son fórmulas vivas.
+- [x] **Fase 1: las seis calculadoras hechas.**
 - [ ] La salida .xlsx, cuando el dueño la pida, se añade sobre la misma
       definición de hoja sin tocar las herramientas.
-- [ ] Calculadoras 2 a 6: FPY y RTY, takt, OEE, kanban, ahorro con ROI y
-      payback.
+- [x] Calculadoras 2 a 6: FPY y RTY, takt, OEE, kanban, ahorro con ROI y
+      payback (2026-11-14).
 - [x] Glosario ampliado con los términos de las seis calculadoras (31
       términos, categoría nueva «Finanzas») y guía de uso general en
       Referencia (`src/reference/guide.ts`), pedidos por el dueño el

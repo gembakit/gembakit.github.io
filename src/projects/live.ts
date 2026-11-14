@@ -60,6 +60,10 @@ export function headlineLabel(h: Headline, t: Messages): string {
       return 'OEE';
     case 'kanban':
       return 'Kanban';
+    case 'payback':
+      return 'Payback';
+    case 'roi':
+      return 'ROI';
     default:
       return h.key;
   }

@@ -14,6 +14,9 @@ import { oeeExplain } from './oee/explain';
 import { kanban } from '../calc/kanban';
 import { kanbanExplain } from './kanban/explain';
 import { calcInput as kanbanInput } from './kanban/reading';
+import { roi } from '../calc/roi';
+import { lineExplain, roiExplain } from './roi/explain';
+import { calcInput as roiInput } from './roi/model';
 
 // «De dónde sale cada valor»: la fórmula con letras, con los números y el
 // resultado, igual que en pantalla. `toText` es la versión en una línea.
@@ -109,6 +112,28 @@ describe('Kanban: de dónde sale cada valor', () => {
     expect(txt(ex.cards)).toEqual(['(D × L × (1 + α)) ÷ C', '(2.000 × 0,1 × (1 + 10 %)) ÷ 22', '10', '10']);
     expect(txt(ex.lead)).toEqual(['Te + Tp', '0,08 días + 0,02 días', '0,1 días']);
     expect(txt(ex.pieces)).toEqual(['k × C', '10 × 22', '220']);
+  });
+});
+
+describe('ROI: de dónde sale cada valor', () => {
+  test('ahorro igual cada año (Lumen): payback = I ÷ A', () => {
+    const s = { currency: '€', investment: 120_000, mode: 'same' as const, lines: [{ name: '', kind: 'hard' as const, how: 'direct' as const, amount: 24_000 }], years: [], newCosts: 0, horizon: 1 };
+    const ex = roiExplain(s, roi(roiInput(s)).result!, es, 'es');
+    expect(txt(ex.payback)).toEqual(['I ÷ A', '120.000 € ÷ 24.000 €', '5 años']);
+    expect(txt(ex.net)).toEqual(['AD − CN', '24.000 € − 0 €', '24.000 €']);
+    expect(txt(ex.roi)).toEqual(['(AH − I) ÷ I', '(24.000 € − 120.000 €) ÷ 120.000 €', '−80 %']);
+  });
+
+  test('ahorro distinto cada año (Lumen «refurbish»): acumulado e interpolado', () => {
+    const s = { currency: '€', investment: 56_000, mode: 'yearly' as const, lines: [], years: [18_000, 16_000, 14_000, 12_000], newCosts: 0, horizon: 0 };
+    const ex = roiExplain(s, roi(roiInput(s)).result!, es, 'es');
+    expect(txt(ex.payback)).toEqual(['3 + (I − Σ) ÷ A4', '3 + (56.000 € − 48.000 €) ÷ 12.000 €', '3,67 años', '3 años y 8 meses']);
+    expect(ex.net).toBeNull();
+  });
+
+  test('línea por unidad: (Ca − Cd) × U', () => {
+    const line = { name: 'Mermas', kind: 'hard' as const, how: 'unit' as const, before: 2.5, after: 2, units: 40_000 };
+    expect(txt(lineExplain(line, 'Mermas', es, 'es', '€'))).toEqual(['(Ca − Cd) × U', '(2,5 € − 2 €) × 40.000', '20.000 €']);
   });
 });
 
