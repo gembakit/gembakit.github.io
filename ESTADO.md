@@ -27,8 +27,8 @@ paso.
 
 | Qué | Dónde |
 |---|---|
-| App publicada | https://pasqualebf.github.io/gemba-kit/ |
-| Código (público) | https://github.com/pasqualebf/gemba-kit |
+| App publicada | https://gembakit.github.io/ (desde el 2026-11-14; antes `pasqualebf.github.io/gemba-kit/`, ya no funciona) |
+| Código (público) | https://github.com/gembakit/gembakit.github.io (organización gratuita `gembakit` de GitHub, del dueño; ver `docs/traspaso.md`) |
 | Maqueta visual aprobada (privada, del dueño) | https://claude.ai/artifact/WE7dYB8wSRRKpsRY7Lwghg |
 | Carpeta local | `C:\Users\pasqu\Proyectos\gemba-kit` (fuera de OneDrive a propósito: OneDrive bloquea los miles de archivos pequeños) |
 
@@ -97,9 +97,10 @@ Notas técnicas que costó descubrir:
    paquetes opcionales de otras plataformas). Pasa **cada vez que se añade
    un paquete** (volvió a pasar con jStat): regenerar el lock antes de
    publicar.
-3. **Git Bash cambia las rutas:** `BASE_PATH=/gemba-kit/` se convierte en una
-   ruta de Windows. Para probar la compilación de GitHub Pages en local, usar
-   `MSYS_NO_PATHCONV=1 BASE_PATH=/gemba-kit/ npx vite build`.
+3. **Dirección en la raíz:** desde el 2026-11-14 la app se publica en la
+   raíz (`BASE_PATH=/`), así que la compilación local y la de GitHub son
+   iguales. (Antes, en una subcarpeta, Git Bash convertía `BASE_PATH` en una
+   ruta de Windows y había que usar `MSYS_NO_PATHCONV=1`.)
 4. **Chrome sin ventana** no baja de unos 500 px de ancho; por eso las
    capturas se hacen con `puppeteer-core` (scripts/screens.mjs), que sí
    simula un móvil de 320-360 px.
@@ -134,7 +135,9 @@ PLAN.md, sección 5.
         cuenta (2026-11-13): API de Drive y de Sheets activadas, pantalla de
         permiso "External" en modo pruebas con el dueño como usuario de
         prueba, permisos `drive.file` y `drive.appdata`, cliente web con
-        orígenes `https://pasqualebf.github.io` y `http://localhost:5173`.
+        orígenes `https://pasqualebf.github.io` y `http://localhost:5173`
+        (el 2026-11-14 se añade `https://gembakit.github.io`, la dirección
+        nueva).
         El identificador de cliente está en `src/google/config.ts`.
   - [x] Google exigió una cuenta de facturación para crear el proyecto. El
         dueño vinculó la suya y decidió dejarla vinculada (tiene un

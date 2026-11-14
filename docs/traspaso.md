@@ -7,8 +7,8 @@ usuarios pierdan nada. Mantener al día cada vez que se añada un servicio.
 
 | Pieza | Dónde | Cuenta actual | Qué identifica |
 |---|---|---|---|
-| Código | GitHub, repositorio `gemba-kit` | Cuenta de GitHub del dueño (`pasqualebf`) | — |
-| Publicación de la app | GitHub Pages | La misma | Dirección `https://pasqualebf.github.io/gemba-kit/` |
+| Código | GitHub, repositorio `gembakit.github.io` | Organización gratuita `gembakit` de GitHub; su propietario es la cuenta del dueño (`pasqualebf`) | — |
+| Publicación de la app | GitHub Pages de la organización | La misma | Dirección `https://gembakit.github.io/` |
 | Proyecto de Google Cloud «Gemba Kit» | console.cloud.google.com | Cuenta de Google del dueño | Número de proyecto `885678684671` |
 | Cliente de acceso con Google | Dentro de ese proyecto | La misma | Identificador en `src/google/config.ts` |
 | APIs activadas | Dentro de ese proyecto | La misma | Drive, Sheets, Slides |
@@ -23,19 +23,22 @@ usuarios pierdan nada. Mantener al día cada vez que se añada un servicio.
    carpeta oculta (`drive.appdata`) van ligados al proyecto: con un proyecto
    nuevo, la app **dejaría de ver** todos los archivos y copias que creó
    antes en el Drive de cada usuario.
-2. **No cambiar la dirección de la app sin avisar.** Los datos del teléfono
-   van ligados a la dirección (`pasqualebf.github.io`). Si la app pasa a otra
-   dirección, cada usuario tiene que hacer una copia de seguridad en la
-   antigua y restaurarla en la nueva. Por eso, **antes de publicar la app
-   para otros**, conviene darle un dominio propio (por ejemplo
-   `gembakit.app`, unos 10-20 € al año): así la dirección no depende de la
-   cuenta de GitHub y un traspaso no la cambia.
+2. **No cambiar la dirección de la app.** Los datos del teléfono van ligados
+   a la dirección (`gembakit.github.io`). Si la app pasara a otra dirección,
+   cada usuario tendría que hacer una copia de seguridad en la antigua y
+   restaurarla en la nueva. Por eso la app vive en una **organización** de
+   GitHub (gratis): para traspasarla se cambia quién administra la
+   organización y la dirección no cambia. (Opción de pago: un dominio propio,
+   unos 10-20 € al año.)
 
 ## Preparado desde ya
 
-- **Un segundo propietario del proyecto de Google Cloud**: añadir la otra
-  cuenta de Google del dueño como propietaria (IAM → «Otorgar acceso» → rol
-  «Propietario»). Si se pierde una cuenta, la otra sigue administrando.
+- **La app vive en la organización `gembakit` de GitHub** (2026-11-14), no en
+  la cuenta personal: su dirección no depende de una persona.
+- **Recomendado, pendiente (el dueño prefiere no hacerlo por ahora):** un
+  segundo propietario del proyecto de Google Cloud (IAM → «Otorgar acceso» →
+  rol «Propietario») y de la organización de GitHub. Si se pierde una
+  cuenta, la otra sigue administrando.
 - **El identificador del cliente está en un solo sitio**:
   `src/google/config.ts`.
 - **Este documento.**
@@ -48,9 +51,9 @@ usuarios pierdan nada. Mantener al día cada vez que se añada un servicio.
    Cambiar el correo de contacto de la pantalla de permiso. Después, quitar
    la cuenta antigua. El proyecto, el cliente y los permisos de los usuarios
    **no cambian**: nadie nota nada.
-2. **GitHub:** Settings → «Transfer ownership» del repositorio a la cuenta
-   nueva. Con dominio propio, la dirección de la app no cambia (hay que
-   volver a configurar el dominio en la cuenta nueva). Sin dominio propio,
-   la dirección cambia: ver regla 2.
-3. **Dominio (si existe):** pasar el registro del dominio a la cuenta nueva.
+2. **GitHub:** en la organización `gembakit` → People → invitar a la cuenta
+   nueva con rol **Owner**. Cuando acepte, quitar la antigua. **No** traspasar
+   el repositorio fuera de la organización: cambiaría la dirección (regla 2).
+3. **Dominio (si algún día se compra uno):** pasar su registro a la cuenta
+   nueva.
 4. Revisar este documento y anotar la fecha del traspaso.

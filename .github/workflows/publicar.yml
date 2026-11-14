@@ -28,9 +28,11 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
+      # La app vive en la raíz de https://gembakit.github.io/ (repositorio
+      # gembakit.github.io de la organización gembakit; ver docs/traspaso.md).
       - run: npx vite build
         env:
-          BASE_PATH: /${{ github.event.repository.name }}/
+          BASE_PATH: /
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

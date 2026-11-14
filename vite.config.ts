@@ -6,7 +6,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 const { version } = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as { version: string };
 
-// BASE_PATH lo pone la publicación en GitHub Pages (subcarpeta del repositorio).
+// BASE_PATH lo pone la publicación en GitHub Pages: «/» (la app está en la raíz de gembakit.github.io).
 // En local la app vive en la raíz.
 export default defineConfig({
   base: process.env.BASE_PATH ?? '/',

@@ -4,7 +4,7 @@
 import { mkdirSync } from 'node:fs';
 import puppeteer from 'puppeteer-core';
 
-const url = process.argv[2] ?? 'https://pasqualebf.github.io/gemba-kit/';
+const url = process.argv[2] ?? 'https://gembakit.github.io/';
 const outDir = process.argv[3] ?? 'screens-live';
 const CHROME = process.argv[4] ?? 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 mkdirSync(outDir, { recursive: true });
