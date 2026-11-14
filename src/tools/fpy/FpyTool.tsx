@@ -4,7 +4,7 @@ import type { ImportedRow, ImportField } from '../../import/mapping';
 import { ImportDialog } from '../../ui/ImportDialog';
 import { useI18n } from '../../i18n';
 import { fpyRty, type FpyStep } from '../../calc/fpy';
-import type { CalcWarning } from '../../calc/types';
+import { fpyConclusion, fpyReadingLines, fpyWarnings, type FpySaved } from './reading';
 import { formatPercent, parseDecimal, toFieldText } from '../../ui/number';
 import { useSavedInput } from '../../projects/live';
 import type { SavePayload } from '../../projects/SaveSheet';
@@ -17,13 +17,8 @@ import { useToast } from '../../ui/Toast';
 import { APP_VERSION } from '../../version';
 import { fpySheet, type NamedStep } from './sheet';
 
-type Mode = 'counts' | 'direct';
-
-/** Datos de FPY guardados en un proyecto: el modo y cada paso (FPY de 0 a 1). */
-export interface FpySaved {
-  mode: Mode;
-  steps: { name: string; entering?: number; good?: number; fpy?: number }[];
-}
+type Mode = FpySaved['mode'];
+export type { FpySaved };
 interface Row {
   id: number;
   name: string;
@@ -108,23 +103,7 @@ export default function FpyTool() {
   const stepName = (i: number) => parsed.steps[i]?.name ?? d.stepName(i + 1);
   const anyText = rows.some((x) => used(x) || x.name.trim() !== '');
 
-  const warningText = (w: CalcWarning): string | null => {
-    switch (w.code) {
-      case 'step-not-whole':
-        return d.warn.notWhole(stepName(w.step));
-      case 'step-no-input':
-        return d.warn.noInput(stepName(w.step));
-      case 'step-negative':
-        return d.warn.negative(stepName(w.step));
-      case 'good-exceed-entering':
-        return d.warn.exceed(stepName(w.step));
-      case 'fpy-out-of-range':
-        return d.warn.outOfRange(stepName(w.step));
-      default:
-        return null;
-    }
-  };
-  const warnings = (out?.warnings ?? []).map(warningText).filter((x): x is string => x !== null);
+  const warnings = fpyWarnings(out?.warnings ?? [], stepName, t);
 
   const update = (id: number, patch: Partial<Row>) => setState((s) => ({ ...s, rows: s.rows.map((x) => (x.id === id ? { ...x, ...patch } : x)) }));
   const setMode = (m: Mode) => setState((s) => ({ ...s, mode: m }));
@@ -301,19 +280,14 @@ export default function FpyTool() {
     );
   }
 
-  const worstNote = r && r.fpy.length > 1 ? d.worstNote(stepName(r.worst), percent(r.fpy[r.worst]!, lang)) : null;
-  const conclusion = r ? d.conclusion(percent(r.rty, lang)) : '';
-  const reading = r ? { conclusion: worstNote ? `${conclusion} ${worstNote}` : conclusion, warnings, typicalError: d.typicalError } : null;
+  const conclusion = r ? fpyConclusion(r, stepName, t, lang) : '';
+  const reading = r ? { conclusion, warnings, typicalError: d.typicalError } : null;
 
   // La hoja lleva la misma lectura que la pantalla.
   const sheet = () =>
     r
       ? fpySheet(parsed.steps, t, {
-          reading: [
-            { tone: 'conclusion', text: worstNote ? `${conclusion} ${worstNote}` : conclusion },
-            ...warnings.map((w) => ({ tone: 'warning' as const, text: w })),
-            { tone: 'tip', text: d.typicalError },
-          ],
+          reading: fpyReadingLines(conclusion, warnings, t),
           version: APP_VERSION,
           date: new Date().toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB'),
         })

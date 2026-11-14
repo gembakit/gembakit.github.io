@@ -9,4 +9,5 @@ export const dpmoTool: ToolDef = {
   icon: Sigma,
   text: (t) => ({ name: t.tools.dpmo.name, summary: t.tools.dpmo.summary }),
   Screen: lazy(() => import('./DpmoTool')),
+  savedSheet: () => import('./reading').then((m) => m.dpmoSavedSheet),
 };

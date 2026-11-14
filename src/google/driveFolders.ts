@@ -18,7 +18,7 @@ export interface FolderMemory {
   set: (key: string, id: string) => Promise<void>;
 }
 
-export const FOLDER_KEYS = { root: 'drive.folder.root', backups: 'drive.folder.backups' } as const;
+export const FOLDER_KEYS = { root: 'drive.folder.root', backups: 'drive.folder.backups', projects: 'drive.folder.projects', loose: 'drive.folder.loose' } as const;
 
 /**
  * Carpeta `name` dentro de `parent` ('root' = Mi unidad): la recordada si
@@ -49,4 +49,16 @@ export async function backupFolder(token: string, names: { root: string; backups
   return ensureFolder(token, FOLDER_KEYS.backups, names.backups, root, memory, f);
 }
 
-export const folderUrl = (id: string) => `https://drive.google.com/drive/folders/${encodeURIComponent(id)}`;
+/** `Gemba Kit / Proyectos`, creando lo que falte. */
+export async function projectsFolder(token: string, names: { root: string; projects: string }, memory: FolderMemory, f: Fetch = fetch): Promise<string> {
+  const root = await ensureFolder(token, FOLDER_KEYS.root, names.root, 'root', memory, f);
+  return ensureFolder(token, FOLDER_KEYS.projects, names.projects, root, memory, f);
+}
+
+/** `Gemba Kit / Sueltas` («Exportar» sin proyecto), creando lo que falte. */
+export async function looseFolder(token: string, names: { root: string; loose: string }, memory: FolderMemory, f: Fetch = fetch): Promise<string> {
+  const root = await ensureFolder(token, FOLDER_KEYS.root, names.root, 'root', memory, f);
+  return ensureFolder(token, FOLDER_KEYS.loose, names.loose, root, memory, f);
+}
+
+export const folderUrl =(id: string) => `https://drive.google.com/drive/folders/${encodeURIComponent(id)}`;

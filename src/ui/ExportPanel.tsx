@@ -6,6 +6,8 @@ import { GoogleApiError } from '../google/api';
 import { ensureToken, forgetToken } from '../google/session';
 import { exportToGoogleSheet } from '../google/exportSheet';
 import { sheetLocale } from '../google/sheetsOutput';
+import { looseFolder } from '../google/driveFolders';
+import { folderMemory } from '../google/folderMemory';
 import type { SheetDef } from '../sheet/types';
 import { THEMES } from './theme/themes';
 import { useTheme } from './theme/ThemeProvider';
@@ -54,7 +56,11 @@ export function ExportPanel({ open, onClose, build }: { open: boolean; onClose: 
     const pending = ensureToken(); // primero, sin esperas: lo pide el navegador
     setPhase({ k: 'creating' });
     pending
-      .then((tk) => exportToGoogleSheet(tk.accessToken, def, THEMES[theme].light, sheetLocale(lang)))
+      .then(async (tk) => {
+        // Sin proyecto, el archivo va a Gemba Kit / Sueltas (no a la raíz del Drive).
+        const folder = await looseFolder(tk.accessToken, { root: t.data.folderRoot, loose: t.data.folderLoose }, folderMemory);
+        return exportToGoogleSheet(tk.accessToken, def, THEMES[theme].light, sheetLocale(lang), fetch, folder);
+      })
       .then((ref) => setPhase({ k: 'done', url: ref.url }))
       .catch((err: unknown) => {
         if (err instanceof GoogleAuthError) return setPhase({ k: 'error', text: e.noPermission });

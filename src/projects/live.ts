@@ -46,7 +46,7 @@ export function useLive<T>(query: () => Promise<T>, deps: readonly unknown[]): T
 }
 
 /** Nombre del resultado principal de cada herramienta. */
-function headlineLabel(h: Headline, t: Messages): string {
+export function headlineLabel(h: Headline, t: Messages): string {
   switch (h.key) {
     case 'sigmaLevel':
       return t.tools.dpmo.sigmaLabel;

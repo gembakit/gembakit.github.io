@@ -10,7 +10,7 @@ export const COLUMNS = 'ABCDE';
 /** Columnas de números de una tabla. */
 const TABLE_COLUMNS = 'CDE';
 
-export type RowKind = 'title' | 'sub' | 'gap' | 'kpi' | 'hint' | 'section' | 'heads' | 'input' | 'result' | 'theads' | 'trow' | 'reading' | 'note';
+export type RowKind = 'title' | 'sub' | 'gap' | 'info' | 'kpi' | 'hint' | 'section' | 'heads' | 'input' | 'result' | 'theads' | 'trow' | 'reading' | 'note';
 
 export interface GridCell {
   text?: string;
@@ -70,6 +70,13 @@ export function layoutSheet(def: SheetDef): Grid {
 
   rows.push(wide('title', def.heading), wide('sub', def.subheading));
   gap();
+
+  // Medición guardada: de qué proyecto es, cuándo, su contexto y su nota (el valor ocupa de C a E).
+  if (def.info) {
+    rows.push(wide('section', def.info.title));
+    def.info.rows.forEach((r, n) => rows.push({ kind: 'info', cells: [E, { text: r.label }, { text: r.value }, E, E], alt: n % 2 === 1 }));
+    gap();
+  }
 
   // Resumen: el resultado principal primero, después los demás marcados.
   const summary = [...def.results.filter((r) => r.main), ...def.results.filter((r) => r.summary && !r.main)];

@@ -95,4 +95,6 @@ export interface SheetDef {
   results: SheetResult[];
   reading: ReadingLine[];
   notes: string[];
+  /** Datos de una medición guardada (proyecto, fecha, contexto…): van arriba, en su propia sección. */
+  info?: { title: string; rows: { label: string; value: string }[] };
 }

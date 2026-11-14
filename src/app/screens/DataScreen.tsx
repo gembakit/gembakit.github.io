@@ -18,7 +18,8 @@ import {
 import { gisReady, GoogleAuthError, loadGis } from '../../google/gis';
 import { GoogleApiError, type DriveItem } from '../../google/api';
 import { ensureToken, forgetToken } from '../../google/session';
-import { backupFolder, folderUrl, type FolderMemory } from '../../google/driveFolders';
+import { backupFolder, folderUrl } from '../../google/driveFolders';
+import { folderMemory } from '../../google/folderMemory';
 import { listDriveBackups, loadDriveBackup, saveBackupToDrive } from '../../google/driveBackup';
 import { Button } from '../../ui/Button';
 import { Card, DetailHeader, Label, Screen } from '../../ui/Layout';
@@ -30,17 +31,6 @@ import { APP_VERSION } from '../../version';
 import { navigate } from '../router';
 
 const LAST_BACKUP = 'lastBackup';
-
-/** Las carpetas de Drive se recuerdan en los ajustes de este aparato. */
-const folderMemory: FolderMemory = {
-  get: async (key) => {
-    const s = await db.settings.get(key);
-    return typeof s?.value === 'string' ? s.value : null;
-  },
-  set: async (key, id) => {
-    await db.settings.put({ key, value: id });
-  },
-};
 
 /** Dónde se enseña el estado: en la tarjeta de la copia o en la de restaurar. */
 type Where = 'backup' | 'restore';

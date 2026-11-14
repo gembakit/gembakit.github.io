@@ -202,6 +202,47 @@ export async function trashDriveItem(token: string, id: string, f: Fetch = fetch
   await call(token, `${DRIVE}/${encodeURIComponent(id)}`, { method: 'PATCH', headers: json, body: JSON.stringify({ trashed: true }) }, f);
 }
 
+/** Cambia el nombre o las propiedades de la app de un archivo o carpeta, y lo mueve a otra carpeta si se indica. */
+export async function updateDriveItem(
+  token: string,
+  id: string,
+  patch: { name?: string; appProperties?: Record<string, string> },
+  move?: { to: string },
+  f: Fetch = fetch,
+): Promise<void> {
+  const q = new URLSearchParams({ fields: 'id' });
+  if (move) {
+    const r = (await (await call(token, `${DRIVE}/${encodeURIComponent(id)}?fields=parents`, {}, f)).json()) as { parents?: string[] };
+    q.set('addParents', move.to);
+    const from = (r.parents ?? []).filter((p) => p !== move.to);
+    if (from.length) q.set('removeParents', from.join(','));
+  }
+  await call(token, `${DRIVE}/${encodeURIComponent(id)}?${q}`, { method: 'PATCH', headers: json, body: JSON.stringify(patch) }, f);
+}
+
+/** Cuándo se modificó un archivo por última vez y quién (nombre que da Google; puede faltar). */
+export async function getDriveModified(token: string, id: string, f: Fetch = fetch): Promise<{ modifiedTime?: string; by?: string; me?: boolean }> {
+  const q = new URLSearchParams({ fields: 'modifiedTime,lastModifyingUser(displayName,me)' });
+  const r = (await (await call(token, `${DRIVE}/${encodeURIComponent(id)}?${q}`, {}, f)).json()) as {
+    modifiedTime?: string;
+    lastModifyingUser?: { displayName?: string; me?: boolean };
+  };
+  return { modifiedTime: r.modifiedTime, by: r.lastModifyingUser?.displayName, me: r.lastModifyingUser?.me };
+}
+
+/** «'Mi pestaña'»: nombre de pestaña como rango de la API (comillas simples, dobladas dentro). */
+export function tabRange(title: string): string {
+  return `'${title.replace(/'/g, "''")}'`;
+}
+
+/** Contenido de varias pestañas enteras, con las fórmulas tal cual (sin calcular). */
+export async function sheetsReadTabs(token: string, id: string, titles: string[], f: Fetch = fetch): Promise<unknown[][][]> {
+  if (!titles.length) return [];
+  const q = new URLSearchParams([...titles.map((t) => ['ranges', tabRange(t)]), ['valueRenderOption', 'FORMULA']]);
+  const r = (await (await call(token, `${SHEETS}/${id}/values:batchGet?${q}`, {}, f)).json()) as { valueRanges?: { values?: unknown[][] }[] };
+  return titles.map((_, i) => r.valueRanges?.[i]?.values ?? []);
+}
+
 /** Contenido de un archivo como texto. */
 export async function downloadDriveText(token: string, id: string, f: Fetch = fetch): Promise<string> {
   return (await call(token, `${DRIVE}/${encodeURIComponent(id)}?alt=media`, {}, f)).text();

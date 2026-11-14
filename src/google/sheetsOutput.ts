@@ -11,13 +11,13 @@ import { STATUS, type Palette } from '../ui/theme/themes';
 // comas) se lean siempre igual; después se pasa a la región del usuario y
 // Google las muestra con sus separadores. Ver ESTADO.md.
 
-interface Color {
+export interface Color {
   red: number;
   green: number;
   blue: number;
 }
 
-function color(hex: string): Color {
+export function color(hex: string): Color {
   const n = parseInt(hex.replace('#', ''), 16);
   return { red: ((n >> 16) & 255) / 255, green: ((n >> 8) & 255) / 255, blue: (n & 255) / 255 };
 }
@@ -61,6 +61,7 @@ const HEIGHTS: Partial<Record<GridRow['kind'], number>> = {
   result: 28,
   trow: 28,
   hint: 24,
+  info: 26,
 };
 /** Filas con un solo texto de B a E. */
 const WIDE = new Set<GridRow['kind']>(['title', 'sub', 'section', 'hint', 'reading', 'note']);
@@ -69,10 +70,10 @@ const NOTE_SPAN = new Set<GridRow['kind']>(['heads', 'input', 'result']);
 const LAST = COLUMNS.length - 1;
 
 /** «E12:E14» → rango de la API (índices desde 0, final excluido). */
-function gridRange(range: string) {
+function gridRange(range: string, sheetId: number) {
   const [a, b] = range.split(':').map((x) => /^([A-Z]+)(\d+)$/.exec(x)!);
   return {
-    sheetId: 0,
+    sheetId,
     startRowIndex: Number(a![2]) - 1,
     endRowIndex: Number(b![2]),
     startColumnIndex: COLUMNS.indexOf(a![1]!),
@@ -88,7 +89,49 @@ function value(cell: GridCell) {
   return {};
 }
 
+/** Una pestaña ya preparada: datos con formato, medidas, uniones y formatos condicionales. */
+export interface TabSpec {
+  sheetId: number;
+  title: string;
+  rowCount: number;
+  columnCount: number;
+  tabColor: Color;
+  rowData: { values: Record<string, unknown>[] }[];
+  rowMetadata: { pixelSize?: number }[];
+  columnMetadata: { pixelSize: number }[];
+  merges: TabRange[];
+  conditionalFormats: { ranges: TabRange[]; booleanRule: { condition: { type: string; values: { userEnteredValue: string }[] }; format: unknown } }[];
+}
+export interface TabRange {
+  sheetId: number;
+  startRowIndex: number;
+  endRowIndex: number;
+  startColumnIndex: number;
+  endColumnIndex: number;
+}
+
+/** Cuerpo para crear un archivo con una sola pestaña. */
 export function buildSpreadsheet(def: SheetDef, grid: Grid, palette: Palette) {
+  const tab = buildTab(def, grid, palette);
+  return { properties: { title: def.fileTitle, locale: 'en_US' }, sheets: [sheetOf(tab)] };
+}
+
+/** La pestaña tal como la pide la creación de un archivo. */
+export function sheetOf(tab: TabSpec) {
+  return {
+    properties: {
+      sheetId: tab.sheetId,
+      title: tab.title,
+      gridProperties: { rowCount: tab.rowCount, columnCount: tab.columnCount, hideGridlines: true },
+      tabColorStyle: { rgbColor: tab.tabColor },
+    },
+    data: [{ startRow: 0, startColumn: 0, rowData: tab.rowData, rowMetadata: tab.rowMetadata, columnMetadata: tab.columnMetadata }],
+    merges: tab.merges,
+    conditionalFormats: tab.conditionalFormats,
+  };
+}
+
+export function buildTab(def: SheetDef, grid: Grid, palette: Palette, sheetId = 0, title = def.tabTitle): TabSpec {
   const c = {
     text: color(palette.text),
     muted: color(palette.muted),
@@ -179,6 +222,13 @@ export function buildSpreadsheet(def: SheetDef, grid: Grid, palette: Palette) {
         case 'hint':
           f.textFormat = text(c.muted, 10, { italic: true });
           break;
+        case 'info':
+          if (row.alt && col > 0) f.backgroundColor = c.bg;
+          f.wrapStrategy = 'WRAP';
+          if (label) f.textFormat = text(c.muted, 10, { bold: true });
+          if (val) f.textFormat = text(c.text, 11);
+          if (col > 0) f.borders = { bottom: border('SOLID', c.line) };
+          break;
         case 'reading':
           f.wrapStrategy = 'WRAP';
           f.verticalAlignment = 'TOP';
@@ -207,14 +257,14 @@ export function buildSpreadsheet(def: SheetDef, grid: Grid, palette: Palette) {
     }),
   }));
 
-  const span = (r: number, from: number) => ({ sheetId: 0, startRowIndex: r, endRowIndex: r + 1, startColumnIndex: from, endColumnIndex: LAST + 1 });
-  const merges = grid.rows.flatMap((row, r) => (WIDE.has(row.kind) ? [span(r, 1)] : NOTE_SPAN.has(row.kind) ? [span(r, 3)] : []));
+  const span = (r: number, from: number) => ({ sheetId, startRowIndex: r, endRowIndex: r + 1, startColumnIndex: from, endColumnIndex: LAST + 1 });
+  const merges = grid.rows.flatMap((row, r) => (WIDE.has(row.kind) ? [span(r, 1)] : NOTE_SPAN.has(row.kind) ? [span(r, 3)] : row.kind === 'info' ? [span(r, 2)] : []));
 
   // El valor más bajo de la tabla, resaltado por la propia hoja: si el
   // usuario cambia un dato, el resaltado se mueve solo.
   const conditionalFormats = grid.highlightMin
     ? (() => {
-        const range = gridRange(grid.highlightMin);
+        const range = gridRange(grid.highlightMin, sheetId);
         const [first, last] = grid.highlightMin.split(':');
         const abs = (a: string) => a.replace(/^([A-Z]+)(\d+)$/, '$$$1$$$2');
         return [
@@ -237,20 +287,16 @@ export function buildSpreadsheet(def: SheetDef, grid: Grid, palette: Palette) {
   }
 
   return {
-    properties: { title: def.fileTitle, locale: 'en_US' },
-    sheets: [
-      {
-        properties: {
-          sheetId: 0,
-          title: def.tabTitle,
-          gridProperties: { rowCount: grid.rows.length + 5, columnCount: COLUMNS.length, hideGridlines: true },
-          tabColorStyle: { rgbColor: c.accent },
-        },
-        data: [{ startRow: 0, startColumn: 0, rowData, rowMetadata, columnMetadata: WIDTHS.map((pixelSize) => ({ pixelSize })) }],
-        merges,
-        conditionalFormats,
-      },
-    ],
+    sheetId,
+    title,
+    rowCount: grid.rows.length + 5,
+    columnCount: COLUMNS.length,
+    tabColor: c.accent,
+    rowData,
+    rowMetadata,
+    columnMetadata: WIDTHS.map((pixelSize) => ({ pixelSize })),
+    merges,
+    conditionalFormats,
   };
 }
 

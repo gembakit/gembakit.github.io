@@ -17,6 +17,7 @@ import { ProjectFormScreen } from './screens/ProjectFormScreen';
 import { ProjectScreen } from './screens/ProjectScreen';
 import { ProjectHistoryScreen } from './screens/ProjectHistoryScreen';
 import { SavedProvider, useLive } from '../projects/live';
+import { useAutoSync } from '../projects/useAutoSync';
 import { getMeasurement, getProject } from '../projects/store';
 
 function ToolRoute({ id }: { id: string }) {
@@ -62,6 +63,7 @@ function MeasurementRoute({ projectId, id }: { projectId: string; id: string }) 
 export function AppShell({ persisted }: { persisted: boolean | null }) {
   const { t } = useI18n();
   const [section = 'proyectos', sub, kind, third] = useRoute();
+  useAutoSync();
   const [capture, setCapture] = useState(false);
   const closeCapture = useCallback(() => setCapture(false), []);
   const openCapture = useCallback(() => setCapture(true), []);

@@ -9,4 +9,5 @@ export const fpyTool: ToolDef = {
   icon: Workflow,
   text: (t) => ({ name: t.tools.fpy.name, summary: t.tools.fpy.summary }),
   Screen: lazy(() => import('./FpyTool')),
+  savedSheet: () => import('./reading').then((m) => m.fpySavedSheet),
 };

@@ -10,6 +10,7 @@ import { PHASES } from '../../projects/model';
 import { PhaseTrack } from '../../projects/PhaseTrack';
 import { FilterSheet } from '../../projects/FilterSheet';
 import { MilestoneSheet } from '../../projects/MilestoneSheet';
+import { SheetCard } from '../../projects/SheetCard';
 import { activeFilters, applyFilter, isDefault, NO_FILTER, recallFilter, rememberFilter, type MeasurementFilter } from '../../projects/filter';
 import { formatDateTime, formatHeadline, useLive } from '../../projects/live';
 import { deleteProject, getProject, latest, listMeasurements, listMilestones, restoreProject, updateProject } from '../../projects/store';
@@ -164,6 +165,8 @@ export function ProjectScreen({ id }: { id: string }) {
           {p.milestones.add}
         </Button>
       </section>
+
+      <SheetCard projectId={project.id} />
 
       <Button variant="ghost" icon={Trash2} className="mt-4 self-start" onClick={() => void remove()}>
         {p.deleteProject}

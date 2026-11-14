@@ -360,9 +360,33 @@ PLAN.md, sección 5.
       va a su historial; la más reciente pasa a ser la actual y la del
       teléfono va al historial). Probado de punta a punta en Chrome sin
       ventana: copia → cambios → restaurar → historial → volver → deshacer.
-- [ ] Parte 4: Google: carpetas ordenadas, archivo del proyecto, pestañas
-      «Resumen» y una por medición, aviso al editar, detección de cambios,
-      sincronizar; «Exportar» suelto a `Gemba Kit/Sueltas`.
+- [x] **Parte 4** (2026-11-14): hoja de Google de cada proyecto.
+      `src/google/projectSync.ts` (motor, recibe el fetch: `Gemba Kit /
+      Proyectos / <proyecto> / <proyecto>`, archivo marcado con
+      `appProperties.gembaProject`; pestañas de la app recordadas por su
+      `sheetId` con dos huellas: lo que se quería escribir y cómo quedó al
+      leerlo; solo reescribe lo que cambió, quita las de mediciones
+      borradas, nunca toca las del usuario, aviso para todos
+      (`warningOnly`) en las suyas; si una pestaña suya cambió en Sheets
+      devuelve `conflict` con quién modificó el archivo, y con «guardar» la
+      duplica como pestaña del usuario sin aviso; archivo borrado →
+      `missing` y se recrea al confirmar; renombra archivo y carpeta).
+      Fórmulas escritas con la hoja en en_US y vuelta a es_ES en el mismo
+      lote. `src/google/summaryTab.ts` (pestaña «Resumen», una columna por
+      campo de contexto). Cada herramienta tiene `savedSheet` (carga
+      perezosa; `tools/*/reading.ts`, la lectura sin pantalla compartida con
+      la herramienta) y la pestaña lleva la sección «Medición»
+      (`SheetDef.info`). `src/projects/sheetSync.ts` (enlace en el ajuste
+      `gsheet:<proyecto>`, que viaja en la copia; cambios por enviar;
+      estado en curso), `SheetCard` en el proyecto, estado en la lista y
+      `useAutoSync` (envía solo si hay red y permiso vigente, 4 s después del
+      último cambio). «Exportar» suelto va a `Gemba Kit / Sueltas`. Pruebas
+      con un Google de mentira (`src/google/testing/fakeGoogle.ts`) y de
+      punta a punta en Chrome sin ventana con ese mismo Google.
+      **Por comprobar con el Google de verdad (el dueño):** que la API
+      acepta todo el lote (vaciar con `updateCells` + `fields: '*'`,
+      `autoResizeDimensions`, cambio de región dentro del lote), el aviso al
+      editar en el Android y el nombre de quien modificó.
 
 ### Fase 2 — Gráficos
 

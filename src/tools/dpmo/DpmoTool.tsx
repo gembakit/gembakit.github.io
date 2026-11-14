@@ -2,7 +2,6 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { CircleAlert, Eraser } from 'lucide-react';
 import { useI18n } from '../../i18n';
 import { dpmo, type DpmoInput } from '../../calc/dpmo';
-import type { CalcWarning } from '../../calc/types';
 import { parseDecimal, toFieldText } from '../../ui/number';
 import { useSavedInput } from '../../projects/live';
 import type { SavePayload } from '../../projects/SaveSheet';
@@ -15,6 +14,7 @@ import { useToast } from '../../ui/Toast';
 import { APP_VERSION } from '../../version';
 import { dpmoSheet } from './sheet';
 import { dpmoExplain, dpmoFormat } from './explain';
+import { dpmoConclusion, dpmoReadingLines, dpmoWarnings } from './reading';
 
 // Ejemplo: el caso publicado de Learn Lean Sigma (ficha 1): 1.000 unidades,
 // 5 oportunidades, 50 defectos → DPMO 10.000.
@@ -62,27 +62,7 @@ export default function DpmoTool() {
   const num = fmt.num;
   const sig = fmt.dpu;
   const fmtDpmo = fmt.dpmo;
-  const fieldName = (f: string) => (f in d ? (d[f as Field] as string) : f);
-
-  const warningText = (w: CalcWarning): string | null => {
-    switch (w.code) {
-      case 'not-whole':
-        return d.warn.notWhole(fieldName(w.field));
-      case 'not-positive':
-        return d.warn.notPositive(fieldName(w.field));
-      case 'negative':
-        return d.warn.negative(fieldName(w.field));
-      case 'defects-exceed-opportunities':
-        return d.warn.exceed;
-      case 'zero-defects':
-        return d.warn.zeroDefects;
-      case 'all-defects':
-        return d.warn.allDefects;
-      default:
-        return null;
-    }
-  };
-  const warnings = (out?.warnings ?? []).map(warningText).filter((x): x is string => x !== null);
+  const warnings = dpmoWarnings(out?.warnings ?? [], t);
 
   const clear = () => {
     const previous = raw;
@@ -161,22 +141,14 @@ export default function DpmoTool() {
     );
   }
 
-  const conclusion = r
-    ? r.sigmaLevel !== null
-      ? `${d.conclusion(fmtDpmo(r.dpmo), num(r.sigmaLevel, 2))} ${d.shiftNote(num(r.zLongTerm!, 4))}`
-      : d.conclusionNoSigma(fmtDpmo(r.dpmo))
-    : '';
+  const conclusion = r ? dpmoConclusion(r, t, lang) : '';
   const reading = r ? { conclusion, warnings, typicalError: d.typicalError } : null;
 
   // La hoja lleva la misma lectura que la pantalla.
   const sheet = () =>
     parsed && r
       ? dpmoSheet(parsed, t, {
-          reading: [
-            { tone: 'conclusion', text: conclusion },
-            ...warnings.map((w) => ({ tone: 'warning' as const, text: w })),
-            { tone: 'tip', text: d.typicalError },
-          ],
+          reading: dpmoReadingLines(conclusion, warnings, t),
           version: APP_VERSION,
           date: new Date().toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB'),
         })

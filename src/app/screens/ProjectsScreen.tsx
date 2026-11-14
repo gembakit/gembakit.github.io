@@ -1,4 +1,5 @@
-import { ChevronRight, FolderPlus, LayoutGrid } from 'lucide-react';
+import { ChevronRight, CircleCheck, CloudUpload, FolderPlus, LayoutGrid } from 'lucide-react';
+import { sheetStatus, type SheetStatus } from '../../projects/sheetSync';
 import { useI18n } from '../../i18n';
 import { db } from '../../data/db';
 import { Button, IconButton } from '../../ui/Button';
@@ -18,6 +19,15 @@ export function ProjectsScreen() {
     const c: Record<string, number> = {};
     for (const a of all) c[a.projectId] = (c[a.projectId] ?? 0) + 1;
     return c;
+  }, []);
+  // Estado de la hoja de Google de cada proyecto que tiene una.
+  const sheets = useLive(async () => {
+    const out: Record<string, SheetStatus> = {};
+    for (const pr of await listProjects()) {
+      const s = await sheetStatus(pr.id);
+      if (s.link) out[pr.id] = s;
+    }
+    return out;
   }, []);
   const date = (ms: number) => new Date(ms).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB', { day: 'numeric', month: 'short' });
 
@@ -59,6 +69,16 @@ export function ProjectsScreen() {
                   <span className="text-[13.5px] text-muted">
                     {p.count(counts?.[pr.id] ?? 0)} · {date(pr.updatedAt)}
                   </span>
+                  {sheets?.[pr.id] && (
+                    <span className={`flex items-center gap-1.5 text-[13.5px] ${sheets[pr.id]!.pending ? 'text-text' : 'text-muted'}`}>
+                      {sheets[pr.id]!.pending ? (
+                        <CloudUpload aria-hidden size={16} className="shrink-0 text-accent-ink" />
+                      ) : (
+                        <CircleCheck aria-hidden size={16} className="shrink-0 text-ok" />
+                      )}
+                      {sheets[pr.id]!.pending ? t.gsheet.listPending(sheets[pr.id]!.pending) : t.gsheet.listUpToDate}
+                    </span>
+                  )}
                 </span>
                 <ChevronRight aria-hidden size={20} className="text-muted" />
               </button>
