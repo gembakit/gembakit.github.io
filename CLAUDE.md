@@ -127,9 +127,12 @@ Todas las herramientas usan la misma pantalla, en este orden:
 - Cada valor calculado del resultado es tocable y abre de dónde sale
   (`src/ui/Explained.tsx`): la fórmula con letras, con los números del
   usuario y el resultado («DPU = D ÷ U = 360 ÷ 2.500 = 0,144»), «Donde» con
-  qué es cada letra y su valor, y debajo qué significa. Pedido por el dueño
-  el 2026-11-14. Cada herramienta nueva lo trae desde el principio, con su
-  `explain.ts` y su prueba.
+  qué es cada letra y su valor, y debajo qué significa. Las fórmulas se
+  escriben como estructura (`src/ui/expr.ts`: `frac`, `times`, `minus`…) y
+  se dibujan como en un libro: divisiones apiladas con su raya, paréntesis
+  solo donde hacen falta; nunca en una línea con «÷» (el dueño lo pidió así).
+  Pedido por el dueño el 2026-11-14. Cada herramienta nueva lo trae desde el
+  principio, con su `explain.ts` y su prueba.
 
 ## Alcance por versiones
 

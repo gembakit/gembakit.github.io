@@ -1,7 +1,58 @@
-import { useCallback, useState, type ReactNode } from 'react';
+import { Fragment, useCallback, useState, type ReactNode } from 'react';
 import { useI18n } from '../i18n';
 import { findTerm } from '../reference/glossary';
 import { Sheet } from './Sheet';
+import { hasFrac, needsParen, toText, type Expr } from './expr';
+
+/** Dibuja una fórmula como en un libro: división apilada con su raya, paréntesis altos si rodean una fracción. */
+export function Formula({ e }: { e: Expr }): ReactNode {
+  if (typeof e === 'string') return <span className="whitespace-nowrap">{e}</span>;
+  if ('frac' in e) {
+    return (
+      <span className="mx-0.5 inline-flex flex-col items-center align-middle text-[0.9em] leading-[1.15]">
+        <span className="px-1 pb-[3px] whitespace-nowrap">
+          <Formula e={e.frac[0]} />
+        </span>
+        <span aria-hidden className="h-[1.5px] w-full rounded-full bg-current" />
+        <span className="px-1 pt-[3px] whitespace-nowrap">
+          <Formula e={e.frac[1]} />
+        </span>
+      </span>
+    );
+  }
+  if ('op' in e) {
+    return (
+      <>
+        {e.args.map((a, i) => (
+          <Fragment key={i}>
+            {/* Espacio fijo antes del signo y normal después: si no cabe, la línea se parte tras el signo. */}
+            {i > 0 && ` ${e.op} `}
+            {needsParen(e.op, a, i) ? <Paren inner={a} /> : <Formula e={a} />}
+          </Fragment>
+        ))}
+      </>
+    );
+  }
+  if ('paren' in e) return <Paren inner={e.paren} />;
+  return (
+    <span className="whitespace-nowrap">
+      {e.fn}
+      <Paren inner={e.arg} />
+    </span>
+  );
+}
+
+function Paren({ inner }: { inner: Expr }) {
+  const tall = hasFrac(inner);
+  const p = tall ? 'inline-block align-middle text-[1.9em] leading-none font-light' : '';
+  return (
+    <>
+      <span className={p}>(</span>
+      <Formula e={inner} />
+      <span className={p}>)</span>
+    </>
+  );
+}
 
 /**
  * De dónde sale un valor calculado, con los números del usuario:
@@ -23,7 +74,7 @@ export interface Derivation {
   /** Lado izquierdo de la fórmula («DPU»). */
   lhs: string;
   /** Cada paso tras el «=»: la fórmula con letras, con números y el resultado (el último). */
-  steps: string[];
+  steps: Expr[];
   /** Qué es cada letra y cuánto vale aquí. */
   where: { sym: string; label: string; value?: string }[];
   /** Aclaraciones cortas debajo (por ejemplo, la función de Excel). */
@@ -43,13 +94,18 @@ export function DerivationView({ calc }: { calc: Derivation }) {
     <>
       {e && <p className="-mt-2 font-semibold text-muted">{e.name}</p>}
       <div className="rounded-[16px] bg-surface-2 p-4">
-        <div className="grid grid-cols-[auto_auto_minmax(0,1fr)] items-baseline gap-x-2 gap-y-1.5 font-display text-[19px] leading-snug tabular-nums">
+        <div className="grid grid-cols-[auto_auto_minmax(0,1fr)] items-center gap-x-2 gap-y-3 font-display text-[19px] leading-snug tabular-nums">
           {stacked && <span className="col-span-3 font-bold">{calc.lhs}</span>}
           {calc.steps.map((s, i) => (
             <div key={i} className="contents">
               <span className={i === 0 ? 'font-bold' : ''}>{i === 0 && !stacked ? calc.lhs : ''}</span>
               <span className="text-muted">=</span>
-              <span className={`wrap-anywhere ${i === last ? 'font-bold text-accent-ink' : i === 0 ? 'font-semibold' : ''}`}>{s}</span>
+              <span className={i === last ? 'font-bold text-accent-ink' : i === 0 ? 'font-semibold' : ''}>
+                <span className="sr-only">{toText(s)}</span>
+                <span aria-hidden>
+                  <Formula e={s} />
+                </span>
+              </span>
             </div>
           ))}
         </div>

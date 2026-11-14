@@ -23,6 +23,8 @@ const SHOTS = [
   { name: 'dpmo-exportar', hash: '#/herramientas/dpmo', click: [/Cargar ejemplo|Load example/, /^Exportar$/] },
   // «De dónde sale» cada valor: la ventana con la fórmula y los números.
   { name: 'explica-dpu', hash: '#/herramientas/dpmo', click: [/Cargar ejemplo/, /^DPU/], full: true },
+  { name: 'explica-dpo', hash: '#/herramientas/dpmo', click: [/Cargar ejemplo/, /^DPO/], full: true },
+  { name: 'explica-dpmo', hash: '#/herramientas/dpmo', click: [/Cargar ejemplo/, /^[\d.]+\s*DPMO/], full: true },
   { name: 'explica-z', hash: '#/herramientas/dpmo', click: [/Cargar ejemplo/, /^Z del proceso/], full: true },
   { name: 'explica-sigma', hash: '#/herramientas/dpmo', click: [/Cargar ejemplo/, /^Nivel sigma/], full: true },
   { name: 'explica-rendimiento', hash: '#/herramientas/dpmo', click: [/Cargar ejemplo/, /^Rendimiento/], full: true },

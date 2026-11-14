@@ -2,6 +2,7 @@ import type { DpmoInput, DpmoResult } from '../../calc/dpmo';
 import { SIGMA_SHIFT } from '../../calc/dpmo';
 import type { Messages } from '../../i18n';
 import type { Derivation } from '../../ui/Explained';
+import { fn, frac, minus, plus, times } from '../../ui/expr';
 import { formatNumber, formatSignificant } from '../../ui/number';
 
 /** Cómo se muestra cada valor en pantalla: la ventana usa exactamente lo mismo. */
@@ -41,19 +42,24 @@ export function dpmoExplain(input: DpmoInput, r: DpmoResult, t: Messages, lang: 
   const wDpo = { sym: 'DPO', label: x.dpoName, value: dpoFine };
 
   return {
-    dpu: { term: 'dpu', lhs: 'DPU', steps: ['D ÷ U', `${D} ÷ ${U}`, f.dpu(r.dpu)], where: [wD, wU] },
-    dpo: { term: 'dpo', lhs: 'DPO', steps: ['D ÷ (U × O)', `${D} ÷ (${U} × ${O})`, `${D} ÷ ${total}`, f.dpo(r.dpo)], where: [wD, wU, wO] },
+    dpu: { term: 'dpu', lhs: 'DPU', steps: [frac('D', 'U'), frac(D, U), f.dpu(r.dpu)], where: [wD, wU] },
+    dpo: {
+      term: 'dpo',
+      lhs: 'DPO',
+      steps: [frac('D', times('U', 'O')), frac(D, times(U, O)), frac(D, total), f.dpo(r.dpo)],
+      where: [wD, wU, wO],
+    },
     dpmo: {
       term: 'dpmo',
       lhs: 'DPMO',
-      steps: [`D ÷ (U × O) × ${million}`, `${D} ÷ ${total} × ${million}`, f.dpmo(r.dpmo)],
+      steps: [times(frac('D', times('U', 'O')), million), times(frac(D, total), million), f.dpmo(r.dpmo)],
       where: [wD, wU, wO],
     },
     yield: {
       title: d.yieldLabel,
       meaning: x.yieldMeaning,
       lhs: x.yieldSym,
-      steps: ['1 − DPO', `1 − ${dpoFine}`, f.yieldPct(r.yield)],
+      steps: [minus('1', 'DPO'), minus('1', dpoFine), f.yieldPct(r.yield)],
       where: [wDpo],
     },
     z:
@@ -62,7 +68,7 @@ export function dpmoExplain(input: DpmoInput, r: DpmoResult, t: Messages, lang: 
         : {
             term: 'z-proceso',
             lhs: 'Z',
-            steps: ['Φ⁻¹(1 − DPO)', `Φ⁻¹(1 − ${dpoFine})`, `Φ⁻¹(${yieldFine})`, f.z(r.zLongTerm)],
+            steps: [fn('Φ⁻¹', minus('1', 'DPO')), fn('Φ⁻¹', minus('1', dpoFine)), fn('Φ⁻¹', yieldFine), f.z(r.zLongTerm)],
             where: [wDpo, { sym: 'Φ⁻¹', label: x.normInv }],
             notes: [x.excel(yieldFine), t.explain.rounded],
           },
@@ -72,7 +78,7 @@ export function dpmoExplain(input: DpmoInput, r: DpmoResult, t: Messages, lang: 
         : {
             term: 'nivel-sigma',
             lhs: x.sigmaSym,
-            steps: [`Z + ${shift}`, `${f.z(r.zLongTerm)} + ${shift}`, f.sigma(r.sigmaLevel)],
+            steps: [plus('Z', shift), plus(f.z(r.zLongTerm), shift), f.sigma(r.sigmaLevel)],
             where: [
               { sym: 'Z', label: x.zName, value: f.z(r.zLongTerm) },
               { sym: shift, label: x.shift },

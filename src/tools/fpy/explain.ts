@@ -2,6 +2,7 @@ import type { FpyResult } from '../../calc/fpy';
 import type { Messages } from '../../i18n';
 import { findTerm } from '../../reference/glossary';
 import { subscript, type Derivation } from '../../ui/Explained';
+import { frac, minus, times } from '../../ui/expr';
 import { formatNumber, formatPercent } from '../../ui/number';
 import type { NamedStep } from './sheet';
 
@@ -21,7 +22,7 @@ export function fpyExplain(steps: NamedStep[], r: FpyResult, t: Messages, lang: 
     if ('fpy' in s) return { ...base, steps: [pct(r.fpy[i]!)], where: [], notes: [x.direct] };
     return {
       ...base,
-      steps: [`${x.goodSym} ÷ ${x.enteringSym}`, `${count(s.good)} ÷ ${count(s.entering)}`, pct(r.fpy[i]!)],
+      steps: [frac(x.goodSym, x.enteringSym), frac(count(s.good), count(s.entering)), pct(r.fpy[i]!)],
       where: [
         { sym: x.goodSym, label: x.goodLabel, value: count(s.good) },
         { sym: x.enteringSym, label: x.enteringLabel, value: count(s.entering) },
@@ -29,11 +30,11 @@ export function fpyExplain(steps: NamedStep[], r: FpyResult, t: Messages, lang: 
     };
   });
 
-  const letters = n <= MAX_LISTED ? r.fpy.map((_, i) => sym(i)).join(' × ') : `${sym(0)} × ${sym(1)} × … × ${sym(n - 1)}`;
+  const letters = n <= MAX_LISTED ? times(...r.fpy.map((_, i) => sym(i))) : times(sym(0), sym(1), '…', sym(n - 1));
   const rty: Derivation = {
     term: 'rty',
     lhs: 'RTY',
-    steps: n === 1 ? [sym(0), pct(r.rty)] : [letters, r.fpy.map(pct).join(' × '), pct(r.rty)],
+    steps: n === 1 ? [sym(0), pct(r.rty)] : [letters, times(...r.fpy.map(pct)), pct(r.rty)],
     where: r.fpy.map((f, i) => ({ sym: sym(i), label: steps[i]?.name ?? '', value: pct(f) })),
     notes: n > 1 ? [t.explain.rounded] : undefined,
   };
@@ -41,7 +42,7 @@ export function fpyExplain(steps: NamedStep[], r: FpyResult, t: Messages, lang: 
   const hidden: Derivation = {
     term: 'fabrica-oculta',
     lhs: x.hiddenSym,
-    steps: ['1 − RTY', `100 % − ${pct(r.rty)}`, pct(r.hiddenFactory)],
+    steps: [minus('1', 'RTY'), minus('100 %', pct(r.rty)), pct(r.hiddenFactory)],
     where: [{ sym: 'RTY', label: findTerm('rty')?.[lang].name ?? 'RTY', value: pct(r.rty) }],
   };
 
