@@ -12,6 +12,7 @@ import { ToolsScreen } from './screens/ToolsScreen';
 import { ReferenceScreen } from './screens/ReferenceScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { GoogleTestScreen } from './screens/GoogleTestScreen';
+import { DataScreen } from './screens/DataScreen';
 import { ProjectFormScreen } from './screens/ProjectFormScreen';
 import { ProjectScreen } from './screens/ProjectScreen';
 import { SavedProvider, useLive } from '../projects/live';
@@ -68,6 +69,7 @@ export function AppShell({ persisted }: { persisted: boolean | null }) {
   if (section === 'herramientas' && sub) screen = <ToolRoute id={sub} />;
   else if (section === 'herramientas') screen = <ToolsScreen />;
   else if (section === 'referencia') screen = <ReferenceScreen />;
+  else if (section === 'ajustes' && sub === 'datos') screen = <DataScreen />;
   else if (section === 'ajustes') screen = <SettingsScreen persisted={persisted} />;
   else if (section === 'prueba-google') screen = <GoogleTestScreen />;
   else if (sub === 'nuevo') screen = <ProjectFormScreen />;

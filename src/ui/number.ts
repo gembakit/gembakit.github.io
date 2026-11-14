@@ -68,6 +68,18 @@ export function formatNumber(n: number, lang: 'es' | 'en', maxDecimals = 2): str
   }).format(n);
 }
 
+/** Tamaño de archivo o de almacenamiento: «120 KB», «2,3 GB». */
+export function formatBytes(n: number, lang: 'es' | 'en'): string {
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  let v = n;
+  let i = 0;
+  while (v >= 1024 && i < units.length - 1) {
+    v /= 1024;
+    i++;
+  }
+  return `${formatNumber(v, lang, i <= 1 ? 0 : 1)} ${units[i]}`;
+}
+
 /** Número con como mucho `digits` cifras significativas (0,036; 0,00123). */
 export function formatSignificant(n: number, lang: 'es' | 'en', digits = 3): string {
   return new Intl.NumberFormat(lang === 'es' ? 'es-ES' : 'en-US', { maximumSignificantDigits: digits }).format(n);

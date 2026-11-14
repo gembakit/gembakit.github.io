@@ -94,6 +94,8 @@ const SHOTS = [
   { name: 'referencia-glosario', hash: '#/referencia', full: true },
   { name: 'referencia-glosario-inicio', hash: '#/referencia', scrollTo: 'Glosario' },
   { name: 'ajustes', hash: '#/ajustes', full: true },
+  { name: 'datos', hash: '#/ajustes/datos', full: true },
+  { name: 'datos-descargada', hash: '#/ajustes/datos', click: /^Descargar copia$/, full: true, only: 'light' },
   { name: 'prueba-google', hash: '#/prueba-google', full: true },
   { name: 'capturar', hash: '#/proyectos', click: /^(Capturar|Capture)$/, byLabel: true },
 ];

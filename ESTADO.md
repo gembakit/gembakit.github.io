@@ -327,8 +327,22 @@ PLAN.md, sección 5.
       espera más de 4 s; `HealthBanner` (Recargar / Copiar detalles) y
       Ajustes → Diagnóstico. **Pendiente:** leer el registro del dueño y
       arreglar la causa.
-- [ ] Parte 3: copia de seguridad (descargar, en Drive, restaurar) y espacio
-      usado.
+- [x] «De dónde sale» cada valor calculado (2026-11-14): `src/ui/Explained.tsx`
+      y `src/ui/expr.ts` (fórmulas como en un libro, divisiones apiladas),
+      `explain.ts` de DPMO y FPY con pruebas. Regla en CLAUDE.md.
+- [x] **Parte 3** (2026-11-14): copia de seguridad. `src/data/backup.ts`
+      (copia JSON de todas las tablas y los ajustes que no son del aparato;
+      restaurar JUNTA: de cada registro gana el `updatedAt` más reciente,
+      nunca se borra nada, todo en una transacción), `src/google/driveFolders.ts`
+      (carpetas `Gemba Kit / Copias de seguridad` recordadas por su
+      identificador en los ajustes `drive.folder.*`; si faltan, se buscan por
+      nombre y si no, se crean), `src/google/driveBackup.ts` (sube, lista y
+      deja las 10 últimas; las viejas a la papelera). Pantalla Ajustes →
+      «Datos y copia de seguridad» (`DataScreen`): dónde están los datos,
+      cuánto ocupan, protección, guardar en Drive o descargar, restaurar desde
+      Drive o archivo con resumen antes de aplicar. Probado de punta a punta
+      con descarga y restauración en otro navegador limpio. **Falta que el
+      dueño pruebe la parte de Drive en su teléfono.**
 - [ ] Parte 4: Google: carpetas ordenadas, archivo del proyecto, pestañas
       «Resumen» y una por medición, aviso al editar, detección de cambios,
       sincronizar; «Exportar» suelto a `Gemba Kit/Sueltas`.

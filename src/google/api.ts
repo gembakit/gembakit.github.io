@@ -146,6 +146,67 @@ export async function createDriveFile(token: string, name: string, mimeType: str
   return { id: body.id, url: body.webViewLink ?? '' };
 }
 
+/** Texto entre comillas simples para las búsquedas de Drive (escapa ' y \). */
+export function driveQuoted(s: string): string {
+  return `'${s.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+}
+
+export interface DriveItem {
+  id: string;
+  name: string;
+  trashed?: boolean;
+  createdTime?: string;
+  size?: string;
+  webViewLink?: string;
+}
+
+/** Datos de un archivo o carpeta; null si no existe o la app ya no lo puede ver. */
+export async function getDriveItem(token: string, id: string, f: Fetch = fetch): Promise<DriveItem | null> {
+  const q = new URLSearchParams({ fields: 'id,name,trashed,webViewLink' });
+  try {
+    return (await (await call(token, `${DRIVE}/${encodeURIComponent(id)}?${q}`, {}, f)).json()) as DriveItem;
+  } catch (e) {
+    if (e instanceof GoogleApiError && e.status === 404) return null;
+    throw e;
+  }
+}
+
+/** Busca archivos que la app puede ver (con el permiso mínimo, solo los suyos). */
+export async function listDriveItems(token: string, query: string, orderBy = 'createdTime desc', pageSize = 100, f: Fetch = fetch): Promise<DriveItem[]> {
+  const q = new URLSearchParams({ q: query, fields: 'files(id,name,createdTime,size,webViewLink)', orderBy, pageSize: String(pageSize) });
+  const body = (await (await call(token, `${DRIVE}?${q}`, {}, f)).json()) as { files?: DriveItem[] };
+  return body.files ?? [];
+}
+
+/** Sube un archivo con su contenido (por ejemplo, una copia de seguridad en JSON) dentro de una carpeta. */
+export async function uploadDriveFile(token: string, name: string, mimeType: string, content: string, parent: string, f: Fetch = fetch): Promise<DriveItem> {
+  const boundary = `gemba-kit-${crypto.randomUUID()}`;
+  const body = [
+    `--${boundary}`,
+    'Content-Type: application/json; charset=UTF-8',
+    '',
+    JSON.stringify({ name, mimeType, parents: [parent] }),
+    `--${boundary}`,
+    `Content-Type: ${mimeType}; charset=UTF-8`,
+    '',
+    content,
+    `--${boundary}--`,
+  ].join('\r\n');
+  const q = new URLSearchParams({ uploadType: 'multipart', fields: 'id,name,createdTime,size,webViewLink' });
+  const res = await call(token, `${UPLOAD}?${q}`, { method: 'POST', headers: { 'Content-Type': `multipart/related; boundary=${boundary}` }, body }, f);
+  return (await res.json()) as DriveItem;
+}
+
+/** Manda un archivo a la papelera de Drive (se puede recuperar allí durante 30 días). */
+export async function trashDriveItem(token: string, id: string, f: Fetch = fetch): Promise<void> {
+  await call(token, `${DRIVE}/${encodeURIComponent(id)}`, { method: 'PATCH', headers: json, body: JSON.stringify({ trashed: true }) }, f);
+}
+
+/** Contenido de un archivo como texto. */
+export async function downloadDriveText(token: string, id: string, f: Fetch = fetch): Promise<string> {
+  return (await call(token, `${DRIVE}/${encodeURIComponent(id)}?alt=media`, {}, f)).text();
+}
+
 /** Lee la estructura de una hoja de cálculo (pestañas, gráficos…) con los campos pedidos. */
 export async function sheetsGet<T>(token: string, id: string, fields: string, f: Fetch = fetch): Promise<T> {
   const q = new URLSearchParams({ fields });
