@@ -61,6 +61,7 @@ export const GUIDE: readonly GuideTopic[] = [
       body: [
         'Todas tienen los mismos cuatro bloques, siempre en este orden: Datos (lo que metes), Resultado (el número o gráfico principal), Cómo leerlo (la conclusión en una frase, los avisos y el error típico) y Acciones (guardar, exportar y ver la fórmula).',
         'Si no sabes por dónde empezar, pulsa «Cargar ejemplo»: verás un caso resuelto y publicado, con el resultado que se espera.',
+        'Arriba de cada herramienta, «Cómo usarla» se despliega con los pasos para usarla bien.',
         'En el ordenador, los datos quedan a la izquierda y el resultado a la derecha.',
       ],
     },
@@ -69,6 +70,7 @@ export const GUIDE: readonly GuideTopic[] = [
       body: [
         'They all have the same four blocks, always in this order: Data (what you enter), Result (the main number or chart), How to read it (the conclusion in one sentence, the warnings and the typical mistake) and Actions (save, export and see the formula).',
         'If you do not know where to start, tap “Load example”: you will see a solved, published case with the expected result.',
+        'At the top of every tool, “How to use it” opens with the steps to use it well.',
         'On a computer, the data sit on the left and the result on the right.',
       ],
     },
@@ -80,8 +82,9 @@ export const GUIDE: readonly GuideTopic[] = [
       body: [
         'Puedes teclear los valores o pegar una columna de Excel o de Google Sheets: copia la columna, toca el campo y pega. Un valor por línea.',
         'Sirven la coma y el punto decimal. Antes de calcular verás cuántos valores se han leído y qué líneas se han ignorado y por qué.',
-        'Si pegas algo como «1.234», la app avisa: puede ser mil doscientos treinta y cuatro o uno con doscientos treinta y cuatro. Revísalo.',
-        'Importar archivos .xlsx y .csv llega con las calculadoras rápidas.',
+        'Si pegas algo como «1.234», la app avisa: puede ser mil doscientos treinta y cuatro o uno con doscientos treinta y cuatro. Revísalo. En datos que solo pueden ser enteros (unidades), «1.200» se lee como mil doscientos.',
+        'Las herramientas que piden una lista (por ejemplo, los pasos de FPY y RTY) tienen el botón «Importar»: eliges un Excel (.xlsx) o un .csv del teléfono o de Drive, o pegas las filas copiadas de Excel o Sheets.',
+        'Al importar, la app busca la fila de títulos y qué columna es cada dato; si se equivoca, lo cambias en los desplegables. Antes de aceptar ves una vista previa y las filas que no se usarán, con el motivo. Lo importado sustituye los datos que había, y se puede deshacer.',
       ],
     },
     en: {
@@ -89,8 +92,30 @@ export const GUIDE: readonly GuideTopic[] = [
       body: [
         'You can type the values or paste a column from Excel or Google Sheets: copy the column, tap the field and paste. One value per line.',
         'Both decimal comma and decimal point work. Before calculating you will see how many values were read and which lines were ignored, and why.',
-        'If you paste something like “1.234”, the app warns you: it could be one thousand two hundred thirty-four or one point two three four. Check it.',
-        'Importing .xlsx and .csv files arrives with the quick calculators.',
+        'If you paste something like “1.234”, the app warns you: it could be one thousand two hundred thirty-four or one point two three four. Check it. In data that can only be whole numbers (units), “1.200” is read as one thousand two hundred.',
+        'Tools that take a list (for example, the steps in FPY and RTY) have an “Import” button: choose an Excel (.xlsx) or .csv file from the phone or Drive, or paste rows copied from Excel or Sheets.',
+        'When importing, the app finds the title row and which column is each piece of data; if it gets it wrong, change it in the drop-downs. Before accepting you see a preview and the rows that will not be used, with the reason. Imported data replace what was there, and you can undo it.',
+      ],
+    },
+  },
+  {
+    id: 'exportar',
+    es: {
+      title: 'Exportar a Google Sheets',
+      body: [
+        'Con un resultado en pantalla, pulsa «Exportar» y después «Crear hoja». La primera vez Google te pide permiso; después, como mucho verás una ventana que se abre y se cierra sola.',
+        'La hoja se crea en tu Drive con un resumen arriba, los datos en celdas de color, los resultados con sus fórmulas, «Cómo leerlo» y notas. Si cambias un dato de color, los resultados se recalculan solos.',
+        '«Cómo leerlo» describe los datos tal como se exportaron: no cambia si editas la hoja.',
+        'Por ahora cada exportación crea un archivo nuevo. Con los proyectos, cada proyecto tendrá un único archivo que la app irá actualizando. Excel llegará más adelante.',
+      ],
+    },
+    en: {
+      title: 'Exporting to Google Sheets',
+      body: [
+        'With a result on screen, tap “Export” and then “Create sheet”. The first time Google asks for permission; after that, at most you will see a window that opens and closes by itself.',
+        'The sheet is created in your Drive with a summary at the top, the data in colored cells, the results with their formulas, “How to read it” and notes. If you change a colored cell, the results recalculate by themselves.',
+        '“How to read it” describes the data as exported: it does not change if you edit the sheet.',
+        'For now every export creates a new file. With projects, each project will have a single file that the app keeps up to date. Excel will come later.',
       ],
     },
   },
@@ -134,7 +159,7 @@ export const GUIDE: readonly GuideTopic[] = [
       title: 'Dónde están tus datos',
       body: [
         'En tu teléfono, y en ningún otro sitio. La app no tiene servidor y no envía nada a nadie.',
-        'Conectar tu cuenta de Google será opcional y solo usará tu propio Drive, para tener lo mismo en el móvil y en el ordenador.',
+        'Conectar tu cuenta de Google es opcional y solo usa tu propio Drive: la app solo ve los archivos que ella misma crea. Ahora sirve para exportar a Google Sheets; más adelante, también para tener lo mismo en el móvil y en el ordenador.',
         'Hasta que llegue la copia de seguridad, si desinstalas la app o borras los datos de Chrome, lo guardado se pierde.',
       ],
     },
@@ -142,7 +167,7 @@ export const GUIDE: readonly GuideTopic[] = [
       title: 'Where your data lives',
       body: [
         'On your phone, and nowhere else. The app has no server and sends nothing to anyone.',
-        'Connecting your Google account will be optional and will only use your own Drive, to have the same data on your phone and your computer.',
+        'Connecting your Google account is optional and only uses your own Drive: the app only sees the files it creates itself. For now it is used to export to Google Sheets; later, also to have the same data on your phone and your computer.',
         'Until backup arrives, if you uninstall the app or clear Chrome’s data, what you saved is lost.',
       ],
     },

@@ -59,6 +59,14 @@ haya red.
 - Cabecera: nombre, tipo, objetivo y **fase actual** (se cambia con un toque).
 - **Mediciones**, agrupadas por fase, con su resultado principal y su
   contexto en una línea («RTY 83 % · Day shift 1 · llenadora · 14 nov»).
+  Con una lista larga:
+  - **Filtrar** por herramienta, fase y cualquier campo de contexto (Equipo,
+    Puesto, Supervisor…), combinables («FPY · Day shift 1 · llenadora»).
+  - **Ordenar** por fecha o por resultado, de mayor a menor o al revés. Por
+    resultado solo cuando el filtro deja una sola herramienta: no tiene
+    sentido ordenar juntos un RTY y un DPMO.
+  - Comparar mediciones nuevas con antiguas en un gráfico llega con
+    «Evolución»; aquí ya se pueden ver una al lado de otra en la lista.
 - **Hitos:** lo que hiciste y cuándo («3 dic · implantación 5S»), con una nota.
   En esta etapa solo se apuntan; se verán en los gráficos de «Evolución».
 - **Google:** «Abrir la hoja», «Abrir la carpeta», estado y botón
@@ -82,9 +90,12 @@ base de Medir). Borrar va a la papelera, con deshacer.
 - **Una pestaña por medición**, con el diseño de hoja que ya aprobaste,
   más su contexto y su versión. Si la medición cambia, se reescribe su
   pestaña; si se borra, se borra su pestaña.
-- Las pestañas de la app llevan protección (ver «Por comprobar»). Si las
-  cambias en Sheets, la app lo detecta al sincronizar y te pregunta antes de
-  reescribir, ofreciendo guardar tu versión como pestaña tuya.
+- Las pestañas de la app llevan **aviso para todos** al editarlas (decidido
+  por el dueño el 2026-11-14). Si alguien las cambia en Sheets, la app lo
+  detecta al sincronizar y pregunta antes de reescribir, ofreciendo guardar
+  esa versión como pestaña tuya. El mensaje dice qué pestaña cambió y, si
+  Google lo da, **quién modificó el archivo por última vez y cuándo** (ver
+  «Por comprobar»).
 - Tus pestañas: la app no las toca.
 - **Sincronizar:** sola al guardar si hay red, y con el botón. Al terminar,
   un resumen corto («2 pestañas actualizadas»).
@@ -94,12 +105,27 @@ base de Medir). Borrar va a la papelera, con deshacer.
 El de ahora (sin proyecto) sigue, pero los archivos van a
 **Gemba Kit / Sueltas** en lugar de la raíz de tu Drive.
 
-### 8. Copia de seguridad en archivo
+### 8. Copia de seguridad y espacio en el teléfono
 
-Ajustes → «Copia de seguridad»: descargar un archivo con todos tus proyectos
-y restaurarlo. Hasta ahora no se guardaba nada real; con los proyectos sí, y
-los datos viven solo en el teléfono. El archivo de Google es un reflejo, no
-sirve para restaurar.
+Ajustes → «Datos y copia de seguridad»:
+
+- **Dónde está todo:** en el almacenamiento de Chrome del teléfono
+  (protegido: el sistema no lo borra solo). La pantalla enseña cuánto ocupa
+  la app y cuánto queda libre.
+- **Copia de seguridad:** un archivo con todos tus proyectos, que puedes
+  **descargar** al teléfono o **guardar en tu Drive** (Gemba Kit / Copias),
+  y **restaurar**. El archivo de Google del proyecto es un reflejo, no sirve
+  para restaurar.
+- **Cuánto ocupa de verdad:** los números y textos ocupan muy poco (miles de
+  mediciones caben en unos pocos MB). Lo que llenará el teléfono serán las
+  **fotos** de la fase 4.
+- **Liberar espacio sin riesgo (cuando lleguen las fotos o haya muchos
+  proyectos):** **«Archivar proyecto»** guarda el proyecto completo en tu
+  Drive, comprueba que la copia se lee bien y **solo entonces** lo quita del
+  teléfono, dejando una tarjeta «Archivado». **«Recuperar»** lo vuelve a
+  bajar. Esto va con las fotos, no en el proyecto mínimo.
+
+Hasta ahora no se guardaba nada real; con los proyectos sí.
 
 ## Lo que se queda para después (en este orden propuesto)
 
@@ -140,16 +166,23 @@ sirve para restaurar.
      los demás no pueden.
   La detección al sincronizar protege tus cambios en los dos casos.
 - Si el aviso aparece en la app de Sheets del Android (paso 6 de la prueba).
+- **Quién lo editó.** Google da la última persona que modificó **el archivo**
+  y la hora (dato del archivo en Drive), pero no qué celda ni qué pestaña
+  cambió cada persona: eso solo se ve en el historial de versiones de
+  Sheets. La app sabrá **qué pestaña** cambió comparando con lo que escribió
+  ella. El mensaje sería: «La pestaña FPY · 14 nov cambió. Última
+  modificación del archivo: Ana Pérez, hoy 10:32». Si varias personas
+  tocaron el archivo, el nombre es solo el de la última. Comprobar que
+  Google lo da con el permiso actual.
 
 ## ❓ Decides tú
 
-- **A. Protección:** ¿aviso para todos (recomendado mientras el archivo sea
-  solo tuyo), con la opción por proyecto de pasar a «bloqueada para los
-  demás» cuando lo compartas?
-- **B. Copia de seguridad dentro del proyecto mínimo:** ¿sí? Recomendado,
-  porque desde aquí se guardan datos reales que solo viven en el teléfono.
-- **C. Campos de contexto propuestos** (Equipo, Puesto, Línea, Producto,
-  Supervisor, Operario): ¿cambias, quitas o añades alguno a la lista por
-  defecto?
+- **A. Protección:** decidido: **aviso para todos**.
+- **B. Copia de seguridad dentro del proyecto mínimo:** decidido: **sí**. El
+  dueño pide además poder liberar espacio sin arriesgar datos y saber dónde
+  se guarda todo (sección 8). Preguntó por Firebase: ver ESTADO.md, sección 6.
+- **C. Campos de contexto:** decidido: **los propuestos** (Equipo, Puesto,
+  Línea, Producto, Supervisor, Operario), todos opcionales, y se pueden
+  añadir más.
 - **D. Orden de lo que viene después:** ¿calculadoras 3 a 6 primero y luego
   «Evolución», o «Evolución» antes?
