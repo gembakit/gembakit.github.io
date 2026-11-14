@@ -3,16 +3,18 @@ import { CircleAlert, Eraser } from 'lucide-react';
 import { useI18n } from '../../i18n';
 import { dpmo, type DpmoInput } from '../../calc/dpmo';
 import type { CalcWarning } from '../../calc/types';
-import { formatNumber, parseDecimal, toFieldText } from '../../ui/number';
+import { parseDecimal, toFieldText } from '../../ui/number';
 import { useSavedInput } from '../../projects/live';
 import type { SavePayload } from '../../projects/SaveSheet';
 import { NumberField } from '../../ui/NumberField';
 import { ToolTemplate } from '../../ui/ToolTemplate';
 import { Button } from '../../ui/Button';
-import { Acronym } from '../../ui/Acronym';
+import { Dotted, Explained, type Derivation } from '../../ui/Explained';
+import { findTerm } from '../../reference/glossary';
 import { useToast } from '../../ui/Toast';
 import { APP_VERSION } from '../../version';
 import { dpmoSheet } from './sheet';
+import { dpmoExplain, dpmoFormat } from './explain';
 
 // Ejemplo: el caso publicado de Learn Lean Sigma (ficha 1): 1.000 unidades,
 // 5 oportunidades, 50 defectos → DPMO 10.000.
@@ -21,14 +23,19 @@ const EMPTY = { units: '', opportunities: '', defects: '' };
 type Field = keyof DpmoInput;
 const FIELDS: Field[] = ['units', 'opportunities', 'defects'];
 
-function Stat({ label, value }: { label: ReactNode; value: string }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-0.5 rounded-[14px] bg-surface-2 p-3">
-      <span className="text-[13px] font-semibold text-muted">{label}</span>
+/** Tarjeta de un valor: entera tocable si hay de dónde sale. */
+function Stat({ label, value, calc }: { label: ReactNode; value: string; calc: Derivation | null }) {
+  const body = (
+    <>
+      <span className="text-[13px] font-semibold text-muted">{calc ? <Dotted>{label}</Dotted> : label}</span>
       <span className="font-display text-[19px] font-bold tabular-nums wrap-anywhere">{value}</span>
-    </div>
+    </>
   );
+  const cls = 'flex min-w-0 flex-col gap-0.5 rounded-[14px] bg-surface-2 p-3';
+  return calc ? <Explained calc={calc} className={`${cls} w-full`}>{body}</Explained> : <div className={cls}>{body}</div>;
 }
+
+const termOf = (id: string, lang: 'es' | 'en') => findTerm(id)?.[lang].term ?? id;
 
 export default function DpmoTool() {
   const { t, lang } = useI18n();
@@ -50,9 +57,11 @@ export default function DpmoTool() {
   const r = out?.result ?? null;
   const anyText = FIELDS.some((f) => raw[f].trim() !== '');
 
-  const num = (x: number, decimals: number) => formatNumber(x, lang, decimals);
-  const sig = (x: number) => new Intl.NumberFormat(lang === 'es' ? 'es-ES' : 'en-US', { maximumSignificantDigits: 3 }).format(x);
-  const fmtDpmo = (x: number) => (x >= 100 ? num(x, 0) : num(x, 2));
+  // Los mismos formatos que la ventana de «de dónde sale»: nunca enseñan cifras distintas.
+  const fmt = dpmoFormat(lang);
+  const num = fmt.num;
+  const sig = fmt.dpu;
+  const fmtDpmo = fmt.dpmo;
   const fieldName = (f: string) => (f in d ? (d[f as Field] as string) : f);
 
   const warningText = (w: CalcWarning): string | null => {
@@ -118,31 +127,35 @@ export default function DpmoTool() {
         <p className="text-[15px] text-muted">{d.empty}</p>
       );
   } else {
+    // Cada valor se toca y enseña de dónde sale, con estos números.
+    const ex = dpmoExplain(parsed!, r, t, lang);
     result = (
       <div className="flex flex-col gap-3.5">
-        {r.sigmaLevel !== null ? (
-          <div className="flex flex-col gap-1">
-            <span className="text-[13px] font-semibold text-muted">
-              <Acronym id="nivel-sigma" />
-            </span>
-            <span className="font-display text-[56px] leading-[0.95] font-bold tracking-[-0.035em] tabular-nums">{num(r.sigmaLevel, 2)}</span>
-            <span className="text-[16px] tabular-nums">
-              <span className="font-display text-[22px] font-bold">{fmtDpmo(r.dpmo)}</span> <Acronym id="dpmo" />
-            </span>
+        {r.sigmaLevel !== null && ex.sigma ? (
+          <div className="flex flex-col items-start gap-1">
+            <Explained calc={ex.sigma} className="flex flex-col gap-1 rounded-[14px]">
+              <span className="text-[13px] font-semibold text-muted">
+                <Dotted>{termOf('nivel-sigma', lang)}</Dotted>
+              </span>
+              <span className="font-display text-[56px] leading-[0.95] font-bold tracking-[-0.035em] tabular-nums">{num(r.sigmaLevel, 2)}</span>
+            </Explained>
+            <Explained calc={ex.dpmo!} className="rounded-[10px] text-[16px] tabular-nums">
+              <span className="font-display text-[22px] font-bold">{fmtDpmo(r.dpmo)}</span> <Dotted>DPMO</Dotted>
+            </Explained>
           </div>
         ) : (
-          <div className="flex flex-col gap-1">
+          <Explained calc={ex.dpmo!} className="flex flex-col items-start gap-1 self-start rounded-[14px]">
             <span className="text-[13px] font-semibold text-muted">
-              <Acronym id="dpmo" />
+              <Dotted>DPMO</Dotted>
             </span>
             <span className="font-display text-[56px] leading-[0.95] font-bold tracking-[-0.035em] tabular-nums">{fmtDpmo(r.dpmo)}</span>
-          </div>
+          </Explained>
         )}
         <div className="grid grid-cols-2 gap-2">
-          <Stat label={<Acronym id="dpu" />} value={sig(r.dpu)} />
-          <Stat label={<Acronym id="dpo" />} value={sig(r.dpo)} />
-          <Stat label={d.yieldLabel} value={`${num(r.yield * 100, 4)} %`} />
-          <Stat label={<Acronym id="z-proceso" />} value={r.zLongTerm === null ? '—' : num(r.zLongTerm, 4)} />
+          <Stat label="DPU" value={sig(r.dpu)} calc={ex.dpu} />
+          <Stat label="DPO" value={sig(r.dpo)} calc={ex.dpo} />
+          <Stat label={d.yieldLabel} value={`${num(r.yield * 100, 4)} %`} calc={ex.yield} />
+          <Stat label={termOf('z-proceso', lang)} value={r.zLongTerm === null ? '—' : num(r.zLongTerm, 4)} calc={ex.z} />
         </div>
       </div>
     );

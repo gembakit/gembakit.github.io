@@ -95,6 +95,7 @@ export const GUIDE: readonly GuideTopic[] = [
         'Todas tienen los mismos cuatro bloques, siempre en este orden: Datos (lo que metes), Resultado (el número o gráfico principal), Cómo leerlo (la conclusión en una frase, los avisos y el error típico) y Acciones (guardar, exportar y ver la fórmula).',
         'Si no sabes por dónde empezar, pulsa «Cargar ejemplo»: verás un caso resuelto y publicado, con el resultado que se espera.',
         'Arriba de cada herramienta, «Cómo usarla» se despliega con los pasos para usarla bien.',
+        'Cada valor calculado del resultado se puede tocar (el nombre lleva un subrayado de puntos): se abre de dónde sale, con la fórmula escrita con letras, después con tus números y el resultado, por ejemplo «DPU = D ÷ U = 50 ÷ 1.000 = 0,05», y debajo qué es cada letra.',
         'En el ordenador, los datos quedan a la izquierda y el resultado a la derecha.',
       ],
     },
@@ -104,6 +105,7 @@ export const GUIDE: readonly GuideTopic[] = [
         'They all have the same four blocks, always in this order: Data (what you enter), Result (the main number or chart), How to read it (the conclusion in one sentence, the warnings and the typical mistake) and Actions (save, export and see the formula).',
         'If you do not know where to start, tap “Load example”: you will see a solved, published case with the expected result.',
         'At the top of every tool, “How to use it” opens with the steps to use it well.',
+        'Every calculated value in the result can be tapped (its name has a dotted underline): it opens where it comes from, with the formula in letters, then with your numbers and the result, for example “DPU = D ÷ U = 50 ÷ 1,000 = 0.05”, and below what each letter is.',
         'On a computer, the data sit on the left and the result on the right.',
       ],
     },
@@ -157,14 +159,14 @@ export const GUIDE: readonly GuideTopic[] = [
     es: {
       title: 'Siglas y términos',
       body: [
-        'Las siglas subrayadas se pueden tocar: se abre su definición sin salir de la pantalla.',
+        'Las siglas subrayadas se pueden tocar: se abre su definición sin salir de la pantalla. En los resultados, además, se ve de dónde sale cada valor con tus números.',
         'Todos los términos están en el glosario, aquí debajo, con buscador. Busca por la sigla, por el nombre o por una palabra de la definición.',
       ],
     },
     en: {
       title: 'Acronyms and terms',
       body: [
-        'Underlined acronyms can be tapped: their definition opens without leaving the screen.',
+        'Underlined acronyms can be tapped: their definition opens without leaving the screen. In results, you also see where each value comes from, with your numbers.',
         'Every term is in the glossary, just below, with a search box. Search by acronym, by name or by a word in the definition.',
       ],
     },

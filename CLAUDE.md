@@ -124,6 +124,12 @@ Todas las herramientas usan la misma pantalla, en este orden:
   sale del cuidado (tipografía, espaciado, transiciones, respuesta inmediata),
   nunca de efectos que resten legibilidad en planta.
 - Cada sigla es tocable y abre su definición.
+- Cada valor calculado del resultado es tocable y abre de dónde sale
+  (`src/ui/Explained.tsx`): la fórmula con letras, con los números del
+  usuario y el resultado («DPU = D ÷ U = 360 ÷ 2.500 = 0,144»), «Donde» con
+  qué es cada letra y su valor, y debajo qué significa. Pedido por el dueño
+  el 2026-11-14. Cada herramienta nueva lo trae desde el principio, con su
+  `explain.ts` y su prueba.
 
 ## Alcance por versiones
 

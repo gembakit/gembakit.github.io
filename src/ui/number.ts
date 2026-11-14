@@ -67,3 +67,16 @@ export function formatNumber(n: number, lang: 'es' | 'en', maxDecimals = 2): str
     useGrouping: true,
   }).format(n);
 }
+
+/** Número con como mucho `digits` cifras significativas (0,036; 0,00123). */
+export function formatSignificant(n: number, lang: 'es' | 'en', digits = 3): string {
+  return new Intl.NumberFormat(lang === 'es' ? 'es-ES' : 'en-US', { maximumSignificantDigits: digits }).format(n);
+}
+
+/** Porcentaje (x de 0 a 1) con los decimales justos: nunca enseña 100 % ni 0 % si no lo es. Sin el signo «%». */
+export function formatPercent(x: number, lang: 'es' | 'en'): string {
+  let d = 1;
+  const v = x * 100;
+  while (d < 4 && ((v < 100 && Number(v.toFixed(d)) === 100) || (v > 0 && Number(v.toFixed(d)) === 0))) d++;
+  return formatNumber(v, lang, d);
+}

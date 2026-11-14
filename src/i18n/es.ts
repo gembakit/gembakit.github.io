@@ -237,6 +237,16 @@ export const es = {
         'Z del proceso = Φ⁻¹(1 − DPO)',
         'Nivel sigma = Z del proceso + 1,5',
       ],
+      explain: {
+        dpoName: 'Defectos por oportunidad',
+        yieldSym: 'Rendimiento',
+        yieldMeaning: 'Parte de las oportunidades que salen sin defecto.',
+        normInv: 'Inversa de la distribución normal estándar: el valor Z que deja por debajo esa proporción.',
+        excel: (p: string) => `En Excel: =INV.NORM.ESTAND(${p})`,
+        sigmaSym: 'Nivel sigma',
+        zName: 'Z del proceso',
+        shift: 'Desplazamiento convencional de Seis Sigma entre corto y largo plazo',
+      },
       steps: {
         opportunitiesTotal: 'Oportunidades en total',
         dpu: 'DPU',
@@ -266,6 +276,7 @@ export const es = {
         'Revisa un número de unidades y cuenta todos los defectos que encuentres, no las unidades defectuosas.',
         'Escribe las unidades, las oportunidades por unidad y los defectos. El resultado sale al momento.',
         'En grande verás el nivel sigma, que incluye el desplazamiento de 1,5 de las tablas de Seis Sigma. Debajo, la Z del proceso sin ese desplazamiento, por si comparas con Minitab.',
+        'Toca cualquier valor del resultado (DPU, DPO, DPMO, rendimiento, Z del proceso o nivel sigma) para ver de dónde sale, con tus números.',
       ],
     },
     fpy: {
@@ -301,6 +312,15 @@ export const es = {
         outOfRange: (step: string) => `${step}: el FPY tiene que estar entre 0 y 100 %.`,
       },
       formula: ['FPY del paso = buenas a la 1.ª ÷ unidades que entran', 'RTY = FPY₁ × FPY₂ × … × FPYₙ', 'Fábrica oculta = 1 − RTY'],
+      explain: {
+        goodSym: 'B',
+        enteringSym: 'E',
+        enteringLabel: 'Unidades que entran',
+        goodLabel: 'Buenas a la primera',
+        stepTitle: (step: string) => `FPY · ${step}`,
+        direct: 'Este FPY se escribió directamente en los datos, no se calcula.',
+        hiddenSym: 'Fábrica oculta',
+      },
       steps: {
         fpy: (step: string) => `FPY · ${step}`,
         rty: 'RTY',
@@ -327,8 +347,15 @@ export const es = {
         'Ponle nombre a cada paso para reconocerlo en el resultado. Con «Añadir paso» sumas los que falten; con la papelera quitas uno.',
         'Si los pasos ya están en una hoja, pulsa «Importar»: elige un Excel (.xlsx) o un .csv, o pega las filas copiadas. Verás qué columna es cada dato y qué filas se usarán antes de aceptar.',
         'En grande verás el RTY: la parte que pasa todo el proceso sin ningún retrabajo. Las barras enseñan el FPY de cada paso y marcan el que más resta.',
+        'Toca el RTY, la fábrica oculta o el FPY de un paso para ver de dónde sale, con tus números.',
       ],
     },
+  },
+  explain: {
+    where: 'Donde',
+    meaning: 'Qué significa',
+    open: (what: string) => `ver de dónde sale ${what}`,
+    rounded: 'La app calcula con todos los decimales; aquí se muestran redondeados.',
   },
   template: {
     data: 'Datos',

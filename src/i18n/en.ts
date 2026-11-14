@@ -237,6 +237,16 @@ export const en: Messages = {
         'Process Z = Φ⁻¹(1 − DPO)',
         'Sigma level = process Z + 1.5',
       ],
+      explain: {
+        dpoName: 'Defects per opportunity',
+        yieldSym: 'Yield',
+        yieldMeaning: 'Share of the opportunities that come out without a defect.',
+        normInv: 'Inverse of the standard normal distribution: the Z value that leaves that proportion below it.',
+        excel: (p: string) => `In Excel: =NORM.S.INV(${p})`,
+        sigmaSym: 'Sigma level',
+        zName: 'Process Z',
+        shift: 'Conventional Six Sigma shift between short and long term',
+      },
       steps: {
         opportunitiesTotal: 'Total opportunities',
         dpu: 'DPU',
@@ -266,6 +276,7 @@ export const en: Messages = {
         'Inspect a number of units and count every defect you find, not the defective units.',
         'Type the units, the opportunities per unit and the defects. The result appears straight away.',
         'In large type you will see the sigma level, which includes the 1.5 shift of the Six Sigma tables. Below it, the process Z without that shift, in case you compare with Minitab.',
+        'Tap any value in the result (DPU, DPO, DPMO, yield, process Z or sigma level) to see where it comes from, with your numbers.',
       ],
     },
     fpy: {
@@ -300,6 +311,15 @@ export const en: Messages = {
         outOfRange: (step: string) => `${step}: FPY must be between 0 and 100%.`,
       },
       formula: ['Step FPY = good first time ÷ units in', 'RTY = FPY₁ × FPY₂ × … × FPYₙ', 'Hidden factory = 1 − RTY'],
+      explain: {
+        goodSym: 'G',
+        enteringSym: 'I',
+        enteringLabel: 'Units in',
+        goodLabel: 'Good first time',
+        stepTitle: (step: string) => `FPY · ${step}`,
+        direct: 'This FPY was typed directly in the data; it is not calculated.',
+        hiddenSym: 'Hidden factory',
+      },
       steps: {
         fpy: (step: string) => `FPY · ${step}`,
         rty: 'RTY',
@@ -326,8 +346,15 @@ export const en: Messages = {
         'Name each step so you can recognise it in the result. “Add step” adds the missing ones; the bin removes one.',
         'If the steps are already in a spreadsheet, tap “Import”: choose an Excel (.xlsx) or .csv file, or paste the copied rows. You will see which column is each piece of data and which rows will be used before accepting.',
         'In large type you will see RTY: the share that goes through the whole process with no rework at all. The bars show each step’s FPY and mark the one that costs the most.',
+        'Tap RTY, the hidden factory or a step’s FPY to see where it comes from, with your numbers.',
       ],
     },
+  },
+  explain: {
+    where: 'Where',
+    meaning: 'What it means',
+    open: (what: string) => `see where ${what} comes from`,
+    rounded: 'The app calculates with every decimal; here the numbers are shown rounded.',
   },
   template: {
     data: 'Data',

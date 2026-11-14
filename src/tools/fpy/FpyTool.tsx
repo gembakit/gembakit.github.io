@@ -5,13 +5,14 @@ import { ImportDialog } from '../../ui/ImportDialog';
 import { useI18n } from '../../i18n';
 import { fpyRty, type FpyStep } from '../../calc/fpy';
 import type { CalcWarning } from '../../calc/types';
-import { formatNumber, parseDecimal, toFieldText } from '../../ui/number';
+import { formatPercent, parseDecimal, toFieldText } from '../../ui/number';
 import { useSavedInput } from '../../projects/live';
 import type { SavePayload } from '../../projects/SaveSheet';
 import { NumberField } from '../../ui/NumberField';
 import { ToolTemplate } from '../../ui/ToolTemplate';
 import { Button, IconButton } from '../../ui/Button';
-import { Acronym } from '../../ui/Acronym';
+import { Dotted, Explained } from '../../ui/Explained';
+import { fpyExplain } from './explain';
 import { useToast } from '../../ui/Toast';
 import { APP_VERSION } from '../../version';
 import { fpySheet, type NamedStep } from './sheet';
@@ -45,13 +46,7 @@ const EXAMPLE: State = {
   rows: ['97', '94', '91'].map((fpy, i) => ({ ...blank(i + 1), fpy })),
 };
 
-/** Porcentaje con los decimales justos: nunca enseña 100 % ni 0 % si no lo es. */
-function percent(x: number, lang: 'es' | 'en'): string {
-  let d = 1;
-  const v = x * 100;
-  while (d < 4 && ((v < 100 && Number(v.toFixed(d)) === 100) || (v > 0 && Number(v.toFixed(d)) === 0))) d++;
-  return formatNumber(v, lang, d);
-}
+const percent = formatPercent;
 
 export default function FpyTool() {
   const { t, lang } = useI18n();
@@ -261,16 +256,20 @@ export default function FpyTool() {
     );
   } else {
     const several = r.fpy.length > 1;
+    // Cada valor se toca y enseña de dónde sale, con estos números.
+    const ex = fpyExplain(parsed.steps, r, t, lang);
     result = (
       <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
-          <span className="text-[13px] font-semibold text-muted">
-            <Acronym id="rty" />
-          </span>
-          <span className="font-display text-[56px] leading-[0.95] font-bold tracking-[-0.035em] tabular-nums">{percent(r.rty, lang)} %</span>
-          <span className="text-[16px] tabular-nums">
-            <span className="font-display text-[22px] font-bold">{percent(r.hiddenFactory, lang)} %</span> <Acronym id="fabrica-oculta" />
-          </span>
+        <div className="flex flex-col items-start gap-1">
+          <Explained calc={ex.rty} className="flex flex-col gap-1 rounded-[14px]">
+            <span className="text-[13px] font-semibold text-muted">
+              <Dotted>RTY</Dotted>
+            </span>
+            <span className="font-display text-[56px] leading-[0.95] font-bold tracking-[-0.035em] tabular-nums">{percent(r.rty, lang)} %</span>
+          </Explained>
+          <Explained calc={ex.hidden} className="rounded-[10px] text-[16px] tabular-nums">
+            <span className="font-display text-[22px] font-bold">{percent(r.hiddenFactory, lang)} %</span> <Dotted>{d.steps.hiddenFactory}</Dotted>
+          </Explained>
         </div>
         <div className="flex flex-col gap-2.5">
           <h3 className="text-[13px] font-semibold text-muted">{d.byStep}</h3>
@@ -278,17 +277,21 @@ export default function FpyTool() {
             {r.fpy.map((f, i) => {
               const worst = several && i === r.worst;
               return (
-                <li key={i} className="flex flex-col gap-1.5">
-                  <div className="flex items-start justify-between gap-3">
-                    <span className="min-w-0 text-[15px] font-semibold wrap-anywhere">
-                      {stepName(i)}
-                      {worst && <span className="ml-2 inline-block rounded-full bg-warn-soft px-2 py-0.5 align-middle text-[12px] font-semibold whitespace-nowrap">{d.worstTag}</span>}
+                <li key={i}>
+                  <Explained calc={ex.step[i]!} className="flex w-full flex-col gap-1.5 rounded-[12px]">
+                    <span className="flex items-start justify-between gap-3">
+                      <span className="min-w-0 text-[15px] font-semibold wrap-anywhere">
+                        {stepName(i)}
+                        {worst && <span className="ml-2 inline-block rounded-full bg-warn-soft px-2 py-0.5 align-middle text-[12px] font-semibold whitespace-nowrap">{d.worstTag}</span>}
+                      </span>
+                      <span className="shrink-0 font-display text-[17px] font-bold tabular-nums">
+                        <Dotted>{percent(f, lang)} %</Dotted>
+                      </span>
                     </span>
-                    <span className="shrink-0 font-display text-[17px] font-bold tabular-nums">{percent(f, lang)} %</span>
-                  </div>
-                  <div aria-hidden className="h-2.5 overflow-hidden rounded-full bg-surface-2">
-                    <div className={`h-full rounded-full ${worst ? 'bg-warn' : 'bg-accent/40'}`} style={{ width: `${Math.max(0, Math.min(1, f)) * 100}%` }} />
-                  </div>
+                    <span aria-hidden className="block h-2.5 overflow-hidden rounded-full bg-surface-2">
+                      <span className={`block h-full rounded-full ${worst ? 'bg-warn' : 'bg-accent/40'}`} style={{ width: `${Math.max(0, Math.min(1, f)) * 100}%` }} />
+                    </span>
+                  </Explained>
                 </li>
               );
             })}
