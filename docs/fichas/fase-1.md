@@ -401,8 +401,10 @@ calculan solo con el ahorro duro; el blando se enseña aparte, con la frase
 
 ## Sin resolver todavía
 
-- **OEE (calculadora 4):** confirmar si Nakajima da 99 % o 99,9 % de
-  calidad en el desglose del 85 %.
+- ~~**OEE (calculadora 4):** confirmar si Nakajima da 99 % o 99,9 % de
+  calidad en el desglose del 85 %.~~ Aclarado por el dueño el 2026-11-14:
+  99 % (90 × 95 × 99 = 84,65 %, redondeado al 85 %). La app enseña por
+  ahora solo el 85 %; el dueño decide si se añade el desglose.
 - **Inversa de la normal (calculadora 1):** se calcula con jStat, como fija
   el encargo. Antes de usarla compruebo su licencia (MIT según su
   repositorio) y la contrasto con los casos de Minitab y de la tabla.

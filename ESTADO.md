@@ -1,6 +1,7 @@
 # Estado del proyecto Gemba Kit
 
-Última actualización: 2026-11-13 (fin de la primera sesión de trabajo).
+Última actualización: 2026-11-14, noche (fin de la segunda sesión: proyecto
+mínimo completo y las seis calculadoras de la Fase 1).
 
 Este archivo es la memoria del proyecto. Quien abra una sesión nueva debe
 poder seguir trabajando solo con leerlo. Mantenlo al día al terminar cada
@@ -22,6 +23,12 @@ paso.
    elementos montados unos sobre otros ni pantallas amontonadas.
 4. Una confirmación en Git por paso, con mensaje claro en español, y
    `git push` para publicar. Solo se publica si pasan todas las pruebas.
+5. **Para después de cada paso a un punto de control** y cuéntale al dueño
+   lo hecho antes de seguir con el siguiente. El 2026-11-14 pidió
+   expresamente no encadenar muchos pasos en una sola tanda.
+6. **Al empezar la próxima sesión, recuérdale al dueño las pruebas
+   pendientes de la sección 2** («Pruebas pendientes del dueño»). Lo pidió
+   él: esa noche era tarde para hacerlas.
 
 ### Direcciones
 
@@ -36,38 +43,60 @@ paso.
 
 ## 2. Dónde estamos
 
-**En curso, dos cosas a la vez:**
+**Hecho y publicado (2026-11-14, último commit `80705ea`, 458 pruebas):**
 
-1. **Fase 1:** calculadoras 1 (DPMO) y 2 (FPY y RTY) hechas, con su hoja de
-   Google, e importar .xlsx/.csv/pegado para las listas. **Flujo de
-   proyectos diseñado con el dueño el 2026-11-14** (sección 6). Siguiente:
-   prueba de presentación, carpeta y aviso (pasos 6 y 7 de la pantalla de
-   prueba; el dueño activa antes la API de Slides) y la ficha del
-   **proyecto mínimo**, que va antes de las calculadoras 3 a 6.
-2. **Cierre de la prueba de Google** (sección 4, Fase 0): ha salido bien.
-   Falta que el dueño pulse el paso 3 al día siguiente (2026-11-14) y a los
-   8 días (2026-11-21). Después se retira la pantalla provisional.
+- **Fase 0** terminada, salvo la última comprobación del permiso de Google
+  (el 2026-11-21, ver abajo).
+- **Proyecto mínimo completo** (sección 4): proyectos y mediciones, hitos,
+  filtros, historial de versiones de cada proyecto, copia de seguridad en
+  Drive o descargada (restaurar proyecto por proyecto), diagnóstico del
+  almacenamiento y **hoja de Google de cada proyecto** (parte 4).
+- **Fase 1: las seis calculadoras** (DPMO, FPY y RTY, takt, OEE, kanban,
+  ahorro con ROI y payback), cada una con «Cómo usarla», ejemplo,
+  explicación tocable de cada valor (fórmulas apiladas), hoja de Google
+  suelta y hoja del proyecto. Importar .xlsx/.csv/pegado en las listas.
+- Nada de lo de la sesión del 2026-11-14 está probado todavía por el dueño
+  en su teléfono (ver la lista siguiente).
 
-**La Fase 0 está terminada salvo la prueba de Google.** La app está
-publicada, se instala en el Android del dueño, funciona en modo avión y el
-almacenamiento protegido está concedido (comprobado por el dueño el
-2026-11-13). Tiene la estructura completa (navegación, temas, idiomas,
-plantilla de herramienta, base de datos local) pero todavía ninguna
-herramienta real: solo una de muestra.
+### Pruebas pendientes del dueño (recordárselas al empezar la sesión)
 
-### Siguiente paso (el dueño elige)
+Todas en el Android, después de pulsar **Actualizar**:
 
-- **Opción A, recomendada: prueba de viabilidad de Google** (paradas 3 y 4 de
-  PLAN.md, sección 5, Fase 0, punto 4). Necesita al dueño unos 15 minutos en
-  el ordenador para crear un proyecto en Google Cloud con su cuenta, guiado
-  paso a paso. Después se comprueba desde su Android que la app inicia
-  sesión, crea una hoja en su Drive, escribe, lee, y cada cuánto pide volver
-  a confirmar el permiso. Todo el diseño de la hoja depende de que esto
-  funcione bien; si sale mal, parar y proponerle alternativas.
-- **Opción B: empezar la Fase 1** (sección 4). Su primer paso es redactar las
-  fichas de las calculadoras para que el dueño las apruebe (parada 5).
+1. **Hoja de Google del proyecto** (lo más importante: solo se ha probado
+   con un Google simulado). En un proyecto, «Crear la hoja en mi Drive»;
+   abrir la hoja y mirar la pestaña «Resumen» y la de cada medición.
+   Cambiar algo en la app y ver que llega solo (o con «Sincronizar»).
+   Cambiar una celda de una pestaña de la app en Sheets: debe salir el aviso
+   al editar, y al sincronizar la app debe preguntar («Guardar sus cambios»
+   o «Descartar sus cambios») y decir quién modificó el archivo. Cambiar el
+   nombre del proyecto y ver que el archivo y la carpeta cambian. Si algo
+   falla, pedirle el mensaje que sale: la API de Google puede rechazar
+   alguna petición del lote (ver la parte 4 en la sección 4).
+2. **Las cuatro calculadoras nuevas** (takt, OEE, kanban, ROI): «Cargar
+   ejemplo», tocar los valores para ver de dónde salen, guardar una medición
+   en un proyecto y exportar la hoja suelta (debe ir a Gemba Kit › Sueltas).
+3. **Copia de seguridad** (Ajustes → «Datos y copia de seguridad»):
+   «Guardar en mi Drive», abrir la carpeta en Drive, restaurar desde Drive y
+   ver el plan por proyecto; «Descargar copia».
+4. **Historial de versiones**: el reloj de un proyecto, «Guardar versión
+   ahora», cambiar algo, «Volver a esta versión», «Deshacer» y «Abrir como
+   copia».
+5. **Importar un .xlsx real suyo** y un .csv descargado de Google Sheets en
+   FPY o takt.
+6. **El 2026-11-21**: paso 3 de la pantalla de prueba de Google (que el
+   permiso sigue valiendo a los 8 días). Después se retira la pantalla de
+   prueba (`GoogleTestScreen` y `projectTest.*`).
+7. Si el almacenamiento vuelve a quedarse pegado: Ajustes → Diagnóstico →
+   copiar y pegarlo en el chat.
 
-Si el dueño no puede sentarse al ordenador, avanzar con la opción B.
+### Siguiente paso (el dueño elige, después de las pruebas)
+
+- Arreglar lo que salga de las pruebas, antes de nada.
+- **OEE:** el dueño confirmó el desglose de Nakajima (sección 6). Ofrecerle
+  añadirlo a la referencia del 85 % o dejarla como está.
+- **Fase 2, gráficos** (estadística descriptiva, histograma, Pareto, corrida),
+  o **«Evolución»** (gráfico de una métrica en el tiempo con los hitos), que
+  la ficha del proyecto mínimo pone justo después de las calculadoras.
 
 ---
 
@@ -290,7 +319,9 @@ PLAN.md, sección 5.
       cada una tocable), hoja y hoja del proyecto. Referencia del 85 %
       **sin desglose**: las fuentes no coinciden en la calidad (99 % en
       Vorne, 99,9 % en otras) y el libro de Nakajima no está a mano; es lo
-      que decía la ficha aprobada si no se aclaraba.
+      que decía la ficha aprobada si no se aclaraba. Después el dueño lo
+      investigó: el dato de Nakajima es 99 % (sección 6). Falta que decida
+      si se añade el desglose.
 - [x] **Calculadora 5, kanban** (2026-11-14): `src/calc/kanban.ts` con los
       tres casos de la ficha (Westerville 10 y 8 contenedores, Fabrico 9,6 →
       10), pantalla en `src/tools/kanban` (reposición por partes, espera +
@@ -564,6 +595,9 @@ Todas del 2026-11-13. No reabrirlas sin él.
 | PDF | Sí. Dos vías: desde la presentación o la hoja de Google (Drive la exporta a PDF; prueba en el paso 7) y, para usar sin conexión en planta, informe PDF generado en la propia app (fase 6). |
 | Protección y contexto | Pestañas de la app con **aviso para todos** (Google no permite aviso para el dueño y bloqueo para los demás a la vez: `ProtectedRange.warningOnly` ignora los editores). Campos de contexto por defecto: Equipo, Puesto, Línea, Producto, Supervisor, Operario; todos opcionales; se pueden añadir. Lista de mediciones con filtros por contexto y orden por fecha o resultado. |
 | Espacio y Firebase | **Aceptado** (2026-11-14): sin Firebase; la nube es el Drive del propio usuario. Copia de seguridad descargable o en Drive en el proyecto mínimo. «Archivar proyecto» en Drive, con comprobación antes de borrar del teléfono, cuando lleguen las fotos. |
+| Calidad en el 85 % de Nakajima (OEE) | **Aclarado por el dueño** (2026-11-14, investigación suya): el desglose canónico de *Introduction to TPM* es disponibilidad > 90 %, rendimiento > 95 % y calidad > **99 %**; 0,90 × 0,95 × 0,99 = 84,65 %, que se redondea al 85 %. El 99,9 % viene de mezclar el TPM con Seis Sigma o de adaptaciones de industrias críticas. Hoy la app enseña solo el 85 %; pendiente de que el dueño diga si se añade el desglose (con el 84,65 % explicado). |
+| Historial de versiones y restaurar | **Aceptado** (2026-11-14): como AutoCAD, Revit o Google Docs. Versiones por proyecto (solas, una por día de cambios, y a mano); volver a una versión reemplaza y se puede deshacer; restaurar una copia va proyecto por proyecto y nunca pierde nada. |
+| Ritmo de trabajo | **Pedido por el dueño** (2026-11-14): parar en un punto de control después de cada paso y contárselo, en lugar de encadenar muchos pasos. |
 | Carpetas en Drive | Ordenadas desde el principio (lo pide el dueño): `Gemba Kit/Proyectos/{proyecto}/` (hoja del proyecto; `Presentaciones/` e `Informes/` solo cuando haga falta), `Gemba Kit/Sueltas/`, `Gemba Kit/Copias de seguridad/` (se guardan las 10 últimas). La app encuentra sus carpetas por identificador: moverlas o renombrarlas en Drive no rompe nada. |
 | Diseño de todo lo que se exporta | **Todo** lo que sale de la app (hojas de Google, gráficos, presentaciones, PDF) con colores **estándar y profesionales**, no los del tema de la app, y **una misma línea de diseño** coherente (decidido 2026-11-14). Sustituye a «la hoja de Google usa la versión clara del tema». Antes, ronda de propuestas visuales para que el dueño elija. El estilo vive en un solo módulo (`src/google/sheetsOutput.ts` hoy), así que cambiarlo no toca las herramientas. |
 | Cuenta de Google y publicación | Durante la construcción, la cuenta de siempre. **Al terminar la app: sacarla del modo pruebas** (publicarla) y probarla con otra cuenta del dueño, que solo dé los permisos dentro de la app, sin tocar Google Cloud. Los permisos `drive.file` y `drive.appdata` son **no sensibles** (documentación de la API de Drive): publicar no exige la verificación de Google; para enseñar nombre y logo en la pantalla de permiso hace falta la «verificación de marca» (ligera: página de inicio, política de privacidad, dominio verificado). |
@@ -586,12 +620,16 @@ Todas del 2026-11-13. No reabrirlas sin él.
 
 ## 7. Pendiente de decidir con el dueño
 
-1. Opción A o B como siguiente paso (sección 2).
-2. Qué entra en "calculadoras rápidas" de la Fase 1 (sección 4).
-3. Estructura final de pestañas de la hoja, sobre una hoja de muestra
-   (parada 6, antes de construir la hoja de Google en la Fase 6).
-4. El dueño ofreció enviar el PDF de su glosario: pedírselo cuando toque
-   ampliar Referencia.
+1. Qué sigue después de las pruebas: Fase 2 (gráficos) o «Evolución»
+   (sección 2).
+2. Si la referencia del OEE lleva el desglose de Nakajima (90 × 95 × 99) o
+   solo el 85 % (sección 6).
+3. La hoja de Google del proyecto se construyó sin enseñarle antes una hoja
+   de muestra (el dueño pidió terminar sin parar). Al probarla, que diga si
+   cambia algo de las pestañas o del diseño.
+4. El dueño valida la adaptación y la traducción del glosario.
+5. Cuenta de Google para los proyectos reales: la de siempre o una nueva
+   solo para Gemba Kit (ficha del proyecto mínimo, pregunta E).
 
 ## 8. Por comprobar (PLAN.md, sección 9)
 
@@ -607,19 +645,24 @@ cada dependencia nueva antes de añadirla.
 
 - La app sin conexión puede quedarse en una versión antigua: hay aviso de
   versión nueva y la versión se ve en Ajustes.
-- Los datos viven solo en el teléfono hasta la Fase 4: si el dueño desinstala
-  la app o borra los datos de Chrome, se pierden. Todavía no se guarda nada
-  real.
+- Los datos viven en el teléfono: si el dueño desinstala la app o borra los
+  datos de Chrome, se pierden salvo lo que tenga en una copia de seguridad
+  (la hoja de Google del proyecto es un reflejo, no sirve para restaurar).
 - Las fotos ocupan mucho: reducirlas al guardar.
 - "1.234" es ambiguo al pegar: ya se avisa en la vista previa.
 - Las pruebas de Excel usan un simulador: en cada herramienta, el dueño abre
   el archivo una vez en Excel y en Google Sheets.
 - Constantes de cartas de control: tabla con fuente validada por el dueño.
-- La conexión con Google sin servidor no está probada (prueba de la opción A).
+- La sincronización de la hoja del proyecto solo está probada con un Google
+  simulado: la API real puede rechazar alguna petición del lote.
 - Una sincronización mal hecha pierde datos: copia de seguridad antes que
   sincronización, y pruebas de combinación en cualquier orden.
-- El dueño puede editar las pestañas protegidas de la app (es el propietario
-  del archivo): la app las reescribe y no confía en ellas.
+- El dueño puede editar las pestañas de la app (solo llevan aviso): la app lo
+  detecta al sincronizar y pregunta antes de reescribirlas.
+- Las capturas de pantalla (`scripts/screens.mjs`) bloquean las descargas de
+  Chrome; los scripts de prueba sueltos que pulsen «Descargar copia» deben
+  hacer lo mismo, o dejan archivos en la carpeta Descargas del dueño (pasó
+  el 2026-11-14).
 - `npm audit` avisa de fallos moderados en deepmerge, glob y minimatch, que
   llegan a través de vite-plugin-pwa → workbox-build. Son herramientas de
   compilación: no van dentro de la app. El arreglo que propone npm baja
@@ -632,3 +675,8 @@ cada dependencia nueva antes de añadirla.
 - 2026-11-13: encargo, plan de ejecución, tres rondas de maqueta visual,
   todas las decisiones de la sección 6, Fase 0 construida y publicada,
   comprobada por el dueño en su Android. Glosario plegable a petición suya.
+- 2026-11-14: prueba de Google, calculadoras DPMO y FPY con su hoja,
+  importar, glosario del dueño, proyecto mínimo completo (partes 1 a 4,
+  historial de versiones, diagnóstico), explicación tocable de cada valor
+  con fórmulas apiladas, y las calculadoras de takt, OEE, kanban y ROI.
+  El dueño deja las pruebas en el teléfono para la sesión siguiente.
