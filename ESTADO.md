@@ -60,7 +60,8 @@ paso.
 
 **2026-11-15:** el dueño probó la hoja del proyecto: se crea bien, pero al
 reescribir la pestaña de DPMO tras cambiar datos salió `#ERROR!` en Z y nivel
-sigma (fórmulas leídas en es_ES). Arreglado (nota técnica 6 de la sección 3).
+sigma (fórmulas leídas en es_ES). Arreglado (nota técnica 6 de la sección 3)
+y **confirmado por el dueño en su Android** el mismo día.
 Pidió además, en este orden propuesto: plegar guía y glosario; takt con
 turno menos descuentos con nombre y ciclo en tiempo o velocidad; OEE con
 paradas por causa, Pareto y referencia del 85 % con desglose; maqueta del
