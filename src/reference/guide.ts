@@ -231,14 +231,14 @@ export const GUIDE: readonly GuideTopic[] = [
       title: 'Siglas y términos',
       body: [
         'Las siglas subrayadas se pueden tocar: se abre su definición sin salir de la pantalla. En los resultados, además, se ve de dónde sale cada valor con tus números.',
-        'Todos los términos están en el glosario, aquí debajo, con buscador. Busca por la sigla, por el nombre o por una palabra de la definición.',
+        'Todos los términos están en el glosario, en esta misma pantalla de Referencia: toca «Glosario» para abrirlo. Tiene buscador: busca por la sigla, por el nombre o por una palabra de la definición. La guía y el glosario empiezan cerrados para no llenar la pantalla; se quedan como los dejes mientras la app esté abierta.',
       ],
     },
     en: {
       title: 'Acronyms and terms',
       body: [
         'Underlined acronyms can be tapped: their definition opens without leaving the screen. In results, you also see where each value comes from, with your numbers.',
-        'Every term is in the glossary, just below, with a search box. Search by acronym, by name or by a word in the definition.',
+        'Every term is in the glossary, on this same Reference screen: tap “Glossary” to open it. It has a search box: search by acronym, by name or by a word in the definition. The guide and the glossary start closed so the screen is not crowded; they stay as you leave them while the app is open.',
       ],
     },
   },

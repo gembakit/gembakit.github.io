@@ -62,11 +62,36 @@ paso.
 reescribir la pestaña de DPMO tras cambiar datos salió `#ERROR!` en Z y nivel
 sigma (fórmulas leídas en es_ES). Arreglado (nota técnica 6 de la sección 3)
 y **confirmado por el dueño en su Android** el mismo día.
-Pidió además, en este orden propuesto: plegar guía y glosario; takt con
-turno menos descuentos con nombre y ciclo en tiempo o velocidad; OEE con
-paradas por causa, Pareto y referencia del 85 % con desglose; maqueta del
-proyecto con pestañas; propuestas de diseño de lo exportado. Recomendado y
-aceptado en principio: gráficos (Fase 2) antes que «Evolución».
+Plan acordado ese día (un paso cada vez, parar tras cada uno):
+
+1. [x] Guía de uso y glosario plegados en Referencia, cerrados por defecto
+   (2026-11-15).
+2. [ ] Versiones: puntos de control **con nombre**; **10 automáticas y 10
+   puntos de control por separado**, para que las automáticas nunca borren
+   un punto de control. Propuesta pendiente de respuesta: al llegar a 10
+   puntos de control, preguntar cuál borrar en lugar de borrar solo.
+3. [ ] Takt (con ficha antes): turno − descuentos con nombre (ver la resta);
+   por estación, ciclo teórico y real con varias medidas (media, **menor
+   tiempo repetible**, variación); ciclo o velocidad, con el tipo de medida de
+   una lista fija (tiempo por unidad / unidades por tiempo) y el nombre de la
+   unidad libre (botellas, cph…). Explicar que el takt no resta averías y
+   compararlo con el OEE.
+4. [ ] OEE (con ficha antes; empieza la Fase 2 de gráficos): paradas con
+   nombre, minutos y categoría (editable); OEE oficial siempre visible;
+   interruptores por categoría que calculan **otro** porcentaje con nombre
+   explícito («OEE sin cambios de formato»), nunca en lugar del oficial;
+   cambio de formato con estándar → estándar frente a exceso; descansos
+   opcionales (en la planta del dueño se rotan puestos y no se para); Pareto
+   por causa; 85 % con el desglose 90 × 95 × 99 y el factor más alejado
+   marcado.
+5. [ ] Maqueta del proyecto con pestañas (el dueño decide después).
+6. [ ] Propuestas de diseño común para lo exportado (hojas, Slides, PDF).
+7. [ ] «Ver más» en cada término del glosario (definición amplia, ejemplo,
+   fórmula, error típico, relacionados, fuente), por tandas empezando por
+   los 31 de las calculadoras. Lo redacta el agente; el dueño valida.
+
+Decidido: gráficos (Fase 2) antes que «Evolución»; cuenta de Google, al
+terminar la app.
 
 ### Pruebas pendientes del dueño (recordárselas al empezar la sesión)
 

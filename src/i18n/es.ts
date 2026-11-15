@@ -869,6 +869,7 @@ export const es = {
     guideMore: 'Cada herramienta tiene además su propia guía, dentro de la herramienta.',
     search: 'Buscar término',
     count: (n: number) => (n === 1 ? '1 término' : `${n} términos`),
+    topics: (n: number) => (n === 1 ? '1 tema' : `${n} temas`),
     noResults: (q: string) => `Ningún término coincide con «${q}».`,
     more: 'Toca un término para ver su definición. El glosario crece con cada herramienta.',
     categories: {

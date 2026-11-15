@@ -868,6 +868,7 @@ export const en: Messages = {
     guideMore: 'Each tool also has its own guide, inside the tool.',
     search: 'Search terms',
     count: (n) => (n === 1 ? '1 term' : `${n} terms`),
+    topics: (n) => (n === 1 ? '1 topic' : `${n} topics`),
     noResults: (q) => `No term matches “${q}”.`,
     more: 'Tap a term to see its definition. The glossary grows with each tool.',
     categories: {
