@@ -1,6 +1,6 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { GembaDB } from './db';
-import { copyVersion, KEEP_VERSIONS, listVersions, restoreVersion, saveVersionNow, sameDay } from './history';
+import { copyVersion, deleteVersion, isCheckpoint, KEEP_AUTO, listVersions, MAX_CHECKPOINTS, putVersion, renameCheckpoint, restoreVersion, saveCheckpoint, sameDay } from './history';
 import { addMilestone, createProject, deleteMeasurement, getProject, listMeasurements, listMilestones, saveMeasurement, updateProject } from '../projects/store';
 
 // Los días se simulan con el reloj; siempre hacia delante, porque las marcas de
@@ -77,7 +77,7 @@ describe('historial de versiones de un proyecto', () => {
     const p = await createProject({ name: 'Línea 3', type: 'dmaic', goal: '', fields: [] }, db);
     const m = await measure(p.id, 'FPY');
     await addMilestone({ projectId: p.id, at: 1, title: '5S', note: '' }, db);
-    await saveVersionNow(db, p.id);
+    await saveCheckpoint(db, p.id, 'Antes de cambiar');
     await updateProject(p.id, { name: 'Cambiado' }, db);
     const [v] = await listVersions(db, p.id);
 
@@ -93,24 +93,74 @@ describe('historial de versiones de un proyecto', () => {
     expect(await listMeasurements(p.id, db)).toHaveLength(1);
   });
 
-  test('guardar versión a mano; si no hubo cambios, no se repite', async () => {
+  test('punto de control con nombre; si no hubo cambios, no se repite', async () => {
     const p = await createProject({ name: 'Línea 3', type: 'dmaic', goal: '', fields: [] }, db);
-    expect(await saveVersionNow(db, p.id)).toBe('saved');
-    expect(await saveVersionNow(db, p.id)).toBe('same');
+    expect(await saveCheckpoint(db, p.id, '  Inicio ')).toMatchObject({ k: 'saved', version: { reason: 'manual', label: 'Inicio' } });
+    expect(await saveCheckpoint(db, p.id, 'Otra vez')).toMatchObject({ k: 'same', version: { label: 'Inicio' } });
     await updateProject(p.id, { goal: 'Algo' }, db);
-    expect(await saveVersionNow(db, p.id)).toBe('saved');
-    expect((await listVersions(db, p.id)).map((v) => v.reason)).toEqual(['manual', 'manual']);
+    expect((await saveCheckpoint(db, p.id, 'Fin de Definir')).k).toBe('saved');
+    expect((await listVersions(db, p.id)).map((v) => v.label)).toEqual(['Fin de Definir', 'Inicio']);
   });
 
-  test(`se quedan las ${KEEP_VERSIONS} versiones más recientes`, async () => {
+  test('una versión automática igual a como está el proyecto pasa a ser el punto de control', async () => {
     const p = await createProject({ name: 'Línea 3', type: 'dmaic', goal: '', fields: [] }, db);
-    for (let i = 0; i < KEEP_VERSIONS + 3; i++) {
+    await measure(p.id, 'Lunes');
+    nextDay();
+    await saveCheckpoint(db, p.id, 'Primero');
+    await updateProject(p.id, { goal: 'Cambio' }, db);
+    const [auto] = await listVersions(db, p.id);
+    await restoreVersion(db, auto!.id);
+    // «Antes de volver atrás» guardó cómo estaba; un punto de control ahora no duplica nada.
+    const n = (await listVersions(db, p.id)).length;
+    expect((await saveCheckpoint(db, p.id, 'Tras volver')).k).toBe('saved');
+    expect(await listVersions(db, p.id)).toHaveLength(n + 1);
+  });
+
+  test(`automáticas: se quedan las ${KEEP_AUTO} más recientes y nunca borran un punto de control`, async () => {
+    const p = await createProject({ name: 'Línea 3', type: 'dmaic', goal: '', fields: [] }, db);
+    await saveCheckpoint(db, p.id, 'El primero');
+    for (let i = 0; i < KEEP_AUTO + 3; i++) {
+      nextDay();
       await updateProject(p.id, { goal: `Objetivo ${i}` }, db);
-      await saveVersionNow(db, p.id);
     }
     const versions = await listVersions(db, p.id);
-    expect(versions).toHaveLength(KEEP_VERSIONS);
-    expect(versions[0]!.state.project.goal).toBe(`Objetivo ${KEEP_VERSIONS + 2}`);
-    expect(versions.at(-1)!.state.project.goal).toBe('Objetivo 3');
+    const autos = versions.filter((v) => !isCheckpoint(v));
+    expect(autos).toHaveLength(KEEP_AUTO);
+    expect(autos[0]!.state.project.goal).toBe(`Objetivo ${KEEP_AUTO + 1}`);
+    expect(versions.filter(isCheckpoint).map((v) => v.label)).toEqual(['El primero']);
+  });
+
+  test(`con ${MAX_CHECKPOINTS} puntos de control pregunta cuál borrar; nunca borra uno solo`, async () => {
+    const p = await createProject({ name: 'Línea 3', type: 'dmaic', goal: '', fields: [] }, db);
+    for (let i = 0; i < MAX_CHECKPOINTS; i++) {
+      await updateProject(p.id, { goal: `Objetivo ${i}` }, db);
+      expect((await saveCheckpoint(db, p.id, `Punto ${i}`)).k).toBe('saved');
+    }
+    await updateProject(p.id, { goal: 'Uno más' }, db);
+    const full = await saveCheckpoint(db, p.id, 'Punto nuevo');
+    expect(full.k).toBe('full');
+    if (full.k !== 'full') return;
+    expect(full.checkpoints).toHaveLength(MAX_CHECKPOINTS);
+    expect((await listVersions(db, p.id)).filter(isCheckpoint)).toHaveLength(MAX_CHECKPOINTS);
+
+    const oldest = full.checkpoints.at(-1)!;
+    expect(oldest.label).toBe('Punto 0');
+    expect((await saveCheckpoint(db, p.id, 'Punto nuevo', oldest.id)).k).toBe('saved');
+    const labels = (await listVersions(db, p.id)).filter(isCheckpoint).map((v) => v.label);
+    expect(labels).toHaveLength(MAX_CHECKPOINTS);
+    expect(labels[0]).toBe('Punto nuevo');
+    expect(labels).not.toContain('Punto 0');
+  });
+
+  test('cambiar el nombre de un punto de control y borrarlo con deshacer', async () => {
+    const p = await createProject({ name: 'Línea 3', type: 'dmaic', goal: '', fields: [] }, db);
+    const r = await saveCheckpoint(db, p.id, 'Antes');
+    if (r.k !== 'saved') throw new Error(r.k);
+    await renameCheckpoint(db, r.version.id, ' Fin de Medir ');
+    expect((await listVersions(db, p.id))[0]!.label).toBe('Fin de Medir');
+    const gone = await deleteVersion(db, r.version.id);
+    expect(await listVersions(db, p.id)).toHaveLength(0);
+    await putVersion(db, gone!);
+    expect((await listVersions(db, p.id))[0]!.label).toBe('Fin de Medir');
   });
 });

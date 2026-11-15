@@ -120,7 +120,8 @@ export const GUIDE: readonly GuideTopic[] = [
       title: 'Historial de versiones',
       body: [
         'Cada proyecto tiene su historial, como las copias .bak de AutoCAD o el historial de versiones de Google Docs. Ábrelo con el reloj de arriba, junto al lápiz.',
-        'La app guarda sola cómo quedó el proyecto cada día que lo cambias: el primer cambio de un día nuevo guarda antes cómo estaba. Antes de un cambio grande, pulsa «Guardar versión ahora». Se quedan las 30 versiones más recientes.',
+        'La app guarda sola cómo quedó el proyecto cada día que lo cambias: el primer cambio de un día nuevo guarda antes cómo estaba. Los cambios del mismo día no crean versión. De estas automáticas se quedan las 10 más recientes.',
+        'Además puedes guardar puntos de control: cuando el avance te convenza, o antes de un cambio grande, pulsa «Guardar punto de control» y ponle un nombre (por ejemplo, «Fin de Medir»). Van en su propia lista, hasta 10, y la app no los borra nunca sola: si ya tienes 10, te pregunta cuál borrar para dejar sitio. Dentro de cada uno puedes cambiarle el nombre o borrarlo (con deshacer).',
         'Toca una versión para ver qué tenía (fase, objetivo, mediciones e hitos) y elige: «Volver a esta versión» deja el proyecto como estaba entonces (vuelve lo que se borró después y se quita lo que se añadió); cómo estaba justo antes se guarda en el historial, así que se puede deshacer. «Abrir como copia» crea un proyecto aparte con esa versión, para mirarlo o compararlo sin tocar el tuyo.',
       ],
     },
@@ -128,7 +129,8 @@ export const GUIDE: readonly GuideTopic[] = [
       title: 'Version history',
       body: [
         'Each project has its history, like AutoCAD’s .bak files or Google Docs’ version history. Open it with the clock at the top, next to the pencil.',
-        'The app saves on its own how the project ended up each day you change it: the first change on a new day first saves how it was. Before a big change, tap “Save version now”. The 30 most recent versions are kept.',
+        'The app saves on its own how the project ended up each day you change it: the first change on a new day first saves how it was. Changes on the same day do not create a version. The 10 most recent of these automatic versions are kept.',
+        'You can also save checkpoints: when you are happy with the progress, or before a big change, tap “Save checkpoint” and give it a name (for example, “End of Measure”). They have their own list, up to 10, and the app never deletes them on its own: if you already have 10, it asks which one to delete to make room. Inside each one you can rename it or delete it (with undo).',
         'Tap a version to see what it held (phase, goal, measurements and milestones) and choose: “Go back to this version” leaves the project as it was then (what was deleted later comes back and what was added is removed); how it was just before is saved in the history, so it can be undone. “Open as a copy” creates a separate project with that version, to look at it or compare without touching yours.',
       ],
     },

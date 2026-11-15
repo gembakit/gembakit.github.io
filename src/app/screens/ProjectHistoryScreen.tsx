@@ -1,8 +1,20 @@
-import { useCallback, useState } from 'react';
-import { ChevronRight, CopyPlus, History, RotateCcw, Save } from 'lucide-react';
+import { useCallback, useEffect, useId, useState } from 'react';
+import { BookmarkPlus, ChevronRight, CopyPlus, Flag, History, Pencil, RotateCcw, Save, Trash2 } from 'lucide-react';
 import { useI18n } from '../../i18n';
 import { db, type ProjectState, type ProjectVersion } from '../../data/db';
-import { copyVersion, listVersions, projectNow, restoreVersion, saveVersionNow } from '../../data/history';
+import {
+  copyVersion,
+  deleteVersion,
+  isCheckpoint,
+  KEEP_AUTO,
+  listVersions,
+  MAX_CHECKPOINTS,
+  projectNow,
+  putVersion,
+  renameCheckpoint,
+  restoreVersion,
+  saveCheckpoint,
+} from '../../data/history';
 import { Button } from '../../ui/Button';
 import { Card, DetailHeader, Label, Screen } from '../../ui/Layout';
 import { Sheet } from '../../ui/Sheet';
@@ -10,6 +22,7 @@ import { useToast } from '../../ui/Toast';
 import { PHASES } from '../../projects/model';
 import { formatDateTime, formatHeadline, useLive } from '../../projects/live';
 import { getProject, latest } from '../../projects/store';
+import { Field, FormError, textareaClass } from '../../projects/SaveSheet';
 import { navigate } from '../router';
 
 /** Cuántas mediciones o hitos se enumeran en el detalle de una versión antes de resumir. */
@@ -29,7 +42,9 @@ export function ProjectHistoryScreen({ id }: { id: string }) {
   const current = useLive(() => projectNow(db, id), [id]);
   const versions = useLive(() => listVersions(db, id), [id]);
   const [open, setOpen] = useState<ProjectVersion | null>(null);
+  const [saving, setSaving] = useState(false);
   const close = useCallback(() => setOpen(null), []);
+  const closeSave = useCallback(() => setSaving(false), []);
   const back = () => navigate(`/proyectos/${id}`);
 
   if (project === undefined) return null;
@@ -41,9 +56,13 @@ export function ProjectHistoryScreen({ id }: { id: string }) {
     );
   }
 
-  const saveNow = async () => {
-    const r = await saveVersionNow(db, id);
-    toast(r === 'saved' ? h.saved : h.same, { tone: r === 'saved' ? 'ok' : 'info' });
+  const checkpoints = (versions ?? []).filter(isCheckpoint);
+  const autos = (versions ?? []).filter((v) => !isCheckpoint(v));
+
+  const removeCheckpoint = async (v: ProjectVersion) => {
+    const gone = await deleteVersion(db, v.id);
+    setOpen(null);
+    toast(h.deleted(v.label ?? ''), { action: gone ? { label: t.common.undo, onAction: () => void putVersion(db, gone) } : undefined });
   };
 
   const goBack = async (v: ProjectVersion) => {
@@ -71,9 +90,9 @@ export function ProjectHistoryScreen({ id }: { id: string }) {
       <Card>
         <div className="flex items-start gap-3">
           <History aria-hidden size={22} className="mt-0.5 shrink-0 text-accent-ink" />
-          <p className="text-[15px] leading-relaxed">{h.intro}</p>
+          <p className="text-[15px] leading-relaxed">{h.intro(KEEP_AUTO)}</p>
         </div>
-        <Button icon={Save} className="w-full" onClick={() => void saveNow()}>
+        <Button variant="primary" icon={BookmarkPlus} className="w-full" onClick={() => setSaving(true)}>
           {h.saveNow}
         </Button>
         <p className="text-[13.5px] leading-relaxed text-muted">{h.saveHint}</p>
@@ -89,35 +108,20 @@ export function ProjectHistoryScreen({ id }: { id: string }) {
         </section>
       )}
 
-      <section className="flex flex-col gap-2.5">
-        <Label>{h.versions}</Label>
-        {versions && versions.length === 0 && (
-          <Card>
-            <p className="text-[15px] leading-relaxed text-muted">{h.empty}</p>
-          </Card>
-        )}
-        {versions && versions.length > 0 && (
-          <ul className="flex flex-col gap-2">
-            {versions.map((v) => (
-              <li key={v.id}>
-                <button type="button" onClick={() => setOpen(v)} className="press raised grid w-full grid-cols-[minmax(0,1fr)_20px] items-center gap-3 rounded-[18px] p-3.5 text-left">
-                  <span className="flex min-w-0 flex-col gap-1">
-                    <span className="text-[15.5px] font-semibold">{formatDateTime(v.at, lang)}</span>
-                    <Reason v={v} />
-                    <StateLine state={v.state} />
-                  </span>
-                  <ChevronRight aria-hidden size={20} className="text-muted" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      {versions && (
+        <>
+          <VersionList title={h.checkpoints(checkpoints.length, MAX_CHECKPOINTS)} empty={h.checkpointsEmpty} list={checkpoints} onOpen={setOpen} />
+          <VersionList title={h.autos(KEEP_AUTO)} empty={h.empty} list={autos} onOpen={setOpen} />
+        </>
+      )}
 
-      <Sheet open={open !== null} onClose={close} title={open ? h.asOf(formatDateTime(open.at, lang)) : ''}>
+      <CheckpointSheet open={saving} onClose={closeSave} projectId={id} />
+
+      <Sheet open={open !== null} onClose={close} title={open ? (open.label ?? h.asOf(formatDateTime(open.at, lang))) : ''}>
         {open && (
           <>
-            <Reason v={open} />
+            {open.label ? <span className="text-[14.5px] text-muted">{h.asOf(formatDateTime(open.at, lang))}</span> : <Reason v={open} />}
+            {isCheckpoint(open) && <RenameField version={open} onDone={setOpen} />}
             <VersionDetail state={open.state} />
             <div className="flex flex-col gap-2">
               <Button variant="primary" icon={RotateCcw} className="w-full" onClick={() => void goBack(open)}>
@@ -131,10 +135,189 @@ export function ProjectHistoryScreen({ id }: { id: string }) {
               </Button>
               <p className="text-[13.5px] leading-relaxed text-muted">{h.copyHint}</p>
             </div>
+            {isCheckpoint(open) && (
+              <Button variant="ghost" icon={Trash2} className="self-start" onClick={() => void removeCheckpoint(open)}>
+                {h.deleteCheckpoint}
+              </Button>
+            )}
           </>
         )}
       </Sheet>
     </Screen>
+  );
+}
+
+/** Una lista de versiones (puntos de control o automáticas), con su título. */
+function VersionList({ title, empty, list, onOpen }: { title: string; empty: string; list: ProjectVersion[]; onOpen: (v: ProjectVersion) => void }) {
+  const { lang } = useI18n();
+  return (
+    <section className="flex flex-col gap-2.5">
+      <Label>{title}</Label>
+      {list.length === 0 ? (
+        <Card>
+          <p className="text-[15px] leading-relaxed text-muted">{empty}</p>
+        </Card>
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {list.map((v) => (
+            <li key={v.id}>
+              <button type="button" onClick={() => onOpen(v)} className="press raised grid w-full grid-cols-[minmax(0,1fr)_20px] items-center gap-3 rounded-[18px] p-3.5 text-left">
+                <span className="flex min-w-0 flex-col gap-1">
+                  {v.label ? (
+                    <>
+                      <span className="flex items-start gap-2 text-[15.5px] font-semibold wrap-anywhere">
+                        <Flag aria-hidden size={17} className="mt-[3px] shrink-0 text-accent-ink" />
+                        <span className="min-w-0">{v.label}</span>
+                      </span>
+                      <span className="text-[14px]">{formatDateTime(v.at, lang)}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-[15.5px] font-semibold">{formatDateTime(v.at, lang)}</span>
+                      <Reason v={v} />
+                    </>
+                  )}
+                  <StateLine state={v.state} />
+                </span>
+                <ChevronRight aria-hidden size={20} className="text-muted" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+/** «Guardar punto de control»: pide el nombre y, si ya hay el máximo, cuál borrar para dejar sitio. */
+function CheckpointSheet({ open, onClose, projectId }: { open: boolean; onClose: () => void; projectId: string }) {
+  const { t, lang } = useI18n();
+  const h = t.projects.history;
+  const toast = useToast();
+  const ids = useId();
+  const [name, setName] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [full, setFull] = useState<ProjectVersion[] | null>(null);
+  const [pick, setPick] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    setName('');
+    setError(null);
+    setFull(null);
+    setPick(null);
+  }, [open]);
+
+  const submit = async () => {
+    if (busy) return;
+    if (!name.trim()) return setError(h.nameRequired);
+    if (full && !pick) return setError(h.pickOne);
+    setBusy(true);
+    try {
+      const r = await saveCheckpoint(db, projectId, name, pick ?? undefined);
+      if (r.k === 'full') {
+        setFull(r.checkpoints);
+        return;
+      }
+      onClose();
+      if (r.k === 'saved') toast(h.saved(r.version.label ?? name.trim()), { tone: 'ok' });
+      else toast(h.same(r.version.label ?? ''), { tone: 'info' });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Sheet open={open} onClose={onClose} title={h.saveTitle}>
+      <Field label={h.name} htmlFor={`${ids}n`}>
+        <NameBox
+          id={`${ids}n`}
+          value={name}
+          placeholder={h.namePlaceholder}
+          onChange={(v) => {
+            setName(v);
+            setError(null);
+          }}
+          onEnter={() => void submit()}
+        />
+      </Field>
+      {full && (
+        <fieldset className="flex flex-col gap-2">
+          <legend className="mb-2 text-[15px] leading-relaxed">{h.full(MAX_CHECKPOINTS)}</legend>
+          {full.map((v) => (
+            <label key={v.id} className="grid cursor-pointer grid-cols-[22px_minmax(0,1fr)] items-start gap-3 rounded-[14px] bg-surface-2 p-3 has-checked:outline-2 has-checked:outline-accent">
+              <input
+                type="radio"
+                name={`${ids}pick`}
+                className="mt-1 size-[18px] accent-accent"
+                checked={pick === v.id}
+                onChange={() => {
+                  setPick(v.id);
+                  setError(null);
+                }}
+              />
+              <span className="flex min-w-0 flex-col">
+                <span className="text-[15px] font-semibold wrap-anywhere">{v.label}</span>
+                <span className="text-[13.5px] text-muted">{formatDateTime(v.at, lang)}</span>
+              </span>
+            </label>
+          ))}
+        </fieldset>
+      )}
+      {error && <FormError>{error}</FormError>}
+      <Button variant="primary" icon={full ? Trash2 : Save} className="w-full" disabled={busy} onClick={() => void submit()}>
+        {full ? h.replace : t.common.save}
+      </Button>
+    </Sheet>
+  );
+}
+
+/** Cambiar el nombre de un punto de control, dentro de su detalle. */
+function RenameField({ version, onDone }: { version: ProjectVersion; onDone: (v: ProjectVersion) => void }) {
+  const { t } = useI18n();
+  const h = t.projects.history;
+  const toast = useToast();
+  const id = useId();
+  const [name, setName] = useState(version.label ?? '');
+  useEffect(() => setName(version.label ?? ''), [version]);
+  const changed = name.trim() !== '' && name.trim() !== version.label;
+  const rename = async () => {
+    if (!changed) return;
+    await renameCheckpoint(db, version.id, name);
+    onDone({ ...version, label: name.trim() });
+    toast(h.renamed, { tone: 'ok' });
+  };
+  return (
+    <Field label={h.name} htmlFor={id}>
+      <NameBox id={id} value={name} onChange={setName} onEnter={() => void rename()} />
+      {changed && (
+        <Button icon={Pencil} className="mt-1 w-full" onClick={() => void rename()}>
+          {h.rename}
+        </Button>
+      )}
+    </Field>
+  );
+}
+
+/** Campo del nombre: de varias líneas para que un nombre largo se lea entero; Intro no salta de línea. */
+function NameBox({ id, value, onChange, onEnter, placeholder }: { id: string; value: string; onChange: (v: string) => void; onEnter: () => void; placeholder?: string }) {
+  return (
+    <textarea
+      id={id}
+      rows={2}
+      maxLength={80}
+      value={value}
+      placeholder={placeholder}
+      className={textareaClass.replace('min-h-24', 'min-h-0')}
+      onChange={(e) => onChange(e.target.value.replace(/\s*\n\s*/g, ' '))}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          onEnter();
+        }
+      }}
+    />
   );
 }
 

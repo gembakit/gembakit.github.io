@@ -66,10 +66,14 @@ Plan acordado ese día (un paso cada vez, parar tras cada uno):
 
 1. [x] Guía de uso y glosario plegados en Referencia, cerrados por defecto
    (2026-11-15).
-2. [ ] Versiones: puntos de control **con nombre**; **10 automáticas y 10
-   puntos de control por separado**, para que las automáticas nunca borren
-   un punto de control. Propuesta pendiente de respuesta: al llegar a 10
-   puntos de control, preguntar cuál borrar en lugar de borrar solo.
+2. [x] Versiones (2026-11-15): puntos de control **con nombre** (`label`,
+   razón `manual`); **10 automáticas (`KEEP_AUTO`) y 10 puntos de control
+   (`MAX_CHECKPOINTS`) por separado**: la poda solo toca las automáticas; al
+   llegar a 10 puntos de control, la app pregunta cuál borrar
+   (`saveCheckpoint` devuelve `full`). Si el proyecto está igual que en una
+   automática, esa pasa a punto de control. Cambiar nombre y borrar (con
+   deshacer) en el detalle. Arreglado además: el término del glosario abierto
+   solo al buscarlo no se podía volver a plegar.
 3. [ ] Takt (con ficha antes): turno − descuentos con nombre (ver la resta);
    por estación, ciclo teórico y real con varias medidas (media, **menor
    tiempo repetible**, variación); ciclo o velocidad, con el tipo de medida de

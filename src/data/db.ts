@@ -112,6 +112,8 @@ export interface ProjectVersion {
   reason: VersionReason;
   /** reason 'backup': fecha de la copia de la que viene. */
   copyAt?: number;
+  /** reason 'manual' (punto de control): el nombre que le dio el usuario. */
+  label?: string;
   state: ProjectState;
 }
 

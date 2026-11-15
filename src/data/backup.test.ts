@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { GembaDB } from './db';
 import { BackupError, backupFileName, makeBackup, planRestore, readBackup, restoreBackup, summarize, localCounts } from './backup';
-import { listVersions, restoreVersion, saveVersionNow } from './history';
+import { listVersions, restoreVersion, saveCheckpoint } from './history';
 import { addMilestone, createProject, deleteMeasurement, deleteProject, getProject, listMeasurements, saveMeasurement, updateProject } from '../projects/store';
 
 let a: GembaDB;
@@ -38,7 +38,7 @@ const actions = (plan: { action: string }[]) => plan.map((x) => x.action);
 describe('copia de seguridad', () => {
   test('un teléfono nuevo recupera todos los proyectos, con su historial y sin los ajustes de Drive', async () => {
     const { p } = await fill(a);
-    await saveVersionNow(a, p.id);
+    await saveCheckpoint(a, p.id, 'Punto de control');
     const text = JSON.stringify(await makeBackup(a, '0.1.0', Date.UTC(2026, 10, 14, 18, 30)));
     const backup = readBackup(text);
     expect(summarize(backup)).toEqual({ createdAt: Date.UTC(2026, 10, 14, 18, 30), projects: 1, measurements: 1, milestones: 1 });

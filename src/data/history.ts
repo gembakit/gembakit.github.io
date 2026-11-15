@@ -4,13 +4,21 @@ import { newId, now } from './record';
 // Historial de versiones de cada proyecto, como hacen AutoCAD (.bak), Revit
 // (proyecto.0001.rvt…) o Google Docs:
 // - Se guardan solas: al empezar a cambiar un proyecto en un día nuevo, se
-//   guarda cómo quedó el último día que se tocó. También se pueden guardar a mano.
+//   guarda cómo quedó el último día que se tocó.
+// - Puntos de control: los guarda el usuario a propósito, con nombre («Fin de
+//   Medir»). Van aparte de las automáticas y la app nunca los borra sola: al
+//   llegar al tope pregunta cuál borrar (pedido por el dueño, 2026-11-15).
 // - Volver a una versión REEMPLAZA el proyecto, pero antes guarda cómo estaba:
 //   nunca se pierde nada y se puede deshacer.
 // - «Abrir como copia» crea un proyecto aparte con esa versión.
 
-/** Versiones que se quedan por proyecto; las más antiguas se borran. */
-export const KEEP_VERSIONS = 30;
+/** Versiones automáticas que se quedan por proyecto (diarias, antes de volver atrás, de una copia); las más antiguas se borran. */
+export const KEEP_AUTO = 10;
+/** Puntos de control por proyecto. Nunca se borran solos. */
+export const MAX_CHECKPOINTS = 10;
+
+/** Punto de control: versión guardada a propósito por el usuario. */
+export const isCheckpoint = (v: ProjectVersion) => v.reason === 'manual';
 
 /** Un proyecto ahora mismo y la fecha de su último cambio (también de lo borrado). */
 export interface ProjectNow {
@@ -70,8 +78,9 @@ export async function keepVersion(db: GembaDB, cur: ProjectNow, reason: VersionR
   return { version, fresh: true };
 }
 
+/** Deja las KEEP_AUTO automáticas más recientes. Los puntos de control no se tocan. */
 export async function pruneVersions(db: GembaDB, projectId: string): Promise<void> {
-  const old = (await listVersions(db, projectId)).slice(KEEP_VERSIONS);
+  const old = (await listVersions(db, projectId)).filter((v) => !isCheckpoint(v)).slice(KEEP_AUTO);
   if (old.length) await db.projectVersions.bulkDelete(old.map((v) => v.id));
 }
 
@@ -86,13 +95,60 @@ export async function checkpoint(db: GembaDB, projectId: string, today = Date.no
   await keepVersion(db, cur, 'auto');
 }
 
-/** «Guardar versión ahora». 'same' si ya había una versión igual. */
-export async function saveVersionNow(db: GembaDB, projectId: string): Promise<'saved' | 'same'> {
+export type CheckpointResult =
+  | { k: 'saved'; version: ProjectVersion }
+  /** Ya hay un punto de control igual a como está ahora el proyecto. */
+  | { k: 'same'; version: ProjectVersion }
+  /** Ya hay MAX_CHECKPOINTS: hay que elegir uno para borrar (`replace`). */
+  | { k: 'full'; checkpoints: ProjectVersion[] };
+
+/**
+ * «Guardar punto de control» con su nombre. Si el proyecto está igual que en
+ * una versión automática, esa versión pasa a ser el punto de control. Con
+ * `replace`, borra antes ese punto de control para dejar sitio.
+ */
+export async function saveCheckpoint(db: GembaDB, projectId: string, label: string, replace?: string): Promise<CheckpointResult> {
   return db.transaction('rw', historyTables(db), async () => {
     const cur = await projectNow(db, projectId);
     if (!cur) throw new Error('Proyecto no encontrado');
-    return (await keepVersion(db, cur, 'manual')).fresh ? 'saved' : 'same';
+    const existing = await versionAt(db, projectId, cur.changedAt);
+    if (existing && isCheckpoint(existing)) return { k: 'same', version: existing };
+    let checkpoints = (await listVersions(db, projectId)).filter(isCheckpoint);
+    const gone = replace ? checkpoints.find((v) => v.id === replace) : undefined;
+    if (gone) {
+      await db.projectVersions.delete(gone.id);
+      checkpoints = checkpoints.filter((v) => v !== gone);
+    }
+    if (checkpoints.length >= MAX_CHECKPOINTS) return { k: 'full', checkpoints };
+    const name = label.trim();
+    if (existing) {
+      const version: ProjectVersion = { ...existing, reason: 'manual', label: name, savedAt: Date.now() };
+      delete version.copyAt;
+      await db.projectVersions.put(version);
+      return { k: 'saved', version };
+    }
+    const version: ProjectVersion = { id: newId(), projectId, at: cur.changedAt, savedAt: Date.now(), reason: 'manual', label: name, state: cur.state };
+    await db.projectVersions.add(version);
+    return { k: 'saved', version };
   });
+}
+
+/** Cambia el nombre de un punto de control. */
+export async function renameCheckpoint(db: GembaDB, versionId: string, label: string): Promise<void> {
+  await db.projectVersions.update(versionId, { label: label.trim() });
+}
+
+/** Borra una versión; devuelve lo borrado para poder deshacer con `putVersion`. */
+export async function deleteVersion(db: GembaDB, versionId: string): Promise<ProjectVersion | undefined> {
+  return db.transaction('rw', db.projectVersions, async () => {
+    const v = await db.projectVersions.get(versionId);
+    if (v) await db.projectVersions.delete(versionId);
+    return v;
+  });
+}
+
+export async function putVersion(db: GembaDB, v: ProjectVersion): Promise<void> {
+  await db.projectVersions.put(v);
 }
 
 /**

@@ -99,8 +99,17 @@ const SHOTS = [
   { name: 'medicion-editar', hash: '#/proyectos', click: [/Rechazo línea 3/, /DPMO y nivel sigma/, { label: /^Editar información$/ }], full: true },
   // Historial de versiones del proyecto: vacío, con una versión guardada a mano y su detalle.
   { name: 'historial-vacio', hash: '#/proyectos', click: [/Rechazo línea 3/, { label: /^Historial de versiones$/ }], full: true, only: 'light' },
-  { name: 'historial', hash: '#/proyectos', click: [/Rechazo línea 3/, { label: /^Historial de versiones$/ }, /^Guardar versión ahora$/], full: true },
-  { name: 'historial-version', hash: '#/proyectos', click: [/Rechazo línea 3/, { label: /^Historial de versiones$/ }, /Guardada por ti/], full: true },
+  { name: 'historial-nombre', hash: '#/proyectos', click: [/Rechazo línea 3/, { label: /^Historial de versiones$/ }, /^Guardar punto de control$/] },
+  {
+    name: 'historial',
+    hash: '#/proyectos',
+    click: [/Rechazo línea 3/, { label: /^Historial de versiones$/ }, /^Guardar punto de control$/],
+    fill: ['[role="dialog"] textarea', 'Fin de Medir: línea base del rechazo aprobada por calidad'],
+    then: /^Guardar$/,
+    full: true,
+    only: 'light',
+  },
+  { name: 'historial-version', hash: '#/proyectos', click: [/Rechazo línea 3/, { label: /^Historial de versiones$/ }, /Fin de Medir/], full: true },
   // Un proyecto 5S: las fases con los nombres más largos.
   {
     name: 'proyecto-5s',
