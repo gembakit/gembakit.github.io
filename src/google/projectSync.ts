@@ -20,8 +20,16 @@ type Fetch = typeof fetch;
 // - cada pestaña de la app lleva aviso para todos al editarla.
 //
 // Las fórmulas se escriben con la hoja en región en_US (en inglés, con comas)
-// y al final se vuelve a la región del usuario, todo en el mismo lote: así no
-// depende de cómo lea la API los separadores en cada región (ESTADO.md).
+// y al final se vuelve a la región del usuario, cada cambio de región en su
+// propio lote: así no depende de cómo lea la API los separadores en cada
+// región (ESTADO.md).
+
+/**
+ * Versión del formato de las pestañas. Subirla hace que la próxima
+ * sincronización reescriba una vez todas las pestañas de la app.
+ * 2: las reescritas con la versión 1 podían quedar con fórmulas rotas (2026-11-15).
+ */
+const TAB_FORMAT = 2;
 
 /** Lo que la app sabe de una pestaña suya. */
 export interface TabState {
@@ -219,7 +227,7 @@ export async function syncProject(token: string, s: SyncInput, f: Fetch = fetch)
   const plan = s.tabs.map((d) => {
     const title = uniqueTitle(d.title, taken);
     taken.add(title.toLowerCase());
-    return { d, title, source: fingerprint(d.build(0, title)) };
+    return { d, title, source: fingerprint([TAB_FORMAT, d.build(0, title)]) };
   });
   const titleOf = (key: string) => plan.find((p) => p.d.key === key)?.title ?? sheets.get(present[key]!.sheetId)!.properties.title;
 
@@ -296,7 +304,16 @@ export async function syncProject(token: string, s: SyncInput, f: Fetch = fetch)
   if (placeholder !== null) deletes.push({ deleteSheet: { sheetId: placeholder } });
 
   const body = [...requests, ...addReqs, ...rewrites, ...protects, ...deletes];
-  if (body.length) await sheetsBatch(token, fileId, [locale('en_US'), ...body, locale(s.locale)], f);
+  if (body.length) {
+    // Tres lotes: Google lee las fórmulas de un lote con la región que tenía la hoja al empezarlo,
+    // aunque el lote la cambie antes. La región del usuario vuelve aunque falle la escritura.
+    await sheetsBatch(token, fileId, [locale('en_US')], f);
+    try {
+      await sheetsBatch(token, fileId, body, f);
+    } finally {
+      await sheetsBatch(token, fileId, [locale(s.locale)], f);
+    }
+  }
 
   // 6. Si el proyecto cambió de nombre, el archivo y su carpeta también.
   if (!created && link.fileName !== s.name) {

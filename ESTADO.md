@@ -58,6 +58,15 @@ paso.
 - Nada de lo de la sesión del 2026-11-14 está probado todavía por el dueño
   en su teléfono (ver la lista siguiente).
 
+**2026-11-15:** el dueño probó la hoja del proyecto: se crea bien, pero al
+reescribir la pestaña de DPMO tras cambiar datos salió `#ERROR!` en Z y nivel
+sigma (fórmulas leídas en es_ES). Arreglado (nota técnica 6 de la sección 3).
+Pidió además, en este orden propuesto: plegar guía y glosario; takt con
+turno menos descuentos con nombre y ciclo en tiempo o velocidad; OEE con
+paradas por causa, Pareto y referencia del 85 % con desglose; maqueta del
+proyecto con pestañas; propuestas de diseño de lo exportado. Recomendado y
+aceptado en principio: gráficos (Fase 2) antes que «Evolución».
+
 ### Pruebas pendientes del dueño (recordárselas al empezar la sesión)
 
 Todas en el Android, después de pulsar **Actualizar**:
@@ -136,7 +145,15 @@ Notas técnicas que costó descubrir:
 5. **Correo privado:** en este repositorio Git firma con
    `236227593+pasqualebf@users.noreply.github.com` (configurado solo aquí)
    para no publicar el correo del dueño. No cambiarlo.
-6. Versiones nuevas en uso: React 19, TypeScript 7, Vite 8, Tailwind 4,
+6. **Región de la hoja y fórmulas (2026-11-15, Android del dueño):** Google
+   lee las fórmulas de un `batchUpdate` con la región que tenía la hoja al
+   **empezar** el lote, aunque el propio lote la cambie antes. Cambiar a
+   en_US, escribir y volver a es_ES en un solo lote rompía las fórmulas con
+   comas o decimales (`#ERROR!`, «Formula parse error») al reescribir una
+   pestaña. Cada cambio de región va en su propio lote; el Google de pruebas
+   (`fakeGoogle.ts`) ya se comporta así. `TAB_FORMAT` en `projectSync.ts`
+   fuerza a reescribir todas las pestañas una vez.
+7. Versiones nuevas en uso: React 19, TypeScript 7, Vite 8, Tailwind 4,
    Vitest 5, vite-plugin-pwa 2, Dexie 4, lucide-react 1. Ante dudas sobre su
    uso, mirar la documentación que trae cada paquete en `node_modules`.
 

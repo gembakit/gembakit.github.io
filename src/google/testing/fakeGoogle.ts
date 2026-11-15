@@ -95,7 +95,10 @@ export class FakeGoogle {
       if (batch) {
         const requests = body.requests as Record<string, Record<string, unknown>>[];
         this.batches.push(requests);
-        return json({ replies: requests.map((r) => this.apply(file, r)) });
+        // Como en Google: las fórmulas de un lote se leen con la región que tenía la hoja al empezar el lote,
+        // aunque el propio lote la cambie antes (comprobado en el Android del dueño, 2026-11-15).
+        const parseLocale = file.locale;
+        return json({ replies: requests.map((r) => this.apply(file, r, parseLocale)) });
       }
       if (read) {
         const values = url.searchParams.getAll('ranges').map((r) => {
@@ -155,7 +158,7 @@ export class FakeGoogle {
     });
   };
 
-  private apply(file: FakeFile, r: Record<string, Record<string, unknown>>): unknown {
+  private apply(file: FakeFile, r: Record<string, Record<string, unknown>>, parseLocale?: string): unknown {
     const sheets = file.sheets!;
     const byId = (id: unknown) => {
       const sh = sheets.find((s) => s.sheetId === id);
@@ -190,7 +193,7 @@ export class FakeGoogle {
           (req.rows as { values: { userEnteredValue?: Record<string, unknown> }[] }[]).forEach((row, i) => {
             sh.values[start.rowIndex + i] = row.values.map((c) => {
               const v = c.userEnteredValue;
-              if (v?.formulaValue !== undefined && file.locale !== 'en_US') throw new Error('Fórmula escrita fuera de en_US');
+              if (v?.formulaValue !== undefined && parseLocale !== 'en_US') throw new Error('Fórmula escrita fuera de en_US');
               return v ? (v.formulaValue ?? v.stringValue ?? v.numberValue ?? '') : '';
             });
           });
