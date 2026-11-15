@@ -30,6 +30,25 @@ test('DPMO: carga el ejemplo publicado y muestra resultado, lectura y guía', as
   expect(screen.getAllByRole('listitem').length).toBeGreaterThanOrEqual(4);
 });
 
+test('Referencia: guía y glosario cerrados; el término buscado se abre solo y se puede volver a plegar', async () => {
+  const user = userEvent.setup();
+  window.location.hash = '#/referencia';
+  render(<App />);
+  const glossary = await screen.findByRole('button', { name: /^(Glosario|Glossary)/ });
+  expect(glossary).toHaveAttribute('aria-expanded', 'false');
+  expect(screen.getByRole('button', { name: /^(Guía de uso|User guide)/ })).toHaveAttribute('aria-expanded', 'false');
+  expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
+  await user.click(glossary);
+  await user.type(screen.getByRole('searchbox'), 'OEE');
+  // Fallo visto por el dueño (2026-11-15): abierto solo, no se podía cerrar.
+  const term = screen.getByRole('button', { name: /^OEE/ });
+  expect(term).toHaveAttribute('aria-expanded', 'true');
+  await user.click(term);
+  expect(term).toHaveAttribute('aria-expanded', 'false');
+  await user.click(term);
+  expect(term).toHaveAttribute('aria-expanded', 'true');
+});
+
 test('DPMO: «Exportar» abre el panel con la hoja de Google y Excel como próximamente', async () => {
   const user = userEvent.setup();
   window.location.hash = '#/herramientas/dpmo';

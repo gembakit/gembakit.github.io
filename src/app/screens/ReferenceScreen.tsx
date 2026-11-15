@@ -89,6 +89,15 @@ export function ReferenceScreen() {
   const list = useMemo(() => searchGlossary(q, lang, cat || undefined), [q, lang, cat]);
   // Se abre sola la definición si solo hay un resultado o si el primero es justo lo buscado.
   const autoOpen = q.trim() !== '' && list.length > 0 && (list.length === 1 || normalize(list[0]![lang].term) === normalize(q.trim())) ? list[0]!.id : null;
+  // Búsqueda con la que el usuario cerró la definición abierta sola: así se puede volver a plegar.
+  const [dismissed, setDismissed] = useState<string | null>(null);
+  const termOpen = (id: string) => openTerms.has(id) || (id === autoOpen && dismissed !== q);
+  const toggleOpenTerm = (id: string) => {
+    if (termOpen(id) && id === autoOpen) {
+      setDismissed(q);
+      if (openTerms.has(id)) toggleTerm(id);
+    } else toggleTerm(id);
+  };
   const guide = useMemo(() => guideFor(lang), [lang]);
   const total = useMemo(() => searchGlossary('', lang).length, [lang]);
   const [openGuide, setOpenGuide] = useState(remembered.guide);
@@ -156,8 +165,8 @@ export function ReferenceScreen() {
                 title={g[lang].term}
                 aside={t.reference.categories[g.category]}
                 subtitle={g[lang].name}
-                open={openTerms.has(g.id) || g.id === autoOpen}
-                onToggle={() => toggleTerm(g.id)}
+                open={termOpen(g.id)}
+                onToggle={() => toggleOpenTerm(g.id)}
               >
                 <p>{g[lang].def}</p>
               </Fold>
