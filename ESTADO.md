@@ -74,7 +74,7 @@ Plan acordado ese día (un paso cada vez, parar tras cada uno):
    automática, esa pasa a punto de control. Cambiar nombre y borrar (con
    deshacer) en el detalle. Arreglado además: el término del glosario abierto
    solo al buscarlo no se podía volver a plegar.
-3. [ ] Takt (con ficha antes): turno − descuentos con nombre (ver la resta);
+3. [ ] Takt (ficha `docs/fichas/takt-v2.md`, pendiente de aprobar): turno − descuentos con nombre (ver la resta);
    por estación, ciclo teórico y real con varias medidas (media, **menor
    tiempo repetible**, variación); ciclo o velocidad, con el tipo de medida de
    una lista fija (tiempo por unidad / unidades por tiempo) y el nombre de la
