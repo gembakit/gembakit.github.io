@@ -9,6 +9,8 @@ import { dpmoExplain } from './dpmo/explain';
 import { fpyExplain } from './fpy/explain';
 import { takt } from '../calc/takt';
 import { taktExplain } from './takt/explain';
+import { deductionNames, readTaktSaved, stationNames, taktView, toTaktInput, type TaktSaved } from './takt/reading';
+import { BOTTLING, PACKS } from './takt/examples';
 import { oee } from '../calc/oee';
 import { oeeExplain } from './oee/explain';
 import { kanban } from '../calc/kanban';
@@ -69,23 +71,45 @@ describe('DPMO: de dónde sale cada valor', () => {
 });
 
 describe('Takt: de dónde sale cada valor', () => {
+  const explainOf = (saved: TaktSaved) => {
+    const r = takt(toTaktInput(saved)).result!;
+    return taktExplain(toTaktInput(saved), stationNames(saved, es), deductionNames(saved, es), r, taktView(saved, es), es, 'es');
+  };
+  const v1 = (available: number, availableUnit: string, demand: number, unit: string, cycles: number[]) =>
+    readTaktSaved({ available, availableUnit, demand, unit, stations: cycles.map((cycle, i) => ({ name: `Estación ${i + 1}`, cycle })) })!;
+
   test('takt = T ÷ D, con el tiempo convertido a la unidad del takt (MS 800)', () => {
-    const input = { available: 420, availableUnit: 'min' as const, demand: 500, unit: 's' as const, cycles: [50, 45, 40, 30, 30] };
-    const stations = input.cycles.map((cycle, i) => ({ name: `Estación ${i + 1}`, cycle }));
-    const ex = taktExplain(input, stations, takt(input).result!, es, 'es');
+    const ex = explainOf(v1(420, 'min', 500, 's', [50, 45, 40, 30, 30]));
     expect(txt(ex.takt)).toEqual(['T ÷ D', '25.200 s ÷ 500', '50,4 s']);
-    expect(ex.takt!.where[0]!.value).toBe('25.200 s (420 min)');
+    expect(txt(ex.available)).toEqual(['Turno', '420', '420 min', '25.200 s']);
+    expect(ex.available!.where[0]!.value).toBe('420 min');
     expect(txt(ex.minStations)).toEqual(['ΣTC ÷ Takt', '195 s ÷ 50,4 s', '3,87', '4']);
     expect(txt(ex.efficiency)).toEqual(['ΣTC ÷ (n × Takt)', '195 s ÷ (5 × 50,4 s)', '77,4 %']);
     expect(txt(ex.idle)).toEqual(['1 − Eficiencia', '100 % − 77,4 %', '22,6 %']);
     expect(txt(ex.capacity)).toEqual(['T ÷ TC máx', '25.200 s ÷ 50 s', '504 piezas']);
   });
 
-  test('sin estaciones solo hay takt', () => {
-    const input = { available: 480, availableUnit: 'min' as const, demand: 240, unit: 'min' as const, cycles: [] };
-    const ex = taktExplain(input, [], takt(input).result!, es, 'es');
+  test('sin estaciones solo hay tiempo disponible y takt', () => {
+    const ex = explainOf(v1(480, 'min', 240, 'min', []));
     expect(txt(ex.takt)).toEqual(['T ÷ D', '480 min ÷ 240', '2 min']);
     expect(ex.capacity).toBeNull();
+  });
+
+  test('embotelladora: la resta del turno, el ritmo, la capacidad y el OEE, en velocidades', () => {
+    const ex = explainOf(BOTTLING(es));
+    expect(txt(ex.available)).toEqual(['(Turno − d₁ − d₂) × Turnos', '(480 − 10 − 20) × 3', '1.350 min', '22,5 h']);
+    expect(txt(ex.takt)).toEqual(['D ÷ T', '900.000 ÷ 22,5 h', '40.000 botellas/h']);
+    expect(txt(ex.capacity)).toEqual(['T × V mín', '22,5 h × 44.500 botellas/h', '1.001.250 botellas']);
+    expect(ex.minStations).toBeNull();
+    expect(txt(ex.expected)).toEqual(['T × V teórica × OEE', '22,5 h × 48.000 botellas/h × 75 %', '810.000 botellas']);
+    expect(txt(ex.minOee)).toEqual(['Ritmo ÷ V teórica', '40.000 botellas/h ÷ 48.000 botellas/h', '83,3 %']);
+  });
+
+  test('montaje de packs: medidas en segundos, resultados en minutos', () => {
+    const ex = explainOf(PACKS(es));
+    expect(txt(ex.available)).toEqual(['Turno − d₁ − d₂ − d₃', '480 − 10 − 10 − 30', '430 min']);
+    expect(txt(ex.takt)).toEqual(['T ÷ D', '430 min ÷ 215', '2 min']);
+    expect(txt(ex.minStations)).toEqual(['ΣTC ÷ Takt', '5,52 min ÷ 2 min', '2,76', '3']);
   });
 });
 

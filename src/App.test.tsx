@@ -49,6 +49,19 @@ test('Referencia: guía y glosario cerrados; el término buscado se abre solo y 
   expect(term).toHaveAttribute('aria-expanded', 'true');
 });
 
+test('Takt: «Cargar ejemplo» deja elegir; la embotelladora da 40.000 botellas/h y la resta del turno', async () => {
+  const user = userEvent.setup();
+  window.location.hash = '#/herramientas/takt';
+  render(<App />);
+  await user.click(await screen.findByRole('button', { name: /Cargar ejemplo|Load example/ }));
+  await user.click(await screen.findByRole('button', { name: /^(Embotelladora|Bottling plant)/ }));
+  expect(
+    await screen.findByText(/^(Hay que sacar 40\.000 botellas\/h \(una cada 0,09 s\)|The line must turn out 40,000 bottles\/h \(one every 0\.09 s\))/),
+  ).toBeInTheDocument();
+  expect(screen.getByText(/480 − 10 − 20 = 450 min × 3 = 1[.,]?350 min \(22[,.]5 h\)/)).toBeInTheDocument();
+  expect(screen.getAllByText(/(Llenadora|Filler)/).length).toBeGreaterThan(0);
+});
+
 test('DPMO: «Exportar» abre el panel con la hoja de Google y Excel como próximamente', async () => {
   const user = userEvent.setup();
   window.location.hash = '#/herramientas/dpmo';

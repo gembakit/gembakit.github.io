@@ -29,6 +29,22 @@ export type CalcWarning =
   | { code: 'step-not-positive'; step: number }
   /** Takt: alguna estación tarda más que el takt (la línea no llega a la demanda). */
   | { code: 'over-takt' }
+  /** Takt: un descuento del turno no es mayor que cero. */
+  | { code: 'deduction-not-positive'; step: number }
+  /** Takt: los descuentos se comen todo el turno. */
+  | { code: 'no-time' }
+  /** Takt: una estación sin teórico ni medidas. */
+  | { code: 'station-empty'; step: number }
+  /** Takt: las medidas de una estación varían mucho. */
+  | { code: 'unstable'; step: number }
+  /** Takt: una estación no tiene el valor pedido (media, repetible o teórico) y se usa otro. */
+  | { code: 'basis-fallback'; step: number }
+  /** Takt: el OEE esperado no está entre 0 y 100 %. */
+  | { code: 'oee-range' }
+  /** Takt: hay OEE esperado pero ninguna estación tiene teórico. */
+  | { code: 'oee-no-theoretical' }
+  /** Takt: hay OEE esperado y solo algunas estaciones tienen teórico. */
+  | { code: 'oee-partial' }
   /** OEE: el rendimiento pasa del 100 % (el tiempo de ciclo ideal es más lento que lo real). */
   | { code: 'performance-over-100' }
   /** OEE: las paradas superan el tiempo disponible. */

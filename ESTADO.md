@@ -74,12 +74,18 @@ Plan acordado ese día (un paso cada vez, parar tras cada uno):
    automática, esa pasa a punto de control. Cambiar nombre y borrar (con
    deshacer) en el detalle. Arreglado además: el término del glosario abierto
    solo al buscarlo no se podía volver a plegar.
-3. [ ] Takt (ficha `docs/fichas/takt-v2.md`, pendiente de aprobar): turno − descuentos con nombre (ver la resta);
-   por estación, ciclo teórico y real con varias medidas (media, **menor
-   tiempo repetible**, variación); ciclo o velocidad, con el tipo de medida de
-   una lista fija (tiempo por unidad / unidades por tiempo) y el nombre de la
-   unidad libre (botellas, cph…). Explicar que el takt no resta averías y
-   compararlo con el OEE.
+3. [x] Takt versión 2 (2026-11-16; ficha `docs/fichas/takt-v2.md`,
+   aprobada con las respuestas A a F al principio): turno − descuentos con
+   nombre y unidad propia, turnos; demanda con nombre de unidad; tiempo por
+   unidad o unidades por tiempo (`toCycle`/`fromCycle`, todo en segundos por
+   dentro) y «Resultados en»; montaje (con balanceo) o máquinas en serie;
+   por estación, teórico y medidas reales (media, repetible = segundo mejor,
+   mín., máx., variación, frente al teórico); calcular con media, repetible
+   o teórico; OEE esperado con producción esperada y OEE mínimo; dos
+   ejemplos (embotelladora y packs, `tools/takt/examples.ts`); importar una
+   fila por medida (las del mismo nombre se juntan). Mediciones guardadas:
+   formato `v: 2`; las de la versión 1 se leen sin perder nada
+   (`readTaktSaved`). **Falta que el dueño lo pruebe en su Android.**
 4. [ ] OEE (con ficha antes; empieza la Fase 2 de gráficos): paradas con
    nombre, minutos y categoría (editable); OEE oficial siempre visible;
    interruptores por categoría que calculan **otro** porcentaje con nombre

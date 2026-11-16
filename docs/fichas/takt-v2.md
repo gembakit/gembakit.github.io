@@ -1,5 +1,32 @@
 # Ficha: takt y cuello de botella, versión 2
 
+**Aprobada por el dueño el 2026-11-16 y construida ese día**, con estos
+cambios sobre el borrador (manda esta lista sobre el texto de abajo):
+
+- A. Cada tiempo (turno, cada descuento) lleva su propia unidad s/min/h, y
+  hay un selector «Resultados en» s/min/h; la app convierte. La resta del
+  turno se enseña en la unidad más pequeña escrita (480 − 10 − 20 min) y,
+  si los resultados van en otra, también en esa.
+- B. Menor repetible = **el segundo mejor valor** (en tiempos, el segundo
+  menor; en velocidades, el segundo mayor, «mayor repetible»): el mejor
+  alcanzado al menos dos veces. Sin margen del 5 %. Se enseña junto al
+  mínimo y al máximo.
+- C. Se calcula con la media por defecto; se puede elegir el repetible o el
+  teórico.
+- D. Tipo de línea: montaje con puestos (con balanceo) o máquinas en serie
+  (sin balanceo). Aprobado tras explicarlo con ejemplos.
+- E. OEE esperado opcional, con «OEE mínimo necesario» para cumplir la
+  demanda. Aprobado tras explicarlo con la embotelladora.
+- F. Ejemplos: embotelladora y armado manual de packs promocionales (tres
+  puestos: formar la caja, meter botellas y regalo, cerrar y etiquetar).
+- Hoja de Google: la tabla solo admite tres columnas de números, así que
+  lleva teórico, el valor real con el que se calcula (la media o el
+  repetible, que escribe la app) y el ciclo o la velocidad en la unidad de
+  los resultados (fórmula); las medidas una a una van en las notas. En las
+  líneas medidas en velocidad con montaje, el balanceo solo se ve en la app.
+
+---
+
 Borrador para aprobar (2026-11-15). Sustituye a la ficha 3 de
 `docs/fichas/fase-1.md` en lo que cambia; lo demás (fórmulas del takt, casos
 publicados) se mantiene.
