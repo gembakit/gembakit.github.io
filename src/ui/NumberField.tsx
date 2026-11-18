@@ -12,12 +12,15 @@ export function NumberField({
   onChange,
   unit,
   invalidText,
+  compact = false,
 }: {
   label: string;
   value: string;
   onChange: (raw: string, parsed: number | null) => void;
   unit?: string;
   invalidText: string;
+  /** Más bajo y con la cifra más pequeña, para listas con muchos campos. */
+  compact?: boolean;
 }) {
   const id = useId();
   const errId = useId();
@@ -29,7 +32,7 @@ export function NumberField({
         {label}
       </label>
       <div
-        className={`flex h-14 items-center rounded-[15px] border-[1.5px] bg-surface px-4 shadow-[inset_0_1px_2px_rgb(0_0_0/0.08)] ${invalid ? 'border-bad' : 'border-line focus-within:border-accent'}`}
+        className={`flex ${compact ? 'h-12' : 'h-14'} items-center rounded-[15px] border-[1.5px] bg-surface px-4 shadow-[inset_0_1px_2px_rgb(0_0_0/0.08)] ${invalid ? 'border-bad' : 'border-line focus-within:border-accent'}`}
       >
         <input
           id={id}
@@ -41,7 +44,7 @@ export function NumberField({
           aria-describedby={invalid ? errId : undefined}
           onBlur={() => setTouched(true)}
           onChange={(e) => onChange(e.target.value, parseDecimal(e.target.value))}
-          className="w-0 min-w-0 flex-1 bg-transparent font-display text-[22px] font-bold tabular-nums outline-none"
+          className={`w-0 min-w-0 flex-1 bg-transparent font-display ${compact ? 'text-[18px]' : 'text-[22px]'} font-bold tabular-nums outline-none`}
         />
         {unit && <span className="font-semibold text-muted">{unit}</span>}
       </div>

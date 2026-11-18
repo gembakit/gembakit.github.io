@@ -1,5 +1,5 @@
 import { useCallback, useId, useState, type ReactNode } from 'react';
-import { CircleAlert, Eraser, Factory, FileUp, Package, Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, CircleAlert, Eraser, Factory, FileUp, Package, Plus, Trash2 } from 'lucide-react';
 import type { ImportedRow, ImportField } from '../../import/mapping';
 import { ImportDialog } from '../../ui/ImportDialog';
 import { useI18n } from '../../i18n';
@@ -95,7 +95,10 @@ function fromSaved(s: TaktSaved, lang: 'es' | 'en'): State {
 }
 
 /** De los campos a los datos: null si falta lo imprescindible; `bad`, el primer sitio con un número mal escrito. */
-function toSaved(st: State, names: { deduction: (i: number) => string; station: (i: number) => string; oee: string }): { saved: TaktSaved | null; bad: string | null } {
+function toSaved(
+  st: State,
+  names: { deduction: (i: number) => string; station: (i: number) => string; oee: string },
+): { saved: TaktSaved | null; bad: string | null; index: (number | null)[] } {
   let bad: string | null = null;
   const num = (text: string, where: string) => {
     if (text.trim() === '') return null;
@@ -110,17 +113,22 @@ function toSaved(st: State, names: { deduction: (i: number) => string; station: 
     else if (d.name.trim() && d.value.trim() === '') bad ??= names.deduction(i);
   });
   const stations: TaktSaved['stations'] = [];
+  // Qué estación guardada es cada fila de la pantalla (las filas vacías no cuentan).
+  const index: (number | null)[] = [];
   st.stations.forEach((s, i) => {
     const where = names.station(i);
     const theoretical = num(s.theo, where);
     const actual = s.actual.map((a) => num(a.v, where)).filter((v): v is number => v !== null);
-    if (s.name.trim() || theoretical !== null || actual.length) stations.push({ name: s.name.trim(), theoretical, actual });
+    if (s.name.trim() || theoretical !== null || actual.length) {
+      index.push(stations.length);
+      stations.push({ name: s.name.trim(), theoretical, actual });
+    } else index.push(null);
   });
   const oeePct = num(st.oee, names.oee);
   const shift = num(st.shift, '');
   const demand = num(st.demand, '');
   const shifts = num(st.shifts, '') ?? 1;
-  if (bad || shift === null || demand === null) return { saved: null, bad };
+  if (bad || shift === null || demand === null) return { saved: null, bad, index };
   return {
     saved: {
       v: 2,
@@ -139,6 +147,7 @@ function toSaved(st: State, names: { deduction: (i: number) => string; station: 
       oee: oeePct === null ? null : oeePct / 100,
     },
     bad: null,
+    index,
   };
 }
 
@@ -191,7 +200,7 @@ function UnitSelect({ value, onChange, label }: { value: TimeUnit; onChange: (u:
       aria-label={label}
       value={value}
       onChange={(e) => onChange(e.target.value as TimeUnit)}
-      className="h-14 w-[84px] shrink-0 rounded-[15px] border-[1.5px] border-line bg-surface px-3 text-[16px] font-semibold text-text outline-none focus:border-accent"
+      className="h-12 w-[80px] shrink-0 rounded-[15px] border-[1.5px] border-line bg-surface px-3 text-[16px] font-semibold text-text outline-none focus:border-accent"
     >
       {TIME_UNITS.map((u) => (
         <option key={u} value={u}>
@@ -208,7 +217,7 @@ function TimeField({ label, value, unit, onValue, onUnit }: { label: string; val
   const d = t.tools.takt;
   return (
     <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2">
-      <NumberField label={label} value={value} invalidText={d.invalidNumber} onChange={onValue} />
+      <NumberField compact label={label} value={value} invalidText={d.invalidNumber} onChange={onValue} />
       <UnitSelect value={unit} onChange={onUnit} label={d.unitOf(label)} />
     </div>
   );
@@ -216,6 +225,38 @@ function TimeField({ label, value, unit, onValue, onUnit }: { label: string; val
 
 /** Texto de ayuda bajo un campo. */
 const Hint = ({ children }: { children: ReactNode }) => <p className="text-[13px] leading-relaxed text-muted">{children}</p>;
+
+/** Bloque plegable de los datos: título siempre a la vista y, cerrado, un resumen de lo que tiene. */
+function Group({ title, summary, bad, open, onToggle, children }: { title: string; summary: string; bad: boolean; open: boolean; onToggle: () => void; children: ReactNode }) {
+  const panelId = useId();
+  return (
+    <section className="border-t border-line">
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls={panelId}
+        onClick={onToggle}
+        className="grid min-h-14 w-full grid-cols-[minmax(0,1fr)_22px] items-center gap-3 py-2.5 text-left"
+      >
+        <span className="min-w-0">
+          <span className="block font-display text-[16.5px] leading-tight font-bold">{title}</span>
+          {(!open || bad) && <span className={`mt-0.5 block text-[13.5px] leading-snug tabular-nums wrap-anywhere ${bad ? 'font-semibold text-bad' : 'text-muted'}`}>{summary}</span>}
+        </span>
+        <ChevronDown aria-hidden size={21} className={`text-muted transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div id={panelId} className="flex flex-col gap-3 pb-4">
+          {children}
+        </div>
+      )}
+    </section>
+  );
+}
+
+/** Subtítulo de un apartado del resultado. */
+const SubTitle = ({ children }: { children: ReactNode }) => <h3 className="font-display text-[16.5px] leading-tight font-bold">{children}</h3>;
+
+const isBad = (text: string) => text.trim() !== '' && parseDecimal(text) === null;
 
 export default function TaktTool() {
   const { t, lang } = useI18n();
@@ -226,6 +267,16 @@ export default function TaktTool() {
     const s = savedInput ? readTaktSaved(savedInput) : null;
     return s ? fromSaved(s, lang) : EMPTY;
   });
+  // Bloques abiertos: «time», «demand», «line», «stations» y cada estación por su id («st12»).
+  // Sin datos, se abren los dos primeros para empezar; con datos, todo plegado y con su resumen.
+  const [open, setOpen] = useState<Set<string>>(() => new Set(savedInput && readTaktSaved(savedInput) ? [] : ['time', 'demand']));
+  const toggle = (k: string) =>
+    setOpen((o) => {
+      const n = new Set(o);
+      if (n.has(k)) n.delete(k);
+      else n.add(k);
+      return n;
+    });
   const [examplesOpen, setExamplesOpen] = useState(false);
   const closeExamples = useCallback(() => setExamplesOpen(false), []);
   const kindId = useId();
@@ -233,12 +284,14 @@ export default function TaktTool() {
   const dedName = (i: number) => state.deductions[i]!.name.trim() || d.deductionName(i + 1);
   const stName = (i: number) => state.stations[i]!.name.trim() || d.stationName(i + 1, state.kind);
 
-  const { saved, bad } = toSaved(state, { deduction: dedName, station: stName, oee: d.oee });
+  const { saved, bad, index } = toSaved(state, { deduction: dedName, station: stName, oee: d.oee });
   const out = saved ? takt(toTaktInput(saved)) : null;
   const r = out?.result ?? null;
   const view = saved ? taktView(saved, t) : { measure: state.measure, measureUnit: state.measureUnit, resultUnit: state.resultUnit, unitName: state.unitName.trim() || d.defaultUnit, kind: state.kind };
   const f = taktFormat(lang, t, view);
   const warnings = saved && out ? taktWarnings(out.warnings, saved, t, lang) : [];
+  const names = saved ? stationNames(saved, t) : [];
+  const line = r?.line ?? null;
   const enteredUnit = state.measure === 'time' ? d.units[state.measureUnit]! : d.perUnit(d.units[state.measureUnit]!);
   const anyText =
     state.shift.trim() !== '' || state.demand.trim() !== '' || state.deductions.length > 0 || state.stations.some((s) => s.name.trim() || s.theo.trim() || s.actual.some((a) => a.v.trim()));
@@ -254,17 +307,23 @@ export default function TaktTool() {
 
   // ── Estaciones ──
   const updateSt = (id: number, change: (x: StRow) => StRow) => setState((s) => ({ ...s, stations: s.stations.map((x) => (x.id === id ? change(x) : x)) }));
-  const addSt = () => setState((s) => ({ ...s, stations: [...s.stations, { id: nextId(), name: '', theo: '', actual: [{ id: nextId(), v: '' }] }] }));
+  const addSt = () => {
+    const id = nextId();
+    setState((s) => ({ ...s, stations: [...s.stations, { id, name: '', theo: '', actual: [{ id: nextId(), v: '' }] }] }));
+    setOpen((o) => new Set([...o, `st${id}`]));
+  };
   const addMeasure = (id: number) => updateSt(id, (x) => ({ ...x, actual: [...x.actual, { id: nextId(), v: '' }] }));
 
   const clear = () => {
     const previous = state;
     setState({ ...EMPTY, shiftUnit: state.shiftUnit, measure: state.measure, measureUnit: state.measureUnit, resultUnit: state.resultUnit, kind: state.kind });
+    setOpen(new Set(['time', 'demand']));
     toast(t.common.cleared, { action: { label: t.common.undo, onAction: () => setState(previous) } });
   };
 
   const loadExample = (which: 'bottling' | 'packs') => {
     setState(fromSaved(which === 'bottling' ? BOTTLING(t) : PACKS(t), lang));
+    setOpen(new Set());
     setExamplesOpen(false);
   };
 
@@ -293,6 +352,7 @@ export default function TaktTool() {
       if (typeof x.theoretical === 'number' && !row.theo) row.theo = toFieldText(x.theoretical, lang);
     }
     setState((s) => ({ ...s, stations: list }));
+    setOpen((o) => new Set([...o, 'stations']));
     toast(t.importing.imported(imported.length), { action: { label: t.common.undo, onAction: () => setState(previous) } });
   };
 
@@ -319,194 +379,215 @@ export default function TaktTool() {
     return text;
   })();
 
+  // ── Resúmenes de los bloques plegados ──
+  const timeBad = isBad(state.shift) || isBad(state.shifts) || state.deductions.some((x) => isBad(x.value));
+  const demandValue = parseDecimal(state.demand);
+  const stationBad = (row: StRow) => isBad(row.theo) || row.actual.some((a) => isBad(a.v));
+  const stationsBad = state.stations.some(stationBad);
+  const stationsSummary =
+    state.stations.length === 0 ? d.groupEmpty.stations! : [d.stationsCount(state.stations.length, state.kind), ...(line ? [d.bottleneckIs(names[line.bottleneck]!)] : [])].join(' · ');
+
   const repeatableLabel = d.stat.repeatable[state.measure]!;
   const data = (
     <>
-      <section className="flex flex-col gap-3">
-        <h3 className="font-display text-[17px] font-bold">{d.timeTitle}</h3>
-        <TimeField label={d.shift} value={state.shift} unit={state.shiftUnit} onValue={(v) => set({ shift: v })} onUnit={(u) => set({ shiftUnit: u })} />
-        <div className="flex flex-col gap-1.5">
-          <span className="text-[13px] font-semibold text-muted">{d.deductions}</span>
-          <Hint>{d.deductionsHint}</Hint>
-        </div>
-        {state.deductions.length > 0 && (
-          <ol className="flex flex-col gap-2.5">
-            {state.deductions.map((row, i) => (
-              <li key={row.id} className="flex flex-col gap-2.5 rounded-[16px] bg-surface-2 p-3">
-                <div className="flex items-start gap-2">
-                  <NameInput value={row.name} placeholder={d.deductionName(i + 1)} label={d.deductionNameLabel(i + 1)} onChange={(v) => updateDed(row.id, { name: v })} />
-                  <IconButton
-                    icon={Trash2}
-                    label={d.removeStation(dedName(i))}
-                    onClick={() => removeWithUndo(dedName(i), (s) => ({ ...s, deductions: s.deductions.filter((x) => x.id !== row.id) }))}
-                  />
-                </div>
-                <TimeField label={d.deductionTime} value={row.value} unit={row.unit} onValue={(v) => updateDed(row.id, { value: v })} onUnit={(u) => updateDed(row.id, { unit: u })} />
-              </li>
-            ))}
-          </ol>
-        )}
-        {state.deductions.length < MAX_DEDUCTIONS && (
-          <Button icon={Plus} className="self-start" onClick={addDed}>
-            {d.addDeduction}
-          </Button>
-        )}
-        <div className="flex flex-col gap-1.5">
-          <NumberField label={d.shifts} value={state.shifts} invalidText={d.invalidNumber} onChange={(v) => set({ shifts: v })} />
-          <Hint>{d.shiftsHint}</Hint>
-        </div>
-        {subtraction && (
-          <p className="rounded-[14px] bg-soft p-3 text-[15px] leading-relaxed font-semibold tabular-nums wrap-anywhere">
-            <span className="block text-[13px] font-semibold text-muted">{d.availableStat}</span>
-            {subtraction}
-          </p>
-        )}
-      </section>
-
-      <section className="flex flex-col gap-3 border-t border-line pt-4">
-        <NumberField label={d.demand} value={state.demand} invalidText={d.invalidNumber} onChange={(v) => set({ demand: v })} />
-        <div className="flex flex-col gap-1.5">
-          <label className="flex flex-col gap-1.5">
-            <span className="text-[13px] font-semibold text-muted">{d.unitName}</span>
-            <input
-              type="text"
-              value={state.unitName}
-              placeholder={d.defaultUnit}
-              autoComplete="off"
-              maxLength={30}
-              onChange={(e) => set({ unitName: e.target.value })}
-              className="h-14 rounded-[15px] border-[1.5px] border-line bg-surface px-4 text-[16px] outline-none placeholder:text-muted focus:border-accent"
-            />
-          </label>
-          <Hint>{d.unitNameHint}</Hint>
-        </div>
-      </section>
-
-      <section className="flex flex-col gap-3 border-t border-line pt-4">
-        <Segmented
-          label={d.measureLabel}
-          value={state.measure}
-          options={(['time', 'rate'] as const).map((m) => ({ value: m, label: d.measures[m]! }))}
-          onChange={(m) => set(state.stations.length === 0 ? { measure: m, measureUnit: m === 'time' ? 's' : 'h', resultUnit: m === 'time' ? 'min' : 'h' } : { measure: m })}
-        />
-        <Hint>{d.measureHints[state.measure]}</Hint>
-        <Segmented
-          label={d.measureUnitLabel}
-          value={state.measureUnit}
-          options={TIME_UNITS.map((u) => ({ value: u, label: state.measure === 'time' ? d.units[u]! : d.perUnit(d.units[u]!), aria: state.measure === 'time' ? d.unitNames[u] : d.perUnitName(u) }))}
-          onChange={(u) => set({ measureUnit: u })}
-        />
-        <Segmented
-          label={d.resultUnitLabel}
-          value={state.resultUnit}
-          options={TIME_UNITS.map((u) => ({ value: u, label: d.units[u]!, aria: d.unitNames[u] }))}
-          onChange={(u) => set({ resultUnit: u })}
-        />
-      </section>
-
-      <div role="radiogroup" aria-labelledby={`${kindId}l`} className="flex flex-col gap-2 border-t border-line pt-4">
-        <span id={`${kindId}l`} className="mb-0.5 text-[13px] font-semibold text-muted">
-          {d.kindLabel}
-        </span>
-        {(['assembly', 'machines'] as const).map((k) => (
-          <label key={k} className="grid cursor-pointer grid-cols-[22px_minmax(0,1fr)] items-start gap-3 rounded-[14px] bg-surface-2 p-3 has-checked:outline-2 has-checked:outline-accent">
-            <input type="radio" name={kindId} className="mt-1 size-[18px] accent-accent" checked={state.kind === k} onChange={() => set({ kind: k })} />
-            <span className="flex min-w-0 flex-col gap-0.5">
-              <span className="text-[15px] font-semibold">{d.kinds[k]}</span>
-              <span className="text-[13px] leading-relaxed text-muted">{d.kindHints[k]}</span>
-            </span>
-          </label>
-        ))}
-      </div>
-
-      <section className="flex flex-col gap-3 border-t border-line pt-4">
-        <div className="flex flex-col gap-1.5">
-          <span className="text-[13px] font-semibold text-muted">{d.stations[state.kind]}</span>
-          <Hint>{d.stationsHint}</Hint>
-        </div>
-        {state.stations.length > 0 && (
-          <ol className="flex flex-col gap-2.5">
-            {state.stations.map((row, i) => {
-              const name = stName(i);
-              const values = row.actual.map((a) => parseDecimal(a.v)).filter((v): v is number => v !== null && v > 0);
-              const stats = stationStats(values, state.measure);
-              const theo = parseDecimal(row.theo);
-              const ofTheo = stats && theo !== null && theo > 0 ? toCycle(theo, state.measure, state.measureUnit) / toCycle(stats.mean, state.measure, state.measureUnit) : null;
-              return (
-                <li key={row.id} className="flex flex-col gap-2.5 rounded-[16px] bg-surface-2 p-3">
+      <div className="flex flex-col border-b border-line">
+        <Group title={d.timeTitle} summary={timeBad ? d.groupBad : (subtraction ?? d.groupEmpty.time!)} bad={timeBad} open={open.has('time')} onToggle={() => toggle('time')}>
+          <TimeField label={d.shift} value={state.shift} unit={state.shiftUnit} onValue={(v) => set({ shift: v })} onUnit={(u) => set({ shiftUnit: u })} />
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[13px] font-semibold text-muted">{d.deductions}</span>
+            <Hint>{d.deductionsHint}</Hint>
+          </div>
+          {state.deductions.length > 0 && (
+            <ol className="flex flex-col gap-2">
+              {state.deductions.map((row, i) => (
+                <li key={row.id} className="flex flex-col gap-2 rounded-[16px] bg-surface-2 p-2.5">
                   <div className="flex items-start gap-2">
-                    <NameInput value={row.name} placeholder={d.stationName(i + 1, state.kind)} label={d.nameLabel(d.stationName(i + 1, state.kind))} onChange={(v) => updateSt(row.id, (x) => ({ ...x, name: v }))} />
-                    <IconButton icon={Trash2} label={d.removeStation(name)} onClick={() => removeWithUndo(name, (s) => ({ ...s, stations: s.stations.filter((x) => x.id !== row.id) }))} />
+                    <NameInput value={row.name} placeholder={d.deductionName(i + 1)} label={d.deductionNameLabel(i + 1)} onChange={(v) => updateDed(row.id, { name: v })} />
+                    <IconButton
+                      icon={Trash2}
+                      label={d.removeStation(dedName(i))}
+                      onClick={() => removeWithUndo(dedName(i), (s) => ({ ...s, deductions: s.deductions.filter((x) => x.id !== row.id) }))}
+                    />
                   </div>
-                  <div className="flex flex-col gap-1.5">
-                    <NumberField label={d.theoretical} unit={enteredUnit} value={row.theo} invalidText={d.invalidNumber} onChange={(v) => updateSt(row.id, (x) => ({ ...x, theo: v }))} />
-                    <Hint>{d.theoreticalHint}</Hint>
+                  <div className="flex gap-2">
+                    <MeasureBox className="flex-1" label={d.deductionTimeOf(dedName(i))} value={row.value} onChange={(v) => updateDed(row.id, { value: v })} />
+                    <UnitSelect value={row.unit} onChange={(u) => updateDed(row.id, { unit: u })} label={d.unitOf(d.deductionTimeOf(dedName(i)))} />
                   </div>
-                  <div className="flex flex-col gap-1.5">
-                    <span className="text-[13px] font-semibold text-muted">{d.actual}</span>
-                    <div className="grid grid-cols-2 gap-2">
-                      {row.actual.map((a, j) => (
-                        <MeasureBox
-                          key={a.id}
-                          label={d.measureN(name, j + 1)}
-                          unit={enteredUnit}
-                          value={a.v}
-                          onChange={(v) => updateSt(row.id, (x) => ({ ...x, actual: x.actual.map((m) => (m.id === a.id ? { ...m, v } : m)) }))}
-                        />
-                      ))}
-                    </div>
-                    {row.actual.length < MAX_MEASURES && (
-                      <Button icon={Plus} className="self-start" onClick={() => addMeasure(row.id)}>
-                        {d.addMeasure}
-                      </Button>
-                    )}
-                    <Hint>{d.actualHint}</Hint>
-                  </div>
-                  {stats && stats.n >= 2 && (
-                    <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 rounded-[12px] bg-surface p-3 text-[14px]">
-                      <StatLine label={d.stat.mean} value={f.entered(stats.mean)} />
-                      <StatLine label={repeatableLabel} value={f.entered(stats.repeatable!)} />
-                      <StatLine label={d.stat.min} value={f.entered(stats.min)} />
-                      <StatLine label={d.stat.max} value={f.entered(stats.max)} />
-                      <StatLine label={d.stat.spread} value={f.pct(stats.spread!)} />
-                      {ofTheo !== null && <StatLine label={d.stat.ofTheoretical} value={f.pct(ofTheo)} />}
-                    </dl>
-                  )}
                 </li>
-              );
-            })}
-          </ol>
-        )}
-        <div className="grid gap-2 sm:grid-cols-2">
-          {state.stations.length < MAX_STATIONS && (
-            <Button icon={Plus} onClick={addSt}>
-              {d.addStation[state.kind]}
+              ))}
+            </ol>
+          )}
+          {state.deductions.length < MAX_DEDUCTIONS && (
+            <Button icon={Plus} className="self-start" onClick={addDed}>
+              {d.addDeduction}
             </Button>
           )}
-          <Button icon={FileUp} onClick={() => setImportOpen(true)}>
-            {t.importing.button}
-          </Button>
-        </div>
-        {state.stations.length > 0 && (
-          <>
-            <Segmented
-              label={d.basisLabel}
-              value={state.basis}
-              options={[
-                { value: 'mean' as const, label: d.bases.mean! },
-                { value: 'repeatable' as const, label: repeatableLabel },
-                { value: 'theoretical' as const, label: d.bases.theoretical! },
-              ]}
-              onChange={(b) => set({ basis: b })}
-            />
-            <Hint>{d.basisHint}</Hint>
-            <div className="flex flex-col gap-1.5">
-              <NumberField label={d.oee} unit="%" value={state.oee} invalidText={d.invalidNumber} onChange={(v) => set({ oee: v })} />
-              <Hint>{d.oeeHint}</Hint>
-            </div>
-          </>
-        )}
-      </section>
+          <div className="flex flex-col gap-1.5">
+            <NumberField compact label={d.shifts} value={state.shifts} invalidText={d.invalidNumber} onChange={(v) => set({ shifts: v })} />
+            <Hint>{d.shiftsHint}</Hint>
+          </div>
+          {subtraction && (
+            <p className="rounded-[14px] bg-soft p-3 text-[15px] leading-relaxed font-semibold tabular-nums wrap-anywhere">
+              <span className="block text-[13px] font-semibold text-muted">{d.availableStat}</span>
+              {subtraction}
+            </p>
+          )}
+        </Group>
+
+        <Group
+          title={d.groups.demand!}
+          summary={isBad(state.demand) ? d.groupBad : demandValue !== null ? f.units(demandValue) : d.groupEmpty.demand!}
+          bad={isBad(state.demand)}
+          open={open.has('demand')}
+          onToggle={() => toggle('demand')}
+        >
+          <NumberField compact label={d.demand} value={state.demand} invalidText={d.invalidNumber} onChange={(v) => set({ demand: v })} />
+          <div className="flex flex-col gap-1.5">
+            <label className="flex flex-col gap-1.5">
+              <span className="text-[13px] font-semibold text-muted">{d.unitName}</span>
+              <input
+                type="text"
+                value={state.unitName}
+                placeholder={d.defaultUnit}
+                autoComplete="off"
+                maxLength={30}
+                onChange={(e) => set({ unitName: e.target.value })}
+                className="h-12 rounded-[15px] border-[1.5px] border-line bg-surface px-4 text-[16px] outline-none placeholder:text-muted focus:border-accent"
+              />
+            </label>
+            <Hint>{d.unitNameHint}</Hint>
+          </div>
+        </Group>
+
+        <Group
+          title={d.groups.line!}
+          summary={d.lineSummary(d.measures[state.measure]!, enteredUnit, d.units[state.resultUnit]!, d.kindsShort[state.kind]!)}
+          bad={false}
+          open={open.has('line')}
+          onToggle={() => toggle('line')}
+        >
+          <Segmented
+            label={d.measureLabel}
+            value={state.measure}
+            options={(['time', 'rate'] as const).map((m) => ({ value: m, label: d.measures[m]! }))}
+            onChange={(m) => set(state.stations.length === 0 ? { measure: m, measureUnit: m === 'time' ? 's' : 'h', resultUnit: m === 'time' ? 'min' : 'h' } : { measure: m })}
+          />
+          <Hint>{d.measureHints[state.measure]}</Hint>
+          <Segmented
+            label={d.measureUnitLabel}
+            value={state.measureUnit}
+            options={TIME_UNITS.map((u) => ({ value: u, label: state.measure === 'time' ? d.units[u]! : d.perUnit(d.units[u]!), aria: state.measure === 'time' ? d.unitNames[u] : d.perUnitName(u) }))}
+            onChange={(u) => set({ measureUnit: u })}
+          />
+          <Segmented
+            label={d.resultUnitLabel}
+            value={state.resultUnit}
+            options={TIME_UNITS.map((u) => ({ value: u, label: d.units[u]!, aria: d.unitNames[u] }))}
+            onChange={(u) => set({ resultUnit: u })}
+          />
+          <div role="radiogroup" aria-labelledby={`${kindId}l`} className="flex flex-col gap-2">
+            <span id={`${kindId}l`} className="text-[13px] font-semibold text-muted">
+              {d.kindLabel}
+            </span>
+            {(['assembly', 'machines'] as const).map((k) => (
+              <label key={k} className="grid cursor-pointer grid-cols-[22px_minmax(0,1fr)] items-start gap-3 rounded-[14px] bg-surface-2 p-3 has-checked:outline-2 has-checked:outline-accent">
+                <input type="radio" name={kindId} className="mt-1 size-[18px] accent-accent" checked={state.kind === k} onChange={() => set({ kind: k })} />
+                <span className="flex min-w-0 flex-col gap-0.5">
+                  <span className="text-[15px] font-semibold">{d.kinds[k]}</span>
+                  <span className="text-[13px] leading-relaxed text-muted">{d.kindHints[k]}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+        </Group>
+
+        <Group
+          title={d.stations[state.kind]!}
+          summary={stationsBad ? d.groupBad : stationsSummary}
+          bad={stationsBad}
+          open={open.has('stations')}
+          onToggle={() => toggle('stations')}
+        >
+          <Hint>{d.stationsHint}</Hint>
+          {state.stations.length > 0 && (
+            <ol className="flex flex-col gap-2">
+              {state.stations.map((row, i) => {
+                const name = stName(i);
+                const values = row.actual.map((a) => parseDecimal(a.v)).filter((v): v is number => v !== null && v > 0);
+                const stats = stationStats(values, state.measure);
+                const theo = parseDecimal(row.theo);
+                const ofTheo = stats && theo !== null && theo > 0 ? toCycle(theo, state.measure, state.measureUnit) / toCycle(stats.mean, state.measure, state.measureUnit) : null;
+                const k = index[i];
+                const worst = line !== null && k !== null && k === line.bottleneck;
+                const rowBad = stationBad(row);
+                const summary = rowBad
+                  ? d.groupBad
+                  : [
+                      ...(stats ? [d.measuresCount(stats.n), stats.n > 1 ? d.meanIs(f.entered(stats.mean)) : f.entered(stats.mean)] : []),
+                      ...(theo !== null && theo > 0 ? [d.theoIs(f.entered(theo))] : []),
+                    ].join(' · ') || d.noData;
+                return (
+                  <StationFold key={row.id} name={name} worst={worst} summary={summary} bad={rowBad} open={open.has(`st${row.id}`)} onToggle={() => toggle(`st${row.id}`)}>
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-[13px] font-semibold text-muted">{d.nameField}</span>
+                      <div className="flex items-start gap-2">
+                        <NameInput value={row.name} placeholder={d.stationName(i + 1, state.kind)} label={d.nameLabel(d.stationName(i + 1, state.kind))} onChange={(v) => updateSt(row.id, (x) => ({ ...x, name: v }))} />
+                        <IconButton icon={Trash2} label={d.removeStation(name)} onClick={() => removeWithUndo(name, (s) => ({ ...s, stations: s.stations.filter((x) => x.id !== row.id) }))} />
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <NumberField compact label={d.theoretical} unit={enteredUnit} value={row.theo} invalidText={d.invalidNumber} onChange={(v) => updateSt(row.id, (x) => ({ ...x, theo: v }))} />
+                      <Hint>{d.theoreticalHint}</Hint>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-[13px] font-semibold text-muted">{d.measuresIn(enteredUnit)}</span>
+                      <div className="grid grid-cols-2 gap-2">
+                        {row.actual.map((a, j) => (
+                          <MeasureBox
+                            key={a.id}
+                            label={d.measureN(name, j + 1)}
+                            value={a.v}
+                            onChange={(v) => updateSt(row.id, (x) => ({ ...x, actual: x.actual.map((m) => (m.id === a.id ? { ...m, v } : m)) }))}
+                          />
+                        ))}
+                      </div>
+                      {row.actual.length < MAX_MEASURES && (
+                        <Button icon={Plus} className="self-start" onClick={() => addMeasure(row.id)}>
+                          {d.addMeasure}
+                        </Button>
+                      )}
+                      <Hint>{d.actualHint}</Hint>
+                    </div>
+                    {stats && stats.n >= 2 && (
+                      <div className="flex flex-col gap-2 rounded-[12px] bg-surface p-3">
+                        <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[14px]">
+                          <StatLine label={d.stat.mean} value={f.entered(stats.mean)} />
+                          <StatLine label={repeatableLabel} value={f.entered(stats.repeatable!)} />
+                          <StatLine label={d.stat.min} value={f.entered(stats.min)} />
+                          <StatLine label={d.stat.max} value={f.entered(stats.max)} />
+                          <StatLine label={d.stat.spread} value={f.pct(stats.spread!)} />
+                          {ofTheo !== null && <StatLine label={d.stat.ofTheoretical} value={f.pct(ofTheo)} />}
+                        </dl>
+                        <p className="text-[12.5px] leading-relaxed text-muted">{d.stat.repeatableHint[state.measure]}</p>
+                      </div>
+                    )}
+                  </StationFold>
+                );
+              })}
+            </ol>
+          )}
+          <div className="grid gap-2 sm:grid-cols-2">
+            {state.stations.length < MAX_STATIONS && (
+              <Button icon={Plus} onClick={addSt}>
+                {d.addStation[state.kind]}
+              </Button>
+            )}
+            <Button icon={FileUp} onClick={() => setImportOpen(true)}>
+              {t.importing.button}
+            </Button>
+          </div>
+        </Group>
+      </div>
 
       {anyText && (
         <Button variant="ghost" icon={Eraser} className="self-start" onClick={clear}>
@@ -539,9 +620,7 @@ export default function TaktTool() {
       <p className="text-[15px] text-muted">{d.empty}</p>
     );
   } else {
-    const names = stationNames(saved, t);
     const ex = taktExplain(toTaktInput(saved), names, deductionNames(saved, t), r, view, t, lang);
-    const line = r.line;
     const isTime = saved.measure === 'time';
     // Barras: en tiempos, el ciclo (más largo = más lento); en velocidades, la velocidad (más corta = más lenta).
     const shownValue = (cycle: number) => (isTime ? cycle : 1 / cycle);
@@ -557,67 +636,89 @@ export default function TaktTool() {
           <BigValue text={f.main(r.takt)} />
           <span className="text-[15px] font-semibold text-muted tabular-nums">{d.equals(isTime ? f.alt(r.takt) : d.oneEvery(f.alt(r.takt)))}</span>
         </Explained>
-        <div className="grid grid-cols-2 gap-2">
-          <Stat label={d.availableStat} value={f.time(r.available)} calc={ex.available} />
-          {line && <Stat label={d.capacity} value={f.units(line.capacity)} calc={ex.capacity} />}
-          {line && <Stat label={d.bottleneck} value={names[line.bottleneck]!} calc={null} />}
-          {line?.balance && (
-            <>
-              <Stat label={d.minStations} value={String(line.balance.minStations)} calc={ex.minStations} />
-              <Stat label={d.efficiency} value={f.pct(line.balance.efficiency)} calc={ex.efficiency} />
-              <Stat label={d.idle} value={f.pct(line.balance.idle)} calc={ex.idle} />
-            </>
-          )}
-        </div>
-        {r.oee && (
-          <div className={`flex flex-col gap-2 rounded-[16px] p-3 ${r.oee.meets ? 'bg-ok-soft' : 'bg-warn-soft'}`}>
-            <h3 className="text-[13px] font-semibold">{`${d.oeeTitle} (${f.pct(r.oee.oee)})`}</h3>
+        <Stat label={d.availableStat} value={f.time(r.available)} calc={ex.available} />
+
+        {line && (
+          <div className="flex flex-col gap-3 border-t border-line pt-4">
+            <SubTitle>{d.stations[saved.kind]}</SubTitle>
+            <Segmented
+              label={d.basisLabel}
+              value={state.basis}
+              options={[
+                { value: 'mean' as const, label: d.bases.mean! },
+                { value: 'repeatable' as const, label: repeatableLabel },
+                { value: 'theoretical' as const, label: d.bases.theoretical! },
+              ]}
+              onChange={(b) => set({ basis: b })}
+            />
+            <Hint>{d.basisHint}</Hint>
             <div className="grid grid-cols-2 gap-2">
-              <Stat label={d.expected} value={f.units(r.oee.expected)} calc={ex.expected} />
-              <Stat label={d.minOee} value={f.pct(r.oee.minOee)} calc={ex.minOee} />
+              <Stat label={d.bottleneck} value={names[line.bottleneck]!} calc={null} />
+              <Stat label={d.capacity} value={f.units(line.capacity)} calc={ex.capacity} />
+              {line.balance && (
+                <>
+                  <Stat label={d.minStations} value={String(line.balance.minStations)} calc={ex.minStations} />
+                  <Stat label={d.efficiency} value={f.pct(line.balance.efficiency)} calc={ex.efficiency} />
+                  <Stat label={d.idle} value={f.pct(line.balance.idle)} calc={ex.idle} />
+                </>
+              )}
+            </div>
+            <div className="flex flex-col gap-2.5">
+              <span className="text-[13px] font-semibold text-muted">{d.byStation[saved.measure]}</span>
+              <ul className="flex flex-col gap-3">
+                {r.stations.map((st, i) => {
+                  const over = line.over.includes(i);
+                  const worst = i === line.bottleneck;
+                  return (
+                    <li key={i} className="flex flex-col gap-1.5">
+                      <span className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+                        <span className="min-w-0 text-[15px] font-semibold wrap-break-word">
+                          {names[i]}
+                          {worst && <BottleneckTag />}
+                        </span>
+                        <span className="shrink-0 text-right font-display text-[16px] font-bold tabular-nums">{f.main(st.cycle)}</span>
+                      </span>
+                      <span aria-hidden className="relative block h-3 rounded-full bg-surface-2">
+                        <span className={`block h-full rounded-full ${over ? 'bg-warn' : 'bg-accent/40'}`} style={{ width: pos(st.cycle) }} />
+                        {st.theoreticalCycle !== null && (
+                          <span className="absolute top-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rotate-45 border-[1.5px] border-text bg-surface" style={{ left: pos(st.theoreticalCycle) }} />
+                        )}
+                        <span className="absolute -top-1 -bottom-1 w-0.5 rounded-full bg-text" style={{ left: pos(r.takt) }} />
+                      </span>
+                      {st.source === 'theoretical' && saved.basis !== 'theoretical' && <span className="text-[12.5px] text-muted">{d.usesTheoretical}</span>}
+                    </li>
+                  );
+                })}
+              </ul>
+              <p className="flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-muted">
+                <span>
+                  <span aria-hidden className="mr-1.5 inline-block h-3 w-0.5 translate-y-0.5 rounded-full bg-text" />
+                  {d.taktMark(f.main(r.takt))}
+                </span>
+                {r.stations.some((s) => s.theoreticalCycle !== null) && (
+                  <span>
+                    <span aria-hidden className="mr-1.5 inline-block size-2.5 rotate-45 border-[1.5px] border-text" />
+                    {d.theoMark}
+                  </span>
+                )}
+              </p>
             </div>
           </div>
         )}
+
         {line && (
-          <div className="flex flex-col gap-2.5">
-            <h3 className="text-[13px] font-semibold text-muted">{d.byStation[saved.measure]}</h3>
-            <ul className="flex flex-col gap-3">
-              {r.stations.map((st, i) => {
-                const over = line.over.includes(i);
-                const worst = i === line.bottleneck;
-                return (
-                  <li key={i} className="flex flex-col gap-1.5">
-                    <span className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
-                      <span className="min-w-0 text-[15px] font-semibold wrap-break-word">
-                        {names[i]}
-                        {worst && <span className="ml-2 inline-block rounded-full bg-warn-soft px-2 py-0.5 align-middle text-[12px] font-semibold whitespace-nowrap">{d.bottleneckTag}</span>}
-                      </span>
-                      <span className="shrink-0 text-right font-display text-[16px] font-bold tabular-nums">{f.main(st.cycle)}</span>
-                    </span>
-                    <span aria-hidden className="relative block h-3 rounded-full bg-surface-2">
-                      <span className={`block h-full rounded-full ${over ? 'bg-warn' : 'bg-accent/40'}`} style={{ width: pos(st.cycle) }} />
-                      {st.theoreticalCycle !== null && (
-                        <span className="absolute top-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rotate-45 border-[1.5px] border-text bg-surface" style={{ left: pos(st.theoreticalCycle) }} />
-                      )}
-                      <span className="absolute -top-1 -bottom-1 w-0.5 rounded-full bg-text" style={{ left: pos(r.takt) }} />
-                    </span>
-                    {st.source === 'theoretical' && saved.basis !== 'theoretical' && <span className="text-[12.5px] text-muted">{d.usesTheoretical}</span>}
-                  </li>
-                );
-              })}
-            </ul>
-            <p className="flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-muted">
-              <span>
-                <span aria-hidden className="mr-1.5 inline-block h-3 w-0.5 translate-y-0.5 rounded-full bg-text" />
-                {d.taktMark(f.main(r.takt))}
-              </span>
-              {r.stations.some((s) => s.theoreticalCycle !== null) && (
-                <span>
-                  <span aria-hidden className="mr-1.5 inline-block size-2.5 rotate-45 border-[1.5px] border-text" />
-                  {d.theoMark}
-                </span>
-              )}
-            </p>
+          <div className="flex flex-col gap-3 border-t border-line pt-4">
+            <SubTitle>{d.oeeTitle}</SubTitle>
+            <div className="flex flex-col gap-1.5">
+              <NumberField compact label={d.oee} unit="%" value={state.oee} invalidText={d.invalidNumber} onChange={(v) => set({ oee: v })} />
+              <Hint>{d.oeeHint}</Hint>
+            </div>
+            {r.oee && (
+              <div className={`grid grid-cols-2 gap-2 rounded-[16px] p-2 ${r.oee.meets ? 'bg-ok-soft' : 'bg-warn-soft'}`}>
+                <Stat label={d.expected} value={f.units(r.oee.expected)} calc={ex.expected} />
+                <Stat label={d.minOee} value={f.pct(r.oee.minOee)} calc={ex.minOee} />
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -673,6 +774,41 @@ export default function TaktTool() {
   );
 }
 
+function BottleneckTag() {
+  const { t } = useI18n();
+  return <span className="ml-2 inline-block rounded-full bg-warn-soft px-2 py-0.5 align-middle text-[12px] font-semibold whitespace-nowrap">{t.tools.takt.bottleneckTag}</span>;
+}
+
+/** Un puesto o máquina plegable: cerrado, su nombre y un resumen; abierto, todo lo suyo. */
+function StationFold({ name, worst, summary, bad, open, onToggle, children }: { name: string; worst: boolean; summary: string; bad: boolean; open: boolean; onToggle: () => void; children: ReactNode }) {
+  const panelId = useId();
+  return (
+    <li className="rounded-[16px] bg-surface-2">
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls={panelId}
+        onClick={onToggle}
+        className="grid min-h-14 w-full grid-cols-[minmax(0,1fr)_20px] items-center gap-2 px-3 py-2.5 text-left"
+      >
+        <span className="min-w-0">
+          <span className="block text-[15.5px] leading-snug font-semibold wrap-break-word">
+            {name}
+            {worst && <BottleneckTag />}
+          </span>
+          {(!open || bad) && <span className={`mt-0.5 block text-[13px] leading-snug tabular-nums wrap-anywhere ${bad ? 'font-semibold text-bad' : 'text-muted'}`}>{summary}</span>}
+        </span>
+        <ChevronDown aria-hidden size={20} className={`text-muted transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div id={panelId} className="flex flex-col gap-3 px-3 pb-3">
+          {children}
+        </div>
+      )}
+    </li>
+  );
+}
+
 /** El resultado grande: la cifra en grande y su unidad («botellas/h») más pequeña al lado. */
 function BigValue({ text }: { text: string }) {
   const cut = text.indexOf(' ');
@@ -694,11 +830,11 @@ function StatLine({ label, value }: { label: string; value: string }) {
   );
 }
 
-/** Casilla de una medida real: compacta, para que quepan dos por fila. */
-function MeasureBox({ label, unit, value, onChange }: { label: string; unit: string; value: string; onChange: (v: string) => void }) {
+/** Casilla compacta de un número (una medida real, el tiempo de un descuento): caben dos por fila. */
+function MeasureBox({ label, unit, value, onChange, className = '' }: { label: string; unit?: string; value: string; onChange: (v: string) => void; className?: string }) {
   const invalid = value.trim() !== '' && parseDecimal(value) === null;
   return (
-    <div className={`flex h-12 min-w-0 items-center rounded-[13px] border-[1.5px] bg-surface px-3 ${invalid ? 'border-bad' : 'border-line focus-within:border-accent'}`}>
+    <div className={`flex h-12 min-w-0 items-center rounded-[13px] border-[1.5px] bg-surface px-3 ${invalid ? 'border-bad' : 'border-line focus-within:border-accent'} ${className}`}>
       <input
         type="text"
         inputMode="decimal"
@@ -709,7 +845,7 @@ function MeasureBox({ label, unit, value, onChange }: { label: string; unit: str
         onChange={(e) => onChange(e.target.value)}
         className="w-0 min-w-0 flex-1 bg-transparent text-[16px] font-semibold tabular-nums outline-none"
       />
-      <span className="ml-1.5 shrink-0 text-[13px] font-semibold text-muted">{unit}</span>
+      {unit && <span className="ml-1.5 shrink-0 text-[13px] font-semibold text-muted">{unit}</span>}
     </div>
   );
 }

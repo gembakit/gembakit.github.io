@@ -85,7 +85,16 @@ Plan acordado ese día (un paso cada vez, parar tras cada uno):
    ejemplos (embotelladora y packs, `tools/takt/examples.ts`); importar una
    fila por medida (las del mismo nombre se juntan). Mediciones guardadas:
    formato `v: 2`; las de la versión 1 se leen sin perder nada
-   (`readTaktSaved`). **Falta que el dueño lo pruebe en su Android.**
+   (`readTaktSaved`).
+   Ordenado tras la primera prueba del dueño (2026-11-18, «no es user
+   friendly»): los datos en cuatro bloques plegables con resumen («Tiempo
+   disponible», «Demanda», «Cómo es la línea», puestos o máquinas); cada
+   puesto o máquina plegable con todo lo suyo (cerrado: medidas, media,
+   teórico y la etiqueta de cuello de botella); con datos o ejemplo, todo
+   sale plegado. «Calcular con» y el OEE pasan al resultado, junto a lo que
+   cambian, para verlo al momento. «OEE esperado» pasa a llamarse «OEE
+   habitual de la línea» («un dato tuyo, no un cálculo»). Campos más bajos
+   (`NumberField compact`). **Falta que el dueño lo pruebe en su Android.**
 4. [ ] OEE (con ficha antes; empieza la Fase 2 de gráficos): paradas con
    nombre, minutos y categoría (editable); OEE oficial siempre visible;
    interruptores por categoría que calculan **otro** porcentaje con nombre

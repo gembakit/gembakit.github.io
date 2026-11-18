@@ -62,6 +62,28 @@ test('Takt: «Cargar ejemplo» deja elegir; la embotelladora da 40.000 botellas/
   expect(screen.getAllByText(/(Llenadora|Filler)/).length).toBeGreaterThan(0);
 });
 
+test('Takt: con datos, los bloques salen plegados con su resumen; «Calcular con» está en el resultado', async () => {
+  const user = userEvent.setup();
+  window.location.hash = '#/herramientas/takt';
+  render(<App />);
+  await user.click(await screen.findByRole('button', { name: /Cargar ejemplo|Load example/ }));
+  await user.click(await screen.findByRole('button', { name: /^(Embotelladora|Bottling plant)/ }));
+  // El bloque de las máquinas, plegado, dice cuántas hay y cuál es el cuello de botella.
+  const machines = await screen.findByRole('button', { name: /^(Máquinas|Machines)\s*4/ });
+  expect(machines).toHaveAttribute('aria-expanded', 'false');
+  expect(machines).toHaveTextContent(/(cuello de botella|bottleneck): (Llenadora|Filler)/);
+  await user.click(machines);
+  const filler = screen.getByRole('button', { name: /^(Llenadora|Filler)/ });
+  expect(filler).toHaveTextContent(/4 (medidas|measurements)/);
+  await user.click(filler);
+  expect(filler).toHaveAttribute('aria-expanded', 'true');
+  expect(screen.getByText(/^(Mayor repetible: la segunda|Highest repeatable: the second-highest)/)).toBeInTheDocument();
+  // «Teórico» en el resultado: la llenadora pasa a su velocidad de placa.
+  await user.click(screen.getByRole('button', { name: /^(Teórico|Theoretical)$/ }));
+  expect(screen.getAllByText(/^48[.,]000 (botellas|bottles)\/h$/).length).toBeGreaterThan(0);
+  expect(screen.getByLabelText(/^(OEE habitual de la línea|Usual OEE of the line)$/)).toHaveValue('75');
+});
+
 test('DPMO: «Exportar» abre el panel con la hoja de Google y Excel como próximamente', async () => {
   const user = userEvent.setup();
   window.location.hash = '#/herramientas/dpmo';
