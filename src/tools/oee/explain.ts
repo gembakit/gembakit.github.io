@@ -11,6 +11,8 @@ export function oeeFormat(lang: 'es' | 'en') {
     num,
     pct: (x: number) => `${num(x * 100, 2)} %`,
     min: (x: number) => `${num(x, 1)} min`,
+    /** Parte del tiempo planificado, con un decimal: «74,8 %». */
+    share: (x: number) => `${num(x * 100, 1)} %`,
     s: (x: number) => `${num(x, 2)} s`,
     count: (x: number) => num(x, 0),
   };

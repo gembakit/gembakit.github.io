@@ -266,3 +266,14 @@ test('el botón central abre la hoja de Capturar y se cierra', async () => {
   expect(screen.queryByRole('dialog')).toBeNull();
   expect(nav).toBeInTheDocument();
 });
+
+test('OEE: cada parte del tiempo planificado lleva sus minutos y su porcentaje', async () => {
+  const user = userEvent.setup();
+  window.location.hash = '#/herramientas/oee';
+  render(<App />);
+  await user.click(await screen.findByRole('button', { name: /Cargar ejemplo|Load example/ }));
+  // Vorne: 420 min planificados; 47 min de paradas = 11,2 %.
+  const downtime = await screen.findByText(/^47(,0|\.0)? min$/);
+  expect(downtime.nextElementSibling).toHaveTextContent(/^11[,.]2 %$/);
+  expect(screen.getByText(/^74[,.]8 %$/)).toBeInTheDocument();
+});

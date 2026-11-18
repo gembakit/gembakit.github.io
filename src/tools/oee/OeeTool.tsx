@@ -33,11 +33,12 @@ function Stat({ label, value, calc }: { label: string; value: string; calc: Deri
   );
 }
 
+// Colores de gráfico, comunes a todos los temas y bien distintos entre sí (también con daltonismo).
 const SEGMENTS = [
-  { key: 'useful', color: 'bg-accent' },
-  { key: 'downtime', color: 'bg-bad' },
-  { key: 'speed', color: 'bg-warn' },
-  { key: 'quality', color: 'bg-muted' },
+  { key: 'useful', color: 'bg-series-1' },
+  { key: 'downtime', color: 'bg-series-2' },
+  { key: 'speed', color: 'bg-series-3' },
+  { key: 'quality', color: 'bg-series-4' },
 ] as const;
 
 export default function OeeTool() {
@@ -100,7 +101,6 @@ export default function OeeTool() {
       );
   } else {
     const ex = oeeExplain(parsed, r, t, lang);
-    const share = (m: number) => `${Math.max(0, (m / r.planned) * 100)}%`;
     const explainOf: Partial<Record<(typeof SEGMENTS)[number]['key'], Derivation>> = { useful: ex.useful, speed: ex.speed, quality: ex.qualityLoss };
     result = (
       <div className="flex flex-col gap-4">
@@ -117,9 +117,9 @@ export default function OeeTool() {
         </div>
         <div className="flex flex-col gap-2.5">
           <h3 className="text-[13px] font-semibold text-muted">{d.timeSplit}</h3>
-          <span aria-hidden className="flex h-4 overflow-hidden rounded-full bg-surface-2">
-            {SEGMENTS.map((s) => (
-              <span key={s.key} className={`h-full ${s.color}`} style={{ width: share(r.minutes[s.key]) }} />
+          <span aria-hidden className="flex h-4 gap-0.5 overflow-hidden rounded-full">
+            {SEGMENTS.filter((s) => r.minutes[s.key] > 0).map((s) => (
+              <span key={s.key} className={`h-full min-w-1 ${s.color}`} style={{ flexGrow: r.minutes[s.key], flexBasis: 0 }} />
             ))}
           </span>
           <ul className="flex flex-col gap-1">
@@ -130,7 +130,10 @@ export default function OeeTool() {
                     <span aria-hidden className={`size-3 shrink-0 rounded-full ${s.color}`} />
                     <span className="min-w-0 text-[14.5px]">{explainOf[s.key] ? <Dotted>{d.losses[s.key]}</Dotted> : d.losses[s.key]}</span>
                   </span>
-                  <span className="shrink-0 font-semibold tabular-nums">{f.min(r.minutes[s.key])}</span>
+                  <span className="flex shrink-0 flex-col items-end leading-tight tabular-nums">
+                    <span className="font-semibold">{f.min(r.minutes[s.key])}</span>
+                    <span className="text-[13px] text-muted">{f.share(r.minutes[s.key] / r.planned)}</span>
+                  </span>
                 </>
               );
               const cls = 'flex w-full items-center justify-between gap-3 rounded-[10px] py-1.5';

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { STATUS, THEMES, THEME_IDS, contrast, cssVariables, type Mode } from './themes';
+import { CHART, STATUS, THEMES, THEME_IDS, contrast, cssVariables, type Mode } from './themes';
 
 const MODES: Mode[] = ['light', 'dark'];
 
@@ -49,4 +49,6 @@ test('las variables CSS usan nombres con guiones', () => {
   expect(v['--accent-ink']).toBe(THEMES.lino.light.accentInk);
   expect(v['--surface-2']).toBe(THEMES.lino.light.surface2);
   expect(v['--ok-soft']).toBe(STATUS.light.okSoft);
+  expect(v['--series-1']).toBe(CHART.light.series1);
+  expect(cssVariables('grafito', 'dark')['--series-8']).toBe(CHART.dark.series8);
 });

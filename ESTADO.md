@@ -110,6 +110,13 @@ Plan acordado ese día (un paso cada vez, parar tras cada uno):
    opcionales (en la planta del dueño se rotan puestos y no se para); Pareto
    por causa; 85 % con el desglose 90 × 95 × 99 y el factor más alejado
    marcado.
+   Antes de la ficha (2026-11-18, pedido del dueño): en la calculadora de OEE
+   actual, la barra «En qué se va el tiempo planificado» usa los colores de
+   gráfico nuevos (`CHART` en `ui/theme/themes.ts`, `bg-series-1…8`: paleta
+   categórica validada para daltonismo, común a los cinco temas, con su
+   versión oscura), con 2 px de separación entre partes, y cada parte lleva
+   su porcentaje del tiempo planificado debajo de los minutos. Esos colores
+   son los que usarán los gráficos de la Fase 2 (Pareto incluido).
 5. [ ] Maqueta del proyecto con pestañas (el dueño decide después).
 6. [ ] Propuestas de diseño común para lo exportado (hojas, Slides, PDF).
 7. [ ] «Ver más» en cada término del glosario (definición amplia, ejemplo,

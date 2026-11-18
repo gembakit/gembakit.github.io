@@ -60,9 +60,20 @@ export const STATUS: Record<Mode, StatusPalette> = {
   dark: { ok: '#74C98E', okSoft: '#17301F', warn: '#F0B860', warnSoft: '#3A2A12', bad: '#FF9488', badSoft: '#3B1A17' },
 };
 
-/** Variables CSS para un tema y modo: --bg, --surface, --accent-ink, … */
+/**
+ * Colores de los gráficos (una serie por color, en este orden fijo), comunes a todos los temas para que
+ * las partes de un gráfico no se confundan con el acento del tema. Paleta categórica validada (separación
+ * para daltonismo y a simple vista) contra las superficies claras y oscuras de los cinco temas; en oscuro,
+ * los mismos tonos ajustados al fondo.
+ */
+export const CHART: Record<Mode, Record<`series${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8}`, string>> = {
+  light: { series1: '#2A78D6', series2: '#EB6834', series3: '#1BAF7A', series4: '#EDA100', series5: '#E87BA4', series6: '#008300', series7: '#6250D6', series8: '#E34948' },
+  dark: { series1: '#3987E5', series2: '#D95926', series3: '#199E70', series4: '#C98500', series5: '#D55181', series6: '#008300', series7: '#9085E9', series8: '#E66767' },
+};
+
+/** Variables CSS para un tema y modo: --bg, --surface, --accent-ink, --series-1, … */
 export function cssVariables(theme: ThemeId, mode: Mode): Record<string, string> {
-  const all = { ...THEMES[theme][mode], ...STATUS[mode] };
+  const all = { ...THEMES[theme][mode], ...STATUS[mode], ...CHART[mode] };
   const out: Record<string, string> = {};
   for (const [k, v] of Object.entries(all)) {
     out[`--${k.replace(/[A-Z0-9]/g, (c) => `-${c.toLowerCase()}`)}`] = v;
