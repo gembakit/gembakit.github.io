@@ -117,6 +117,8 @@ Plan acordado ese día (un paso cada vez, parar tras cada uno):
    versión oscura), con 2 px de separación entre partes, y cada parte lleva
    su porcentaje del tiempo planificado debajo de los minutos. Esos colores
    son los que usarán los gráficos de la Fase 2 (Pareto incluido).
+   Ficha escrita el 2026-11-18 (`docs/fichas/oee-v2.md`), **pendiente de
+   que el dueño responda las preguntas A a F**.
 5. [ ] Maqueta del proyecto con pestañas (el dueño decide después).
 6. [ ] Propuestas de diseño común para lo exportado (hojas, Slides, PDF).
 7. [ ] «Ver más» en cada término del glosario (definición amplia, ejemplo,
