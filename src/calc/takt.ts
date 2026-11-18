@@ -7,7 +7,8 @@ import type { CalcOutput, CalcWarning } from './types';
 // - cada estación o máquina tiene su teórico (de placa) y medidas reales;
 // - el balanceo solo en montaje con puestos (en máquinas en serie el trabajo
 //   no se puede repartir);
-// - con el OEE esperado: producción esperada y OEE mínimo para cumplir.
+// - con el OEE habitual: producción esperada, OEE mínimo para cumplir y ciclo
+//   objetivo (takt × OEE: lo que tiene que poder hacer la línea con sus pérdidas).
 
 export type TimeUnit = 's' | 'min' | 'h';
 export const TIME_UNITS: TimeUnit[] = ['s', 'min', 'h'];
@@ -118,6 +119,11 @@ export interface OeeResult {
   expected: number;
   /** OEE que hace falta para cumplir la demanda: ciclo teórico ÷ takt. */
   minOee: number;
+  /**
+   * Ciclo objetivo: takt × OEE, en segundos por unidad. Lo que tiene que poder hacer cada máquina
+   * según su teórico para cumplir con las pérdidas habituales (en velocidad: ritmo ÷ OEE).
+   */
+  targetCycle: number;
   meets: boolean;
 }
 
@@ -185,8 +191,10 @@ export function takt(input: TaktInput): CalcOutput<TaktResult> {
     if ((s.theoretical !== null && !(s.theoretical > 0)) || s.actual.some((v) => !(v > 0))) warnings.push({ code: 'step-not-positive', step });
     else if (s.theoretical === null && s.actual.length === 0) warnings.push({ code: 'station-empty', step });
   });
-  if (input.oee !== null && !(input.oee > 0 && input.oee <= 1)) warnings.push({ code: 'oee-range' });
   if (warnings.length) return { result: null, steps: [], warnings };
+  // Un OEE fuera de rango no tumba el resto del cálculo: se avisa y no se usa.
+  const oeeOk = input.oee !== null && input.oee > 0 && input.oee <= 1;
+  if (input.oee !== null && !oeeOk) warnings.push({ code: 'oee-range' });
 
   const shift = input.shift * SECONDS[input.shiftUnit];
   const perShift = input.deductions.reduce((a, d) => a - d.value * SECONDS[d.unit], shift);
@@ -215,18 +223,19 @@ export function takt(input: TaktInput): CalcOutput<TaktResult> {
       if (s.source !== input.basis) warnings.push({ code: 'basis-fallback', step });
     });
 
-    if (input.oee !== null) {
+    if (oeeOk) {
       // La que marca la producción esperada es la más lenta según su teórico.
       const withTheo = stations.flatMap((s, i) => (s.theoreticalCycle !== null ? [{ i, c: s.theoreticalCycle }] : []));
       if (withTheo.length === 0) warnings.push({ code: 'oee-no-theoretical' });
       else {
         const ref = withTheo.reduce((a, b) => (b.c > a.c ? b : a));
-        const expected = (available * input.oee) / ref.c;
-        oee = { oee: input.oee, reference: ref.i, theoreticalCycle: ref.c, expected, minOee: ref.c / t, meets: expected >= input.demand * (1 - 1e-12) };
+        const o = input.oee!;
+        const expected = (available * o) / ref.c;
+        oee = { oee: o, reference: ref.i, theoreticalCycle: ref.c, expected, minOee: ref.c / t, targetCycle: t * o, meets: expected >= input.demand * (1 - 1e-12) };
         if (withTheo.length < stations.length) warnings.push({ code: 'oee-partial' });
       }
     }
-  } else if (input.oee !== null) warnings.push({ code: 'oee-no-theoretical' });
+  } else if (oeeOk) warnings.push({ code: 'oee-no-theoretical' });
 
   return { result: { perShift, available, takt: t, stations, line, oee }, steps: [], warnings };
 }

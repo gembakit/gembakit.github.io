@@ -53,7 +53,7 @@ export function taktFormat(lang: 'es' | 'en', t: Messages, v: TaktView) {
   };
 }
 
-export type TaktKey = 'available' | 'takt' | 'capacity' | 'minStations' | 'efficiency' | 'idle' | 'expected' | 'minOee';
+export type TaktKey = 'available' | 'takt' | 'capacity' | 'minStations' | 'efficiency' | 'idle' | 'expected' | 'minOee' | 'target';
 
 /** De dónde sale cada valor del takt, con los números del usuario. */
 export function taktExplain(
@@ -114,7 +114,7 @@ export function taktExplain(
         notes: [t.explain.rounded],
       };
 
-  const none = { capacity: null, minStations: null, efficiency: null, idle: null, expected: null, minOee: null };
+  const none = { capacity: null, minStations: null, efficiency: null, idle: null, expected: null, minOee: null, target: null };
   const line = r.line;
   if (!line) return { available, takt, ...none };
 
@@ -176,7 +176,7 @@ export function taktExplain(
   }
 
   const o = r.oee;
-  if (!o) return { available, takt, capacity, ...balance, expected: null, minOee: null };
+  if (!o) return { available, takt, capacity, ...balance, expected: null, minOee: null, target: null };
   const ref = names[o.reference] ?? d.stationName(o.reference + 1, view.kind);
   const oeePct = f.pct(o.oee);
   const wOee = { sym: x.oeeSym, label: x.oeeLabel, value: oeePct };
@@ -207,6 +207,16 @@ export function taktExplain(
         : [frac(x.rateSym, x.theoRateSym), frac(f.rate(r.takt), f.rate(o.theoreticalCycle)), f.pct(o.minOee)],
       where: isTime ? [wTheo, { sym: 'Takt', label: x.taktLabel, value: f.time(r.takt) }] : [{ sym: x.rateSym, label: d.rateTitle, value: f.rate(r.takt) }, wTheo],
       notes: [t.explain.rounded],
+    },
+    target: {
+      title: d.target,
+      meaning: isTime ? x.targetMeaning : x.targetRateMeaning,
+      lhs: d.target,
+      steps: isTime
+        ? [times('Takt', x.oeeSym), times(f.time(r.takt), oeePct), f.time(o.targetCycle)]
+        : [frac(x.rateSym, x.oeeSym), frac(f.rate(r.takt), oeePct), f.rate(o.targetCycle)],
+      where: isTime ? [{ sym: 'Takt', label: x.taktLabel, value: f.time(r.takt) }, wOee] : [{ sym: x.rateSym, label: d.rateTitle, value: f.rate(r.takt) }, wOee],
+      notes: [x.targetNote(isTime ? f.time(o.theoreticalCycle) : f.rate(o.theoreticalCycle), ref), t.explain.rounded],
     },
   };
 }

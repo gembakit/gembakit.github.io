@@ -84,6 +84,25 @@ test('Takt: con datos, los bloques salen plegados con su resumen; «Calcular con
   expect(screen.getByLabelText(/^(OEE habitual de la línea|Usual OEE of the line)$/)).toHaveValue('75');
 });
 
+test('Takt: un OEE mayor que 100 avisa sin quitar la casilla, y se puede corregir', async () => {
+  const user = userEvent.setup();
+  window.location.hash = '#/herramientas/takt';
+  render(<App />);
+  await user.click(await screen.findByRole('button', { name: /Cargar ejemplo|Load example/ }));
+  await user.click(await screen.findByRole('button', { name: /^(Embotelladora|Bottling plant)/ }));
+  const oee = await screen.findByLabelText(/^(OEE habitual de la línea|Usual OEE of the line)$/);
+  await user.clear(oee);
+  await user.type(oee, '150');
+  expect(screen.getAllByText(/(tiene que estar entre 0 y 100|must be between 0 and 100)/).length).toBeGreaterThan(0);
+  // El resto del resultado sigue y la casilla también.
+  expect(screen.getByLabelText(/^(OEE habitual de la línea|Usual OEE of the line)$/)).toBe(oee);
+  await user.clear(oee);
+  await user.type(oee, '75');
+  expect(screen.queryByText(/(tiene que estar entre 0 y 100|must be between 0 and 100)/)).toBeNull();
+  // Ritmo objetivo con el 75 %: 40.000 ÷ 0,75.
+  expect(screen.getByRole('button', { name: /^(Ritmo objetivo con tu OEE|Target pace with your OEE)\s*53[.,]333/ })).toBeInTheDocument();
+});
+
 test('DPMO: «Exportar» abre el panel con la hoja de Google y Excel como próximamente', async () => {
   const user = userEvent.setup();
   window.location.hash = '#/herramientas/dpmo';

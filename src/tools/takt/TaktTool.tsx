@@ -1,5 +1,5 @@
 import { useCallback, useId, useState, type ReactNode } from 'react';
-import { ChevronDown, CircleAlert, Eraser, Factory, FileUp, Package, Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, CircleAlert, Eraser, TriangleAlert, Factory, FileUp, Package, Plus, Trash2 } from 'lucide-react';
 import type { ImportedRow, ImportField } from '../../import/mapping';
 import { ImportDialog } from '../../ui/ImportDialog';
 import { useI18n } from '../../i18n';
@@ -97,7 +97,7 @@ function fromSaved(s: TaktSaved, lang: 'es' | 'en'): State {
 /** De los campos a los datos: null si falta lo imprescindible; `bad`, el primer sitio con un número mal escrito. */
 function toSaved(
   st: State,
-  names: { deduction: (i: number) => string; station: (i: number) => string; oee: string },
+  names: { deduction: (i: number) => string; station: (i: number) => string },
 ): { saved: TaktSaved | null; bad: string | null; index: (number | null)[] } {
   let bad: string | null = null;
   const num = (text: string, where: string) => {
@@ -124,7 +124,8 @@ function toSaved(
       stations.push({ name: s.name.trim(), theoretical, actual });
     } else index.push(null);
   });
-  const oeePct = num(st.oee, names.oee);
+  // El OEE mal escrito no bloquea el cálculo: su casilla está en el resultado y tiene que seguir a la vista para corregirlo.
+  const oeePct = parseDecimal(st.oee);
   const shift = num(st.shift, '');
   const demand = num(st.demand, '');
   const shifts = num(st.shifts, '') ?? 1;
@@ -284,7 +285,7 @@ export default function TaktTool() {
   const dedName = (i: number) => state.deductions[i]!.name.trim() || d.deductionName(i + 1);
   const stName = (i: number) => state.stations[i]!.name.trim() || d.stationName(i + 1, state.kind);
 
-  const { saved, bad, index } = toSaved(state, { deduction: dedName, station: stName, oee: d.oee });
+  const { saved, bad, index } = toSaved(state, { deduction: dedName, station: stName });
   const out = saved ? takt(toTaktInput(saved)) : null;
   const r = out?.result ?? null;
   const view = saved ? taktView(saved, t) : { measure: state.measure, measureUnit: state.measureUnit, resultUnit: state.resultUnit, unitName: state.unitName.trim() || d.defaultUnit, kind: state.kind };
@@ -621,6 +622,8 @@ export default function TaktTool() {
     );
   } else {
     const ex = taktExplain(toTaktInput(saved), names, deductionNames(saved, t), r, view, t, lang);
+    // Avisos del OEE junto a su casilla (también salen en «Cómo leerlo»).
+    const oeeProblems = out!.warnings.flatMap((w) => (w.code === 'oee-range' ? [d.warn.oeeRange] : w.code === 'oee-no-theoretical' ? [d.warn.oeeNoTheoretical] : []));
     const isTime = saved.measure === 'time';
     // Barras: en tiempos, el ciclo (más largo = más lento); en velocidades, la velocidad (más corta = más lenta).
     const shownValue = (cycle: number) => (isTime ? cycle : 1 / cycle);
@@ -713,10 +716,19 @@ export default function TaktTool() {
               <NumberField compact label={d.oee} unit="%" value={state.oee} invalidText={d.invalidNumber} onChange={(v) => set({ oee: v })} />
               <Hint>{d.oeeHint}</Hint>
             </div>
+            {oeeProblems.map((w) => (
+              <p key={w} className="flex items-start gap-2.5 rounded-[14px] bg-warn-soft p-3 text-[14px]">
+                <TriangleAlert aria-hidden size={18} className="mt-0.5 shrink-0 text-warn" />
+                <span>{w}</span>
+              </p>
+            ))}
             {r.oee && (
               <div className={`grid grid-cols-2 gap-2 rounded-[16px] p-2 ${r.oee.meets ? 'bg-ok-soft' : 'bg-warn-soft'}`}>
                 <Stat label={d.expected} value={f.units(r.oee.expected)} calc={ex.expected} />
                 <Stat label={d.minOee} value={f.pct(r.oee.minOee)} calc={ex.minOee} />
+                <div className="col-span-2">
+                  <Stat label={d.target} value={f.main(r.oee.targetCycle)} calc={ex.target} />
+                </div>
               </div>
             )}
           </div>

@@ -115,6 +115,8 @@ describe('takt versión 2', () => {
     expect(o.expected).toBeCloseTo(810_000, 6);
     expect(o.minOee).toBeCloseTo(40_000 / 48_000, 12);
     expect(o.meets).toBe(false);
+    // Ritmo objetivo con el 75 %: 40.000 ÷ 0,75 = 53.333 botellas/h; la llenadora (48.000 de placa) no llega.
+    expect(fromCycle(o.targetCycle, 'rate', 'h')).toBeCloseTo(40_000 / 0.75, 6);
     // La etiquetadora varía un 10,6 %: se avisa.
     expect(out.warnings).toEqual([{ code: 'unstable', step: 2 }]);
   });
@@ -159,6 +161,10 @@ describe('takt versión 2', () => {
     expect(takt({ ...base, deductions: [{ value: 8, unit: 'h' }] }).warnings).toEqual([{ code: 'no-time' }]);
     expect(takt({ ...base, stations: [{ theoretical: null, actual: [] }] }).warnings).toEqual([{ code: 'station-empty', step: 0 }]);
     expect(takt({ ...base, stations: [{ theoretical: 0, actual: [1] }] }).warnings).toEqual([{ code: 'step-not-positive', step: 0 }]);
-    expect(takt({ ...base, oee: 1.2 }).warnings).toEqual([{ code: 'oee-range' }]);
+    // Un OEE fuera de rango se avisa, pero el resto del cálculo sigue (si no, no habría dónde corregirlo).
+    const wrong = takt({ ...base, oee: 1.2, stations: [{ theoretical: 1.5, actual: [1.8] }] });
+    expect(wrong.warnings).toEqual([{ code: 'oee-range' }]);
+    expect(wrong.result!.line).not.toBeNull();
+    expect(wrong.result!.oee).toBeNull();
   });
 });

@@ -183,6 +183,13 @@ export function taktConclusion(r: TaktResult, s: TaktSaved, t: Messages, lang: '
     const rate = view.measure === 'rate' ? f.main(effective) : f.alt(effective);
     if (o.minOee > 1) parts.push(d.oeeImpossible(names[o.reference]!, f.units(r.available / o.theoreticalCycle)));
     else parts.push(o.meets ? d.oeeOk(oee, expected, rate, demand, f.pct(o.minOee)) : d.oeeShort(oee, expected, rate, demand, f.pct(o.minOee)));
+    // Ritmo objetivo: a qué tiene que poder ir la línea, según su teórico, con esas pérdidas.
+    const ref = names[o.reference]!;
+    parts.push(
+      view.measure === 'rate'
+        ? d.oeeTargetRate(f.main(o.targetCycle), ref, f.main(o.theoreticalCycle))
+        : d.oeeTargetTime(f.main(o.targetCycle), ref, f.main(o.theoreticalCycle)),
+    );
     if (s.stations.some((st) => st.actual.length > 0)) parts.push(d.oeeNote);
   }
   return parts.join(' ');

@@ -511,6 +511,7 @@ export const en: Messages = {
       oeeTitle: 'Compare with your OEE (optional)',
       expected: 'Expected output',
       minOee: 'Minimum OEE needed',
+      target: 'Target pace with your OEE',
       byStation: { time: 'Cycle time of each one', rate: 'Speed of each one' },
       taktMark: (v) => `takt ${v}`,
       theoMark: 'theoretical',
@@ -528,6 +529,8 @@ export const en: Messages = {
       oeeImpossible: (station, max) =>
         `Not even with 100 % OEE: according to its theoretical value, ${station} only turns out ${max} in the period. More available time or more capacity is needed.`,
       oeeNote: 'Actual measurements are of the line while running; OEE adds stops, speed loss and rejects.',
+      oeeTargetTime: (target, s, theo) => `To meet demand with that OEE, every workstation or machine would need to make one unit in ${target} at most by its theoretical value; ${s}, the slowest, takes ${theo}.`,
+      oeeTargetRate: (target, s, theo) => `To meet demand with that OEE, every machine would need to reach ${target} at least by its nameplate; ${s}, the slowest, runs at ${theo}.`,
       typicalError:
         'Typical mistake: calculating takt with the full shift time without removing what is planned, or also deducting breakdowns: those do not change what the customer asks for; they show up in OEE.',
       warn: {
@@ -590,6 +593,9 @@ export const en: Messages = {
         expectedMeaning: 'What would come out in the period if the line runs at its usual OEE: OEE already deducts stops, speed loss and rejects.',
         minOeeMeaning: 'The minimum OEE needed to meet demand in the available time. Above 100 %, it cannot be met even without losses.',
         ceilNote: 'Rounded up.',
+        targetMeaning: 'The cycle each workstation or machine must be able to achieve, by its theoretical value, to meet demand with the line’s usual losses. It is shorter than the takt: it leaves room for stops, speed loss and rejects.',
+        targetRateMeaning: 'The speed each machine must be able to reach, by its nameplate, to meet demand with the line’s usual losses. It is higher than the takt pace: it leaves room for stops, speed loss and rejects.',
+        targetNote: (theo, s) => `Compare it with the theoretical value of the slowest one: ${s}, ${theo}.`,
       },
       sheet: {
         tab: 'Takt',
@@ -628,6 +634,8 @@ export const en: Messages = {
           expectedRate: 'available time × theoretical speed × OEE',
           minOee: 'theoretical cycle ÷ takt',
           minOeeRate: 'pace ÷ theoretical speed',
+          target: 'takt × OEE',
+          targetRate: 'pace ÷ OEE',
         },
         convertedNote: (u, original) => `${u} (= ${original})`,
         highlightMax: 'The highest cycle (the bottleneck) is highlighted automatically; if you change the data, the highlight moves.',
@@ -644,7 +652,7 @@ export const en: Messages = {
         'In “About the line”, choose how you measure it (time per unit or units per time), the unit you want results in and the type of line: assembly with workstations (line balancing is calculated too) or machines in series.',
         'Add the workstations or machines with their theoretical (nameplate) value and your actual measurements, or bring them in with “Import” (one row per measurement: rows with the same name are grouped). Each one folds away with everything that belongs to it; when closed, it shows its measurements and mean.',
         'In “2 · Result”, “Calculate with” chooses whether the machines count with their mean, repeatable value or theoretical value: everything below updates at once.',
-        'Further down, in “Compare with your OEE”, enter the OEE the line usually runs at (your own figure): the app tells you how much it would produce and the minimum OEE it needs to meet demand.',
+        'Further down, in “Compare with your OEE”, enter the OEE the line usually runs at (your own figure): the app tells you how much it would produce, the minimum OEE it needs to meet demand and the target pace: how fast the machines must be able to run, by their nameplate, to meet demand with those losses.',
         'Tap the takt and the other values to see where they come from, with your numbers.',
       ],
     },

@@ -111,6 +111,9 @@ export function taktSheet(s: TaktSaved, r: TaktResult, t: Messages, lang: 'es' |
           ? { key: 'expected', label: d.expected, formula: '{available}*{oee}/{theo}', note: `${view.unitName} · ${n.expected}`, format: 'auto', summary: true }
           : { key: 'expected', label: d.expected, formula: '{available}*{theo}*{oee}', note: `${view.unitName} · ${n.expectedRate}`, format: 'auto', summary: true },
         { key: 'minOee', label: d.minOee, formula: isTime ? '{theo}/{takt}' : '{rate}/{theo}', note: isTime ? n.minOee : n.minOeeRate, format: 'percent', summary: true },
+        isTime
+          ? { key: 'target', label: d.target, formula: '{takt}*{oee}', note: `${u} · ${n.target}`, format: 'auto', summary: true }
+          : { key: 'target', label: d.target, formula: '{rate}/{oee}', note: `${rateU} · ${n.targetRate}`, format: 'auto', summary: true },
       );
     notes.push(isTime ? sh.highlightMax : sh.highlightMin);
     if (useReal) notes.push(sh.realNote(basis));

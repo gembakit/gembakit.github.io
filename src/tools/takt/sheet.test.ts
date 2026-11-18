@@ -36,6 +36,8 @@ function check(s: TaktSaved) {
   if (r.oee) {
     expect(v('expected')).toBeCloseTo(r.oee.expected, 6);
     expect(v('minOee')).toBeCloseTo(r.oee.minOee, 9);
+    if (s.measure === 'time') expect(v('target')).toBeCloseTo(r.oee.targetCycle / tu, 9);
+    else expect(v('target')).toBeCloseTo(fromCycle(r.oee.targetCycle, 'rate', s.resultUnit), 6);
   }
   return def;
 }
@@ -98,6 +100,7 @@ describe('mediciones guardadas', () => {
     expect(text).toContain('Hay que sacar 40.000 botellas/h (una cada 0,09 s) para cumplir la demanda de 900.000 botellas.');
     expect(text).toContain('La más lenta es Llenadora (44.500 botellas/h, el 92,7 % de su teórico)');
     expect(text).toContain('Con un OEE del 75 %, la línea sacaría 810.000 botellas (36.000 botellas/h), por debajo de la demanda de 900.000 botellas: necesita al menos un 83,3 %.');
+    expect(text).toContain('Para cumplir con ese OEE, cada máquina tendría que poder ir a 53.333 botellas/h como mínimo según su placa; Llenadora, la más lenta, va a 48.000 botellas/h.');
     expect(def.reading.some((l) => l.tone === 'warning' && l.text.startsWith('Etiquetadora varía mucho entre medidas (de 48.500 /h a 54.000 /h)'))).toBe(true);
   });
 });

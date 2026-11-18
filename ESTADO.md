@@ -94,7 +94,14 @@ Plan acordado ese día (un paso cada vez, parar tras cada uno):
    sale plegado. «Calcular con» y el OEE pasan al resultado, junto a lo que
    cambian, para verlo al momento. «OEE esperado» pasa a llamarse «OEE
    habitual de la línea» («un dato tuyo, no un cálculo»). Campos más bajos
-   (`NumberField compact`). **Falta que el dueño lo pruebe en su Android.**
+   (`NumberField compact`).
+   Después (2026-11-18): un OEE mayor que 100 o mal escrito ya no quita el
+   resultado (la casilla del OEE vive ahí y no se podía corregir): se avisa
+   junto a la casilla y no se usa. Nuevo «Ritmo objetivo con tu OEE»
+   (`targetCycle` = takt × OEE; en velocidad, ritmo ÷ OEE), con su
+   explicación, su frase en «Cómo leerlo» y su fila en la hoja. Las averías
+   siguen sin restarse del takt: entran por el OEE. **Falta que el dueño lo
+   pruebe en su Android.**
 4. [ ] OEE (con ficha antes; empieza la Fase 2 de gráficos): paradas con
    nombre, minutos y categoría (editable); OEE oficial siempre visible;
    interruptores por categoría que calculan **otro** porcentaje con nombre

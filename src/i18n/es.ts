@@ -512,6 +512,7 @@ export const es = {
       oeeTitle: 'Comparar con tu OEE (opcional)',
       expected: 'Producción esperada',
       minOee: 'OEE mínimo necesario',
+      target: 'Ritmo objetivo con tu OEE',
       byStation: { time: 'Tiempo de ciclo de cada uno', rate: 'Velocidad de cada una' } as Record<string, string>,
       taktMark: (v: string) => `takt ${v}`,
       theoMark: 'teórico',
@@ -532,6 +533,8 @@ export const es = {
       oeeImpossible: (station: string, max: string) =>
         `Ni con un OEE del 100 % llega: según su teórico, ${station} solo saca ${max} en el periodo. Hace falta más tiempo disponible o más capacidad.`,
       oeeNote: 'Las medidas reales son de la línea en marcha; el OEE añade las paradas, la pérdida de velocidad y los rechazos.',
+      oeeTargetTime: (target: string, s: string, theo: string) => `Para cumplir con ese OEE, cada puesto o máquina tendría que poder hacer una unidad en ${target} como mucho según su teórico; ${s}, el más lento, tarda ${theo}.`,
+      oeeTargetRate: (target: string, s: string, theo: string) => `Para cumplir con ese OEE, cada máquina tendría que poder ir a ${target} como mínimo según su placa; ${s}, la más lenta, va a ${theo}.`,
       typicalError:
         'Error típico: calcular el takt con el tiempo total del turno, sin quitar lo planificado, o restar también las averías: esas no cambian lo que pide el cliente; se ven en el OEE.',
       warn: {
@@ -595,6 +598,9 @@ export const es = {
         expectedMeaning: 'Lo que saldría en el periodo si la línea trabaja con su OEE habitual: el OEE ya descuenta paradas, pérdida de velocidad y rechazos.',
         minOeeMeaning: 'El OEE que hace falta como mínimo para cumplir la demanda en el tiempo disponible. Por encima del 100 %, no se llega ni sin pérdidas.',
         ceilNote: 'Se redondea hacia arriba.',
+        targetMeaning: 'El ciclo que tiene que poder hacer cada puesto o máquina, según su teórico, para cumplir la demanda con las pérdidas habituales de la línea. Es más corto que el takt: deja margen para paradas, pérdida de velocidad y rechazos.',
+        targetRateMeaning: 'La velocidad que tiene que poder alcanzar cada máquina, según su placa, para cumplir la demanda con las pérdidas habituales de la línea. Es más alta que el ritmo del takt: deja margen para paradas, pérdida de velocidad y rechazos.',
+        targetNote: (theo: string, s: string) => `Compáralo con el teórico de la más lenta: ${s}, ${theo}.`,
       },
       sheet: {
         tab: 'Takt',
@@ -633,6 +639,8 @@ export const es = {
           expectedRate: 'tiempo disponible × velocidad teórica × OEE',
           minOee: 'ciclo teórico ÷ takt',
           minOeeRate: 'ritmo ÷ velocidad teórica',
+          target: 'takt × OEE',
+          targetRate: 'ritmo ÷ OEE',
         },
         convertedNote: (u: string, original: string) => `${u} (= ${original})`,
         highlightMax: 'El ciclo más alto (el cuello de botella) se resalta solo; si cambias los datos, el resaltado se mueve.',
@@ -649,7 +657,7 @@ export const es = {
         'En «Cómo es la línea», elige cómo la mides (tiempo por unidad o unidades por tiempo), en qué unidad quieres los resultados y el tipo de línea: montaje con puestos (calcula también el balanceo) o máquinas en serie.',
         'Añade los puestos o máquinas con su teórico (de placa) y tus medidas reales, o impórtalos con «Importar» (una fila por medida: las filas con el mismo nombre se juntan). Cada uno se pliega con todo lo suyo; cerrado, enseña sus medidas y su media.',
         'En «2 · Resultado», «Calcular con» elige si las máquinas cuentan con su media, su valor repetible o su teórico: lo de debajo cambia al momento.',
-        'Más abajo, en «Comparar con tu OEE», escribe el OEE que suele tener la línea (es un dato tuyo): la app dice cuánto sacaría y qué OEE necesita como mínimo para cumplir.',
+        'Más abajo, en «Comparar con tu OEE», escribe el OEE que suele tener la línea (es un dato tuyo): la app dice cuánto sacaría, qué OEE necesita como mínimo para cumplir y el ritmo objetivo: a qué ritmo tienen que poder ir las máquinas, según su placa, para cumplir con esas pérdidas.',
         'Toca el takt y los demás valores para ver de dónde salen, con tus números.',
       ],
     },

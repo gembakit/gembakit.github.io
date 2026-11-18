@@ -41,6 +41,8 @@ const SHOTS = [
   { name: 'explica-takt', hash: '#/herramientas/takt', click: [/Cargar ejemplo/, /^Embotelladora/, /^Ritmo que pide/], full: true },
   { name: 'explica-disponible', hash: '#/herramientas/takt', click: [/Cargar ejemplo/, /^Embotelladora/, /^Tiempo disponible\s*22/], full: true },
   { name: 'explica-oee-minimo', hash: '#/herramientas/takt', click: [/Cargar ejemplo/, /^Embotelladora/, /^OEE mínimo/], full: true },
+  { name: 'explica-objetivo', hash: '#/herramientas/takt', click: [/Cargar ejemplo/, /^Embotelladora/, /^Ritmo objetivo/], full: true },
+  { name: 'explica-objetivo-packs', hash: '#/herramientas/takt', click: [/Cargar ejemplo/, /^Armado de packs/, /^Puestos/, /^Meter botellas/], full: true },
   { name: 'explica-minimo', hash: '#/herramientas/takt', click: [/Cargar ejemplo/, /^Armado de packs/, /^Mínimo de puestos/], full: true },
   { name: 'explica-eficiencia', hash: '#/herramientas/takt', click: [/Cargar ejemplo/, /^Armado de packs/, /^Eficiencia del balanceo/], full: true },
   { name: 'explica-capacidad', hash: '#/herramientas/takt', click: [/Cargar ejemplo/, /^Embotelladora/, /^Capacidad/], full: true },
