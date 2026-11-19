@@ -51,6 +51,8 @@ export type CalcWarning =
   | { code: 'stops-exceed-time' }
   /** OEE: más piezas rechazadas que producidas. */
   | { code: 'rejects-exceed-total' }
+  /** OEE: el tiempo estándar de una parada no es mayor que cero. */
+  | { code: 'standard-not-positive'; step: number }
   /** Kanban: sin margen de seguridad. */
   | { code: 'no-safety' }
   /** ROI: el ahorro neto es cero o negativo; la inversión no se recupera. */

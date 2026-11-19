@@ -41,7 +41,7 @@ export function IconButton({ icon: Icon, label, className = '', type = 'button',
       type={type}
       aria-label={label}
       title={label}
-      className={`press raised-sm grid size-12 shrink-0 place-items-center rounded-[14px] text-text ${className}`}
+      className={`press raised-sm grid size-12 shrink-0 place-items-center rounded-[14px] text-text disabled:cursor-not-allowed disabled:opacity-40 ${className}`}
       {...rest}
     >
       <Icon aria-hidden size={20} strokeWidth={1.9} />

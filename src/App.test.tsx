@@ -272,8 +272,30 @@ test('OEE: cada parte del tiempo planificado lleva sus minutos y su porcentaje',
   window.location.hash = '#/herramientas/oee';
   render(<App />);
   await user.click(await screen.findByRole('button', { name: /Cargar ejemplo|Load example/ }));
+  await user.click(await screen.findByRole('button', { name: /^(Caso publicado de Vorne|Vorne published case)/ }));
   // Vorne: 420 min planificados; 47 min de paradas = 11,2 %.
-  const downtime = await screen.findByText(/^47(,0|\.0)? min$/);
-  expect(downtime.nextElementSibling).toHaveTextContent(/^11[,.]2 %$/);
-  expect(screen.getByText(/^74[,.]8 %$/)).toBeInTheDocument();
+  // La primera vez sale en el reparto del tiempo; después, en el Pareto.
+  const downtime = (await screen.findAllByText(/^47(,0|\.0)? min$/))[0]!;
+  expect(downtime.nextElementSibling).toHaveTextContent(/^11[,.]2\s%$/);
+  expect(screen.getByText(/^74[,.]8\s%$/)).toBeInTheDocument();
+});
+
+test('OEE: la embotelladora enseña el oficial, la otra vista con su nombre y el Pareto', async () => {
+  const user = userEvent.setup();
+  window.location.hash = '#/herramientas/oee';
+  render(<App />);
+  await user.click(await screen.findByRole('button', { name: /Cargar ejemplo|Load example/ }));
+  await user.click(await screen.findByRole('button', { name: /^(Embotelladora|Bottling plant)/ }));
+  // Oficial 70,74 %; marcado el tiempo estándar: «OEE sin el tiempo estándar de las paradas» 75,57 %.
+  expect(await screen.findByText(/^70[,.]74\s%$/)).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /^(OEE sin el tiempo estándar de las paradas|OEE without the standard time of the stops)\s*75[,.]57\s%/ })).toBeInTheDocument();
+  // Marcar «Cambios de formato»: ya incluye su estándar → «OEE sin cambios de formato» 77,33 %.
+  await user.click(screen.getByRole('checkbox', { name: /^(Cambios de formato|Changeovers)/ }));
+  expect(screen.getByRole('button', { name: /^(OEE sin cambios de formato|OEE without changeovers)\s*77[,.]33\s%/ })).toBeInTheDocument();
+  // El oficial no cambia.
+  expect(screen.getByText(/^70[,.]74\s%$/)).toBeInTheDocument();
+  // Pareto: el acumulado de la primera fila es su parte.
+  expect(screen.getByText(/^42[,.]1\s% · (acumulado|cumulative) 42[,.]1\s%/)).toBeInTheDocument();
+  // Las paradas, plegadas, dicen cuántas son y cuántos minutos suman.
+  expect(screen.getByRole('button', { name: /^(Paradas no planificadas|Unplanned stops)\s*4 (paradas|stops) · 95 min/ })).toBeInTheDocument();
 });

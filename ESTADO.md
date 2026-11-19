@@ -102,7 +102,7 @@ Plan acordado ese día (un paso cada vez, parar tras cada uno):
    explicación, su frase en «Cómo leerlo» y su fila en la hoja. Las averías
    siguen sin restarse del takt: entran por el OEE. **Falta que el dueño lo
    pruebe en su Android.**
-4. [ ] OEE (con ficha antes; empieza la Fase 2 de gráficos): paradas con
+4. [x] OEE (con ficha antes; empieza la Fase 2 de gráficos): paradas con
    nombre, minutos y categoría (editable); OEE oficial siempre visible;
    interruptores por categoría que calculan **otro** porcentaje con nombre
    explícito («OEE sin cambios de formato»), nunca en lugar del oficial;
@@ -117,8 +117,25 @@ Plan acordado ese día (un paso cada vez, parar tras cada uno):
    versión oscura), con 2 px de separación entre partes, y cada parte lleva
    su porcentaje del tiempo planificado debajo de los minutos. Esos colores
    son los que usarán los gráficos de la Fase 2 (Pareto incluido).
-   Ficha escrita el 2026-11-18 (`docs/fichas/oee-v2.md`), **pendiente de
-   que el dueño responda las preguntas A a F**.
+   Ficha escrita el 2026-11-18 (`docs/fichas/oee-v2.md`), aprobada el
+   2026-11-19 (respuestas A a F al principio) y construida ese día:
+   `calc/oee.ts` nuevo (paradas con categoría y estándar, `oeeView`,
+   `pareto`, `furthestFactor`, `WORLD_CLASS`); formato guardado `v: 2` en
+   `tools/oee/model.ts` (las mediciones de la versión 1 se leen sin perder
+   nada); pantalla con tres bloques plegables (tiempo planificado, paradas
+   con su editor de categorías, producción con ciclo o velocidad ideal),
+   resultado con el OEE oficial, los tres factores frente a 90/95/99 y «el
+   más lejos», reparto del tiempo, «Otras vistas» (un porcentaje con nombre
+   para todo lo marcado; nunca cambia el oficial) y Pareto por categoría o
+   por parada (acumulado escrito, raya del 80 %, opción de añadir velocidad
+   y calidad; lo quitado en gris). Ejemplos: Vorne y embotelladora. Hoja de
+   Google: tabla por categoría (minutos y parte estándar), paradas en las
+   notas, la vista marcada con fórmula INDEX/MATCH. Una medición nueva de
+   OEE toma las categorías de la última del último proyecto usado. Piezas
+   de formulario comunes del takt y el OEE en `tools/form.tsx`. Arreglado
+   de paso: en las explicaciones («Donde»), una cifra larga pasa a la línea
+   de abajo en vez de pisar el nombre. **Falta que el dueño lo pruebe en su
+   Android.**
 5. [ ] Maqueta del proyecto con pestañas (el dueño decide después).
 6. [ ] Propuestas de diseño común para lo exportado (hojas, Slides, PDF).
 7. [ ] «Ver más» en cada término del glosario (definición amplia, ejemplo,
@@ -673,7 +690,7 @@ Todas del 2026-11-13. No reabrirlas sin él.
 | PDF | Sí. Dos vías: desde la presentación o la hoja de Google (Drive la exporta a PDF; prueba en el paso 7) y, para usar sin conexión en planta, informe PDF generado en la propia app (fase 6). |
 | Protección y contexto | Pestañas de la app con **aviso para todos** (Google no permite aviso para el dueño y bloqueo para los demás a la vez: `ProtectedRange.warningOnly` ignora los editores). Campos de contexto por defecto: Equipo, Puesto, Línea, Producto, Supervisor, Operario; todos opcionales; se pueden añadir. Lista de mediciones con filtros por contexto y orden por fecha o resultado. |
 | Espacio y Firebase | **Aceptado** (2026-11-14): sin Firebase; la nube es el Drive del propio usuario. Copia de seguridad descargable o en Drive en el proyecto mínimo. «Archivar proyecto» en Drive, con comprobación antes de borrar del teléfono, cuando lleguen las fotos. |
-| Calidad en el 85 % de Nakajima (OEE) | **Aclarado por el dueño** (2026-11-14, investigación suya): el desglose canónico de *Introduction to TPM* es disponibilidad > 90 %, rendimiento > 95 % y calidad > **99 %**; 0,90 × 0,95 × 0,99 = 84,65 %, que se redondea al 85 %. El 99,9 % viene de mezclar el TPM con Seis Sigma o de adaptaciones de industrias críticas. Hoy la app enseña solo el 85 %; pendiente de que el dueño diga si se añade el desglose (con el 84,65 % explicado). |
+| Calidad en el 85 % de Nakajima (OEE) | **Aclarado por el dueño** (2026-11-14, investigación suya): el desglose canónico de *Introduction to TPM* es disponibilidad > 90 %, rendimiento > 95 % y calidad > **99 %**; 0,90 × 0,95 × 0,99 = 84,65 %, que se redondea al 85 %. El 99,9 % viene de mezclar el TPM con Seis Sigma o de adaptaciones de industrias críticas. Desde el 2026-11-19 la app enseña el desglose (90 × 95 × 99 = 84,65 %) y marca el factor más lejos de su referencia (OEE versión 2). |
 | Historial de versiones y restaurar | **Aceptado** (2026-11-14): como AutoCAD, Revit o Google Docs. Versiones por proyecto (solas, una por día de cambios, y a mano); volver a una versión reemplaza y se puede deshacer; restaurar una copia va proyecto por proyecto y nunca pierde nada. |
 | Ritmo de trabajo | **Pedido por el dueño** (2026-11-14): parar en un punto de control después de cada paso y contárselo, en lugar de encadenar muchos pasos. |
 | Carpetas en Drive | Ordenadas desde el principio (lo pide el dueño): `Gemba Kit/Proyectos/{proyecto}/` (hoja del proyecto; `Presentaciones/` e `Informes/` solo cuando haga falta), `Gemba Kit/Sueltas/`, `Gemba Kit/Copias de seguridad/` (se guardan las 10 últimas). La app encuentra sus carpetas por identificador: moverlas o renombrarlas en Drive no rompe nada. |

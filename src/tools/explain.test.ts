@@ -13,6 +13,7 @@ import { deductionNames, readTaktSaved, stationNames, taktView, toTaktInput, typ
 import { BOTTLING, PACKS } from './takt/examples';
 import { oee } from '../calc/oee';
 import { oeeExplain } from './oee/explain';
+import { BOTTLING as BOTTLING_OEE, toOeeInput, VORNE as VORNE_OEE, type OeeSaved } from './oee/model';
 import { kanban } from '../calc/kanban';
 import { kanbanExplain } from './kanban/explain';
 import { calcInput as kanbanInput } from './kanban/reading';
@@ -22,7 +23,8 @@ import { calcInput as roiInput } from './roi/model';
 
 // «De dónde sale cada valor»: la fórmula con letras, con los números y el
 // resultado, igual que en pantalla. `toText` es la versión en una línea.
-const txt = (d: Derivation | null) => d!.steps.map(toText);
+// El espacio que no se parte («75,57\u00a0%») se compara como un espacio normal.
+const txt = (d: Derivation | null) => d!.steps.map((e) => toText(e).replace(/\u00a0/g, ' '));
 
 describe('fórmulas como estructura', () => {
   test('la división apilada agrupa sola: en una línea lleva paréntesis', () => {
@@ -113,19 +115,30 @@ describe('Takt: de dónde sale cada valor', () => {
   });
 });
 
-describe('OEE: de dónde sale cada valor (caso Vorne)', () => {
-  const input = { shift: 480, plannedStops: 60, unplannedStops: 47, idealCycle: 1, total: 19271, rejects: 423 };
-  const ex = oeeExplain(input, oee(input).result!, es, 'es');
-  test('los tres factores y el OEE', () => {
+describe('OEE: de dónde sale cada valor', () => {
+  const explainOee = (s: OeeSaved) => {
+    const i = toOeeInput(s);
+    return oeeExplain(s, i.idealCycle, oee(i).result!, es, 'es');
+  };
+  test('Vorne: los tres factores y el OEE', () => {
+    const ex = explainOee(VORNE_OEE(es));
     expect(txt(ex.availability)).toEqual(['Tm ÷ Tp', '373 min ÷ 420 min', '88,81 %']);
     expect(txt(ex.performance)).toEqual(['(TCi × N) ÷ Tm', '(1 s × 19.271) ÷ 22.380 s', '86,11 %']);
     expect(txt(ex.quality)).toEqual(['(N − R) ÷ N', '(19.271 − 423) ÷ 19.271', '18.848 ÷ 19.271', '97,8 %']);
     expect(txt(ex.oee)).toEqual(['Disp × Rend × Cal', '88,81 % × 86,11 % × 97,8 %', '74,79 %']);
+    expect(ex.view).toBeNull();
   });
-  test('las pérdidas en minutos', () => {
+  test('Vorne: las pérdidas en minutos', () => {
+    const ex = explainOee(VORNE_OEE(es));
     expect(txt(ex.speed)).toEqual(['Tm − (TCi × N)', '373 min − (1 s × 19.271)', '51,8 min']);
     expect(txt(ex.qualityLoss)).toEqual(['TCi × R', '1 s × 423', '7,1 min']);
     expect(txt(ex.useful)).toEqual(['TCi × (N − R)', '1 s × 18.848', '314,1 min']);
+  });
+  test('embotelladora: velocidad en botellas/h y la otra vista', () => {
+    const ex = explainOee(BOTTLING_OEE(es));
+    expect(txt(ex.performance)).toEqual(['N ÷ (Vi × Tm)', '270.000 ÷ (48.000 botellas/h × 6,25 h)', '90 %']);
+    expect(txt(ex.useful)).toEqual(['(N − R) ÷ Vi', '266.000 ÷ 48.000 botellas/h', '332,5 min']);
+    expect(txt(ex.view!)).toEqual(['Tu ÷ (Tp − Q)', '332,5 min ÷ (470 min − 30 min)', '75,57 %']);
   });
 });
 

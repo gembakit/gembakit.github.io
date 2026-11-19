@@ -115,10 +115,11 @@ export function DerivationView({ calc }: { calc: Derivation }) {
           <h3 className="text-[13px] font-semibold text-muted">{t.explain.where}</h3>
           <dl className="flex flex-col gap-1.5">
             {calc.where.map((w) => (
-              <div key={w.sym} className="grid grid-cols-[minmax(2.75rem,auto)_minmax(0,1fr)_auto] items-baseline gap-x-3 rounded-[12px] bg-surface-2 px-3 py-2.5">
-                <dt className="font-display text-[17px] font-bold">{w.sym}</dt>
-                <dd className="text-[15px] leading-snug">{w.label}</dd>
-                <dd className="text-right font-display text-[16px] font-bold tabular-nums">{w.value ?? ''}</dd>
+              // Si la cifra es larga («48.000 botellas/h»), pasa a la línea de abajo en vez de pisar el nombre.
+              <div key={w.sym} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-[12px] bg-surface-2 px-3 py-2.5">
+                <dt className="min-w-[2.75rem] font-display text-[17px] font-bold">{w.sym}</dt>
+                <dd className="min-w-[7rem] flex-1 text-[15px] leading-snug wrap-break-word">{w.label}</dd>
+                <dd className="ml-auto text-right font-display text-[16px] font-bold tabular-nums">{w.value ?? ''}</dd>
               </div>
             ))}
           </dl>

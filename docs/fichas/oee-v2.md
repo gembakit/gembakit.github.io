@@ -1,5 +1,23 @@
 # Ficha: OEE, versión 2
 
+**Aprobada por el dueño el 2026-11-19 y construida ese día**, con estas
+respuestas (mandan sobre el texto de abajo):
+
+- A. Categorías iniciales, sí, adaptables. Se guardan con cada medición; una
+  medición nueva de OEE empieza con las de la última medición de OEE del
+  último proyecto donde se guardó.
+- B. «Quitar» = tratar como planificado; solo cambia la disponibilidad.
+  Aprobado tras explicarlo con la embotelladora. Al construirlo: lo marcado
+  da **un** porcentaje con nombre que lo dice todo («OEE sin averías ni
+  cambios de formato»); quitar una categoría ya incluye su estándar.
+- C. Tiempo estándar opcional en cualquier parada.
+- D. Pareto con la opción de añadir la pérdida por velocidad y la de
+  calidad.
+- E. Velocidad o ciclo ideal con el selector del takt.
+- F. Los dos ejemplos.
+
+---
+
 Borrador para aprobar (2026-11-18). Sustituye a la ficha 4 de
 `docs/fichas/fase-1.md` en lo que cambia. Las fórmulas oficiales (Vorne,
 oee.com) y el caso publicado (OEE 74,79 %) se mantienen y se siguen
