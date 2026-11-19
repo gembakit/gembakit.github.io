@@ -13,6 +13,9 @@ import { ReferenceScreen } from './screens/ReferenceScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { GoogleTestScreen } from './screens/GoogleTestScreen';
 import { DataScreen } from './screens/DataScreen';
+import { WelcomeScreen } from './screens/WelcomeScreen';
+import { welcomeDone } from '../google/account';
+import { currentAccount } from '../google/session';
 import { ProjectFormScreen } from './screens/ProjectFormScreen';
 import { ProjectScreen } from './screens/ProjectScreen';
 import { ProjectHistoryScreen } from './screens/ProjectHistoryScreen';
@@ -67,6 +70,22 @@ export function AppShell({ persisted }: { persisted: boolean | null }) {
   const [capture, setCapture] = useState(false);
   const closeCapture = useCallback(() => setCapture(false), []);
   const openCapture = useCallback(() => setCapture(true), []);
+  // La bienvenida sale la primera vez que se abre la app sin cuenta conectada, o en #/bienvenida.
+  const [firstRun, setFirstRun] = useState(() => !welcomeDone() && !currentAccount());
+  const endWelcome = useCallback(() => {
+    setFirstRun(false);
+    navigate('/proyectos');
+  }, []);
+
+  if (firstRun || section === 'bienvenida') {
+    return (
+      <div className="min-h-dvh bg-bg text-text">
+        <main>
+          <WelcomeScreen onDone={endWelcome} />
+        </main>
+      </div>
+    );
+  }
 
   let screen;
   if (section === 'herramientas' && sub) screen = <ToolRoute id={sub} />;

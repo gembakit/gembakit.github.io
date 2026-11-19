@@ -136,6 +136,23 @@ Plan acordado ese día (un paso cada vez, parar tras cada uno):
    de paso: en las explicaciones («Donde»), una cifra larga pasa a la línea
    de abajo en vez de pisar el nombre. **Falta que el dueño lo pruebe en su
    Android.**
+   Pedido intercalado (2026-11-19): **bienvenida e inicio de sesión con
+   Google**. La primera vez que se abre la app sin cuenta conectada sale la
+   bienvenida (`app/screens/WelcomeScreen.tsx`, también en `#/bienvenida`)
+   con «Conectar con Google» y «Seguir sin cuenta» (la app sigue funcionando
+   entera sin cuenta). Ajustes › Cuenta de Google (`app/GoogleAccount.tsx`):
+   cuenta conectada, «Abrir la carpeta en Drive» (o «Crear las carpetas en
+   mi Drive» si no se conocen) y «Desconectar» (retira el permiso en Google
+   y olvida cuenta y carpetas en el aparato). Al conectar se crean en el
+   Drive de esa cuenta Gemba Kit › Proyectos, Sueltas y Copias de seguridad
+   (`google/account.ts`, `ensureAppFolders`). Las carpetas recordadas son de
+   una cuenta (`drive.owner`): con otra cuenta se buscan o crean en su
+   Drive. Límite conocido: la hoja de un proyecto creada con la cuenta A,
+   vista con la cuenta B en el mismo teléfono, sale como «ya no está en tu
+   Drive» (puede crearla de nuevo en el Drive de B). **Para que entren otras
+   personas**, el dueño tiene que sacar la app del modo pruebas en Google
+   Cloud o añadirlas como usuarios de prueba (sección 6, «Cuenta de Google y
+   publicación»). **Falta que el dueño lo pruebe en su Android.**
 5. [ ] Maqueta del proyecto con pestañas (el dueño decide después).
 6. [ ] Propuestas de diseño común para lo exportado (hojas, Slides, PDF).
 7. [ ] «Ver más» en cada término del glosario (definición amplia, ejemplo,
@@ -173,7 +190,12 @@ Todas en el Android, después de pulsar **Actualizar**:
 6. **El 2026-11-21**: paso 3 de la pantalla de prueba de Google (que el
    permiso sigue valiendo a los 8 días). Después se retira la pantalla de
    prueba (`GoogleTestScreen` y `projectTest.*`).
-7. Si el almacenamiento vuelve a quedarse pegado: Ajustes → Diagnóstico →
+7. **Bienvenida y cuenta de Google** (2026-11-19): Ajustes › Cuenta de
+   Google, ver su cuenta, «Abrir la carpeta en Drive», «Desconectar», y
+   conectar de nuevo; la bienvenida se ve en el navegador abriendo
+   `gembakit.github.io/#/bienvenida`. Otra persona solo puede entrar
+   después de publicar la app o añadirla como usuaria de prueba.
+8. Si el almacenamiento vuelve a quedarse pegado: Ajustes → Diagnóstico →
    copiar y pegarlo en el chat.
 
 ### Siguiente paso (el dueño elige, después de las pruebas)
@@ -725,6 +747,12 @@ Todas del 2026-11-13. No reabrirlas sin él.
 4. El dueño valida la adaptación y la traducción del glosario.
 5. Cuenta de Google para los proyectos reales: la de siempre o una nueva
    solo para Gemba Kit (ficha del proyecto mínimo, pregunta E).
+6. Abrir la app a otras personas (pedido el 2026-11-19 con la bienvenida):
+   añadirlas como usuarias de prueba en Google Cloud (hasta 100; Google
+   puede volver a pedir el permiso a los 7 días) o publicar la app (sin revisión de
+   Google con estos permisos). Antes de publicar para otros, la decisión
+   del dominio propio (sección 6, «Traspaso»): los datos de cada teléfono
+   van ligados a la dirección de la app.
 
 ## 8. Por comprobar (PLAN.md, sección 9)
 

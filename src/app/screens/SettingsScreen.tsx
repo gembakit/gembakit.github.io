@@ -8,6 +8,7 @@ import { BigHeader, Card, Label, Screen } from '../../ui/Layout';
 import { useTheme, type ModeChoice } from '../../ui/theme/ThemeProvider';
 import { DEFAULT_THEME, THEMES, THEME_IDS } from '../../ui/theme/themes';
 import { APP_VERSION } from '../../version';
+import { GoogleAccountPanel } from '../GoogleAccount';
 
 function Segmented<T extends string>({ value, options, onChange, label }: { value: T; options: { id: T; label: string; icon?: ReactNode }[]; onChange: (v: T) => void; label: string }) {
   return (
@@ -137,6 +138,9 @@ export function SettingsScreen({ persisted }: { persisted: boolean | null }) {
 
       <section className="flex flex-col gap-2.5">
         <Label>{t.settings.google}</Label>
+        <Card>
+          <GoogleAccountPanel />
+        </Card>
         <button
           type="button"
           onClick={() => navigate('/prueba-google')}

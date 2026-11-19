@@ -142,6 +142,7 @@ const SHOTS = [
   { name: 'ajustes', hash: '#/ajustes', full: true },
   { name: 'datos', hash: '#/ajustes/datos', full: true },
   { name: 'datos-descargada', hash: '#/ajustes/datos', click: /^Descargar copia$/, full: true, only: 'light' },
+  { name: 'bienvenida', hash: '#/bienvenida', full: true },
   { name: 'prueba-google', hash: '#/prueba-google', full: true },
   { name: 'capturar', hash: '#/proyectos', click: /^(Capturar|Capture)$/, byLabel: true },
 ];
@@ -154,6 +155,14 @@ const problems = [];
 for (const mode of ['light', 'dark']) {
   const page = await browser.newPage();
   await page.setExtraHTTPHeaders({ 'Accept-Language': 'es-ES,es' });
+  // La bienvenida sale solo la primera vez: se da por vista (tiene su propia captura en #/bienvenida).
+  await page.evaluateOnNewDocument(() => {
+    try {
+      localStorage.setItem('gk.welcome', 'done');
+    } catch {
+      // about:blank no tiene almacenamiento.
+    }
+  });
   await page.setViewport({ width, height: 780, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
   await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: mode }]);
   for (const s of SHOTS) {
