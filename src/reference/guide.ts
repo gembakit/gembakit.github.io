@@ -96,7 +96,7 @@ export const GUIDE: readonly GuideTopic[] = [
       body: [
         'Es opcional: la app funciona entera sin cuenta. Conectarla sirve para guardar en tu Drive las copias de seguridad, la hoja de cada proyecto y lo que exportes.',
         'La primera vez que abres la app sale la bienvenida, con «Conectar con Google» y «Seguir sin cuenta». Después, todo está en Ajustes › Cuenta de Google.',
-        'Al conectar, eliges la cuenta en la ventana de Google y aceptas. La app crea en ese Drive la carpeta Gemba Kit, con Proyectos, Sueltas y Copias de seguridad dentro. Solo ve los archivos que crea ella, nunca el resto de tu Drive.',
+        'En la bienvenida, «Conectar con Google» enseña antes qué carpetas se crearán; después, «Continuar con Google» abre la ventana de Google, donde eliges la cuenta y aceptas. La app crea en ese Drive la carpeta Gemba Kit, con Proyectos, Sueltas y Copias de seguridad dentro. Solo ve los archivos que crea ella, nunca el resto de tu Drive.',
         'En Ajustes › Cuenta de Google ves la cuenta conectada, «Abrir la carpeta en Drive» y «Desconectar». Desconectar retira el permiso en este teléfono; lo que ya está en tu Drive se queda allí. Para usar otra cuenta, desconecta y conecta la otra: sus carpetas se crean en su Drive.',
       ],
     },
@@ -105,7 +105,7 @@ export const GUIDE: readonly GuideTopic[] = [
       body: [
         'It is optional: the whole app works without an account. Connecting it lets you keep backups, each project’s sheet and your exports in your Drive.',
         'The first time you open the app you see the welcome screen, with “Connect with Google” and “Continue without an account”. After that, everything is in Settings › Google account.',
-        'When you connect, you choose the account in the Google window and accept. The app creates the Gemba Kit folder in that Drive, with Projects, Loose and Backups inside. It only sees the files it creates, never the rest of your Drive.',
+        'On the welcome screen, “Connect with Google” first shows which folders will be created; then “Continue with Google” opens the Google window, where you choose the account and accept. The app creates the Gemba Kit folder in that Drive, with Projects, Loose and Backups inside. It only sees the files it creates, never the rest of your Drive.',
         'In Settings › Google account you see the connected account, “Open the folder in Drive” and “Disconnect”. Disconnecting removes the permission on this phone; what is already in your Drive stays there. To use another account, disconnect and connect the other one: its folders are created in its Drive.',
       ],
     },

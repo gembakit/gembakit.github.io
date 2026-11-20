@@ -152,7 +152,14 @@ Plan acordado ese día (un paso cada vez, parar tras cada uno):
    Drive» (puede crearla de nuevo en el Drive de B). **Para que entren otras
    personas**, el dueño tiene que sacar la app del modo pruebas en Google
    Cloud o añadirlas como usuarios de prueba (sección 6, «Cuenta de Google y
-   publicación»). **Falta que el dueño lo pruebe en su Android.**
+   publicación»). Rehecha el 2026-11-20 a petición del dueño («muy poco
+   trabajada, muy marrón»): paleta neutra «Pizarra» solo en la bienvenida
+   (sea cual sea el tema), logotipo animado (barras que bajan, línea que
+   sube), eslogan «La mejora continua, en tu bolsillo.» con el verbo de
+   «Lean y Seis Sigma para …» cambiando (fijo si el teléfono pide menos
+   movimiento) y las carpetas de Drive explicadas solo tras pulsar
+   «Conectar con Google» (Google se abre con «Continuar con Google»).
+   **Falta que el dueño lo pruebe en su Android.**
 5. [ ] Maqueta del proyecto con pestañas (el dueño decide después).
 6. [ ] Propuestas de diseño común para lo exportado (hojas, Slides, PDF).
 7. [ ] «Ver más» en cada término del glosario (definición amplia, ejemplo,
@@ -750,9 +757,11 @@ Todas del 2026-11-13. No reabrirlas sin él.
 6. Abrir la app a otras personas (pedido el 2026-11-19 con la bienvenida):
    añadirlas como usuarias de prueba en Google Cloud (hasta 100; Google
    puede volver a pedir el permiso a los 7 días) o publicar la app (sin revisión de
-   Google con estos permisos). Antes de publicar para otros, la decisión
-   del dominio propio (sección 6, «Traspaso»): los datos de cada teléfono
-   van ligados a la dirección de la app.
+   Google con estos permisos). **Dominio (2026-11-20): el dueño no compra
+   dominio por ahora; la app se publica en `gembakit.github.io`.** Si algún
+   día cambia de dirección, cada usuario tendría que pasar sus datos con
+   una copia de seguridad (los datos del teléfono van ligados a la
+   dirección).
 
 ## 8. Por comprobar (PLAN.md, sección 9)
 

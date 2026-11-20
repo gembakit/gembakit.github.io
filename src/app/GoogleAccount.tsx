@@ -1,4 +1,4 @@
-import { useState, useSyncExternalStore } from 'react';
+import { useState, useSyncExternalStore, type ReactNode } from 'react';
 import { CircleAlert, CircleCheck, ExternalLink, Folder, FolderPlus, Loader2, LogIn, LogOut, ShieldCheck, WifiOff, type LucideIcon } from 'lucide-react';
 import { useI18n } from '../i18n';
 import { Button } from '../ui/Button';
@@ -29,20 +29,22 @@ export function Status({ icon: Icon, tone, text, spin }: { icon: LucideIcon; ton
   );
 }
 
-/** Las carpetas que la app crea en Drive, dibujadas como un árbol. */
-function FolderTree() {
+/** Las carpetas que la app crea en Drive, dibujadas como un árbol. `ready`: ya creadas (con su marca). */
+export function FolderTree({ ready = false }: { ready?: boolean }) {
   const { t } = useI18n();
   const d = t.data;
+  const Mark = ({ size }: { size: number }) =>
+    ready ? <CircleCheck aria-hidden size={size} className="shrink-0 text-ok" /> : <Folder aria-hidden size={size} className="shrink-0 text-muted" />;
   return (
     <div className="rounded-[14px] bg-surface-2 px-3.5 py-3 text-[14.5px]">
       <p className="flex items-center gap-2 font-semibold">
-        <Folder aria-hidden size={18} className="shrink-0 text-accent-ink" />
+        {ready ? <Mark size={18} /> : <Folder aria-hidden size={18} className="shrink-0 text-accent-ink" />}
         <span className="min-w-0">{d.folderRoot}</span>
       </p>
       <ul className="mt-1.5 ml-2 flex flex-col gap-1.5 border-l-2 border-line pl-3.5">
         {[d.folderProjects, d.folderLoose, d.folderBackups].map((n) => (
           <li key={n} className="flex items-center gap-2">
-            <Folder aria-hidden size={16} className="shrink-0 text-muted" />
+            <Mark size={16} />
             <span className="min-w-0">{n}</span>
           </li>
         ))}
@@ -52,11 +54,11 @@ function FolderTree() {
 }
 
 /**
- * Conectar, ver y desconectar la cuenta de Google. Al conectar, crea en el
- * Drive de esa cuenta la carpeta Gemba Kit con sus tres carpetas.
- * `onboarding`: dentro de la bienvenida (sin «Desconectar»).
+ * Conectar, crear las carpetas y desconectar la cuenta de Google. Lo usan la
+ * bienvenida y Ajustes. Al conectar se crea en el Drive de esa cuenta la
+ * carpeta Gemba Kit con sus tres carpetas.
  */
-export function GoogleAccountPanel({ onboarding = false }: { onboarding?: boolean }) {
+export function useGoogleConnection() {
   const { t } = useI18n();
   const a = t.account;
   const toast = useToast();
@@ -107,7 +109,8 @@ export function GoogleAccountPanel({ onboarding = false }: { onboarding?: boolea
     void disconnectGoogle().then(() => toast(a.disconnected));
   };
 
-  const connection = !online ? (
+  /** Por qué no se puede conectar ahora (sin red, cargando Google…), o null. */
+  const connection: ReactNode = !online ? (
     <Status icon={WifiOff} tone="warn" text={a.offline} />
   ) : gis === 'loading' ? (
     <Status icon={Loader2} spin tone="muted" text={a.loadingGoogle} />
@@ -115,28 +118,54 @@ export function GoogleAccountPanel({ onboarding = false }: { onboarding?: boolea
     <Status icon={CircleAlert} tone="bad" text={a.googleFailed} />
   ) : null;
 
-  const opStatus =
+  /** Cómo fue lo último que se pidió. */
+  const opStatus: ReactNode =
     op.k === 'busy' ? (
       <Status icon={Loader2} spin tone="muted" text={op.text} />
-    ) : op.k === 'done' ? (
-      <Status icon={CircleCheck} tone="ok" text={op.text} />
     ) : op.k === 'error' ? (
       <Status icon={CircleAlert} tone="bad" text={op.text} />
+    ) : op.k === 'done' ? (
+      <Status icon={CircleCheck} tone="ok" text={op.text} />
     ) : null;
 
-  if (!account) {
+  return { account, root, ready, busy, op, connect, createFolders, disconnect, connection, opStatus };
+}
+
+/** Enlace «Abrir la carpeta en Drive». */
+export function OpenFolderLink({ id, className = '' }: { id: string; className?: string }) {
+  const { t } = useI18n();
+  return (
+    <a
+      href={folderUrl(id)}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`press raised-sm inline-flex min-h-12 items-center justify-center gap-2 rounded-[15px] px-4 text-[15px] font-semibold ${className}`}
+    >
+      <ExternalLink aria-hidden size={20} strokeWidth={1.9} className="shrink-0" />
+      <span>{t.account.openFolder}</span>
+    </a>
+  );
+}
+
+/** Ajustes › Cuenta de Google: conectar, ver la cuenta, abrir su carpeta y desconectar. */
+export function GoogleAccountPanel() {
+  const { t } = useI18n();
+  const a = t.account;
+  const g = useGoogleConnection();
+
+  if (!g.account) {
     return (
       <div className="flex flex-col gap-3.5">
-        {!onboarding && <p className="text-[15px] leading-relaxed">{a.notConnected}</p>}
+        <p className="text-[15px] leading-relaxed">{a.notConnected}</p>
         <p className="text-[15px] leading-relaxed">{a.foldersIntro}</p>
         <FolderTree />
         <p className="flex items-start gap-2.5 text-[14px] leading-relaxed text-muted">
           <ShieldCheck aria-hidden size={19} className="mt-0.5 shrink-0 text-ok" />
           <span>{a.privacy}</span>
         </p>
-        {connection}
-        {opStatus}
-        <Button variant={onboarding ? 'primary' : 'secondary'} icon={LogIn} disabled={!ready} onClick={connect} className={onboarding ? 'w-full' : 'self-start'}>
+        {g.connection}
+        {g.opStatus}
+        <Button icon={LogIn} disabled={!g.ready} onClick={g.connect} className="self-start">
           {a.connect}
         </Button>
       </div>
@@ -145,37 +174,27 @@ export function GoogleAccountPanel({ onboarding = false }: { onboarding?: boolea
 
   return (
     <div className="flex flex-col gap-3.5">
-      <Status icon={CircleCheck} tone="ok" text={a.connected(account)} />
-      {root ? (
-        <a
-          href={folderUrl(root)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="press raised-sm inline-flex min-h-12 items-center justify-center gap-2 self-start rounded-[15px] px-4 text-[15px] font-semibold"
-        >
-          <ExternalLink aria-hidden size={20} strokeWidth={1.9} className="shrink-0" />
-          <span>{a.openFolder}</span>
-        </a>
+      <Status icon={CircleCheck} tone="ok" text={a.connected(g.account)} />
+      {g.root ? (
+        <OpenFolderLink id={g.root} className="self-start" />
       ) : (
-        root === null && (
+        g.root === null && (
           <>
             <p className="text-[15px] leading-relaxed">{a.noFolders}</p>
-            {connection}
-            <Button icon={FolderPlus} disabled={!ready} onClick={createFolders} className="self-start">
+            {g.connection}
+            <Button icon={FolderPlus} disabled={!g.ready} onClick={g.createFolders} className="self-start">
               {a.createFolders}
             </Button>
           </>
         )
       )}
-      {opStatus}
-      {!onboarding && (
-        <div className="flex flex-col gap-1.5 border-t border-line pt-3">
-          <Button variant="ghost" icon={LogOut} onClick={disconnect} disabled={busy} className="self-start px-0">
-            {a.disconnect}
-          </Button>
-          <p className="text-[13.5px] leading-relaxed text-muted">{a.disconnectHint}</p>
-        </div>
-      )}
+      {g.opStatus}
+      <div className="flex flex-col gap-1.5 border-t border-line pt-3">
+        <Button variant="ghost" icon={LogOut} onClick={g.disconnect} disabled={g.busy} className="self-start px-0">
+          {a.disconnect}
+        </Button>
+        <p className="text-[13.5px] leading-relaxed text-muted">{a.disconnectHint}</p>
+      </div>
     </div>
   );
 }

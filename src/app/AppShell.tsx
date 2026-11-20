@@ -79,11 +79,7 @@ export function AppShell({ persisted }: { persisted: boolean | null }) {
 
   if (firstRun || section === 'bienvenida') {
     return (
-      <div className="min-h-dvh bg-bg text-text">
-        <main>
-          <WelcomeScreen onDone={endWelcome} />
-        </main>
-      </div>
+      <WelcomeScreen onDone={endWelcome} />
     );
   }
 

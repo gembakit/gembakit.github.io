@@ -142,7 +142,8 @@ const SHOTS = [
   { name: 'ajustes', hash: '#/ajustes', full: true },
   { name: 'datos', hash: '#/ajustes/datos', full: true },
   { name: 'datos-descargada', hash: '#/ajustes/datos', click: /^Descargar copia$/, full: true, only: 'light' },
-  { name: 'bienvenida', hash: '#/bienvenida', full: true },
+  { name: 'bienvenida', hash: '#/bienvenida', full: true, wait: 2600 },
+  { name: 'bienvenida-conectar', hash: '#/bienvenida', click: /^Conectar con Google$/, full: true, wait: 800 },
   { name: 'prueba-google', hash: '#/prueba-google', full: true },
   { name: 'capturar', hash: '#/proyectos', click: /^(Capturar|Capture)$/, byLabel: true },
 ];
@@ -207,6 +208,8 @@ for (const mode of ['light', 'dark']) {
       if (!ok) problems.push(`${mode}/${s.name}: no encontré el botón ${re}`);
       await new Promise((r) => setTimeout(r, 400));
     }
+    // Esperar a que terminen las animaciones de entrada (bienvenida).
+    if (s.wait) await new Promise((r) => setTimeout(r, s.wait));
     // Llevar a la vista un bloque intermedio (por su título) para revisarlo.
     if (s.scrollTo) {
       const ok = await page.evaluate((text) => {

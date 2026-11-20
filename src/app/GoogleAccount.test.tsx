@@ -45,8 +45,10 @@ const folders = () => [...google.files.values()].filter((f) => f.mimeType === 'a
 test('bienvenida la primera vez: «Seguir sin cuenta» lleva a Proyectos y no vuelve a salir', async () => {
   const user = userEvent.setup();
   const { unmount } = render(<App />);
-  expect(await screen.findByRole('heading', { level: 1, name: /Te damos la bienvenida|Welcome/ })).toBeInTheDocument();
+  expect(await screen.findByRole('heading', { level: 1, name: /La mejora continua, en tu bolsillo|Continuous improvement, in your pocket/ })).toBeInTheDocument();
   expect(screen.queryByRole('navigation')).toBeNull();
+  // Las carpetas de Drive solo se explican al pulsar «Conectar con Google».
+  expect(screen.queryByText(/Copias de seguridad|Backups/)).toBeNull();
   await user.click(screen.getByRole('button', { name: /Seguir sin cuenta|Continue without an account/ }));
   expect(await screen.findByRole('heading', { level: 1, name: /Proyectos|Projects/ })).toBeInTheDocument();
   unmount();
@@ -58,6 +60,10 @@ test('conectar en la bienvenida crea Gemba Kit con sus tres carpetas en el Drive
   const user = userEvent.setup();
   render(<App />);
   await user.click(await screen.findByRole('button', { name: /Conectar con Google|Connect with Google/ }));
+  // Primero explica qué carpetas se crean; Google se abre con «Continuar con Google».
+  expect(screen.getByText(/^(Copias de seguridad|Backups)$/)).toBeInTheDocument();
+  expect(folders()).toHaveLength(0);
+  await user.click(screen.getByRole('button', { name: /Continuar con Google|Continue with Google/ }));
   expect(await screen.findByText(/Carpetas listas en tu Drive|Folders ready in your Drive/)).toBeInTheDocument();
   expect(screen.getByText(/ana@example\.com/)).toBeInTheDocument();
   const all = folders();
