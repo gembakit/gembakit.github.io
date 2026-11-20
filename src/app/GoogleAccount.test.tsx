@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { App } from '../App';
 import { db } from '../data/db';
@@ -85,7 +85,8 @@ test('Ajustes: desconectar retira el permiso y otra cuenta tiene sus propias car
 
   await user.click(screen.getByRole('button', { name: /^(Desconectar|Disconnect)$/ }));
   expect(await screen.findByText(/Sin conectar|Not connected/)).toBeInTheDocument();
-  expect(revoked).toEqual(['T-ana@example.com']);
+  // «Sin conectar» sale en cuanto se olvida la cuenta; las carpetas y el permiso se retiran justo después.
+  await waitFor(() => expect(revoked).toEqual(['T-ana@example.com']));
   expect(await db.settings.get(FOLDER_KEYS.root)).toBeUndefined();
 
   // Otra cuenta en el mismo teléfono: Drive distinto, carpetas nuevas.
