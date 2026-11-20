@@ -215,6 +215,43 @@ Todas en el Android, después de pulsar **Actualizar**:
 8. Si el almacenamiento vuelve a quedarse pegado: Ajustes → Diagnóstico →
    copiar y pegarlo en el chat.
 
+### Plan hasta terminar la app (propuesto el 2026-11-20, pendiente de aprobar)
+
+Ideas para ir más rápido: piezas comunes antes que herramientas (formato de
+ordenador, motor de gráficos, proyecto en Drive); una ficha por bloque, no
+por herramienta; las pruebas del dueño en tandas, con una lista, al cerrar
+cada bloque; el glosario «Ver más» por tandas mientras el dueño prueba.
+
+0. **Cerrar lo abierto:** sesión de pruebas del dueño (lista de arriba),
+   arreglar lo que salga, retirar la pantalla de prueba de Google tras el
+   2026-11-21, causa del atasco del almacenamiento si vuelve.
+1. **Base para todo lo que falta:** formato de ordenador para toda la app;
+   proyectos separados por cuenta; maqueta y construcción de la pantalla del
+   proyecto con pestañas (Fases, Hoja, Acciones, Informe); propuestas del
+   diseño común de lo exportado.
+2. **Gráficos y estadística (Fases 2 y 3):** motor de gráficos común
+   (tocables), descriptiva con histograma, Pareto, corrida, «Evolución» con
+   hitos, capacidad (Cp, Cpk, Pp, Ppk), cartas I-MR y X-barra R (tabla de
+   constantes validada por el dueño antes).
+3. **El proyecto en Drive:** sincronizar entre aparatos (PLAN.md 4.4) con
+   papelera; después el **invitado que solo ve**. Los **editores** (pedido
+   del dueño el 2026-11-20, «todavía no») usarían la misma pieza: quedan
+   para después.
+4. **Captura en planta (Fase 4):** botón Capturar, cronómetro de ciclos,
+   hoja de conteo, recorrido de desperdicios con fotos, auditoría 5S;
+   archivar proyecto en Drive cuando haya fotos.
+5. **Causa y acción (Fase 5):** 5 porqués, espina de pescado, acciones, A3,
+   evento Kaizen, plan de control.
+6. **Proyecto completo (Fase 6):** lo que falta para cerrar cada fase y el
+   asistente «¿Qué necesitas hacer?», plantillas propias, visor de la hoja en
+   la app, importar pestañas (datos por origen, versiones, sugerencias de
+   herramienta), informe PDF en la app, presentación de Google, pestaña
+   «Contexto» y «Copiar contexto para IA», imagen PNG. Excel .xlsx sigue en
+   espera. Referencia: fórmulas y árboles de decisión.
+7. **Publicar:** página de privacidad en el mismo sitio, sacar la app del
+   modo pruebas, probar con otra cuenta, comprobar la facturación, prueba
+   final en Android y ordenador (también en modo avión).
+
 ### Siguiente paso (el dueño elige, después de las pruebas)
 
 - Arreglar lo que salga de las pruebas, antes de nada.
@@ -779,7 +816,9 @@ Todas del 2026-11-13. No reabrirlas sin él.
    (sin cambiar ni tomar datos): el dueño lo comparte por correo, se guarda
    como archivo en su Drive, y el invitado lo abre en su app con la ventana
    de Google para elegir archivos (necesaria con el permiso `drive.file`).
-   Trabajar varias personas a la vez, más adelante.
+   Trabajar varias personas a la vez, más adelante. **Editores** (el dueño
+   asigna quién puede cambiar su proyecto): lo quiere «pero no aún»; tenerlo
+   en cuenta al diseñar el invitado para que se añada sin rehacer.
 
 ## 8. Por comprobar (PLAN.md, sección 9)
 
