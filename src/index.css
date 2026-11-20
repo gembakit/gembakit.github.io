@@ -186,8 +186,28 @@ body {
 .wk-in {
   animation: wk-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
+/* Fotos de fondo: se acercan despacio mientras se ven y se funden al cambiar; la raya de cada foto se llena. */
+@keyframes wk-zoom {
+  from { transform: scale(1.02); }
+  to { transform: scale(1.12); }
+}
+@keyframes wk-fill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.wk-slide {
+  transition: opacity 1.6s ease;
+}
+.wk-slide-on img {
+  animation: wk-zoom 9s ease-out both;
+}
+.wk-fill {
+  transform-origin: left;
+  animation: wk-fill linear both;
+}
 @media (prefers-reduced-motion: reduce) {
   .wk-pulse { animation: none; }
+  .wk-slide-on img { animation: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

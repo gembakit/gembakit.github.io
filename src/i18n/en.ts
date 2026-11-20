@@ -1155,6 +1155,7 @@ export const en: Messages = {
     allCategories: 'All',
   },
   account: {
+    eyebrow: 'Made for the shop floor',
     slogan: 'Continuous improvement, in your pocket.',
     verbsLead: 'Lean and Six Sigma to',
     verbs: ['measure', 'calculate', 'analyze', 'document', 'improve'],

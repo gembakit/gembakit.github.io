@@ -159,7 +159,17 @@ Plan acordado ese día (un paso cada vez, parar tras cada uno):
    «Lean y Seis Sigma para …» cambiando (fijo si el teléfono pide menos
    movimiento) y las carpetas de Drive explicadas solo tras pulsar
    «Conectar con Google» (Google se abre con «Continuar con Google»).
-   **Falta que el dueño lo pruebe en su Android.**
+   Segunda vuelta el mismo día («sigue muy básica», quiere efecto «wow» con
+   fotos grandes, y formato de ordenador en el ordenador y de teléfono en el
+   teléfono): tres fotos de planta a pantalla completa que se funden cada
+   7 s y se acercan despacio (`public/welcome/`, licencia de Unsplash; en
+   teléfono, recorte vertical más ligero; no van en la copia sin conexión),
+   velo oscuro, «Pizarra» en oscuro durante la bienvenida (`setPaintAs` con
+   modo). Teléfono: texto y botones abajo, como portada; la tarjeta de
+   conectar ocupa la pantalla. Ordenador: texto grande a la izquierda y la
+   tarjeta de conectar a la derecha. Capturas: `scripts/welcome-shots.mjs`
+   (320, 390, tableta, 1366 y 1920, claro y oscuro).
+   **Falta que el dueño lo pruebe en su Android y en el ordenador.**
 5. [ ] Maqueta del proyecto con pestañas (el dueño decide después).
 6. [ ] Propuestas de diseño común para lo exportado (hojas, Slides, PDF).
 7. [ ] «Ver más» en cada término del glosario (definición amplia, ejemplo,
@@ -762,6 +772,14 @@ Todas del 2026-11-13. No reabrirlas sin él.
    día cambia de dirección, cada usuario tendría que pasar sus datos con
    una copia de seguridad (los datos del teléfono van ligados a la
    dirección).
+7. Pedidos del 2026-11-20, por hacer en pasos separados (el dueño aprobó el
+   orden): **formato de ordenador para toda la app** (hoy es de teléfono
+   ensanchado), **proyectos separados por cuenta** en el mismo aparato y,
+   como primer paso de compartir, **un invitado que solo ve** un proyecto
+   (sin cambiar ni tomar datos): el dueño lo comparte por correo, se guarda
+   como archivo en su Drive, y el invitado lo abre en su app con la ventana
+   de Google para elegir archivos (necesaria con el permiso `drive.file`).
+   Trabajar varias personas a la vez, más adelante.
 
 ## 8. Por comprobar (PLAN.md, sección 9)
 
@@ -770,7 +788,7 @@ de Google, que se resuelve con la prueba de viabilidad. Licencias revisadas
 (leídas de cada package.json el 2026-11-13): React, React DOM, Vite,
 Tailwind, vite-plugin-pwa y workbox-window (MIT), Dexie (Apache-2.0),
 lucide-react (ISC), fuentes Inter e Inter Tight (OFL-1.1, permite incluirlas
-en la app). Añadidas después: jStat 1.9.6 (MIT) y fflate 0.8.3 (MIT). Ninguna obliga a publicar el código bajo sus condiciones. Revisar
+en la app). Añadidas después: jStat 1.9.6 (MIT) y fflate 0.8.3 (MIT). Fotos de la bienvenida (2026-11-20): Unsplash, licencia libre sin obligación de citar (TruckRun XBWF6_TEsFM; Homa Appliances 0V9Ua2YsXfE y pWUyHVJgLhg). Ninguna obliga a publicar el código bajo sus condiciones. Revisar
 cada dependencia nueva antes de añadirla.
 
 ## 9. Riesgos que hay que vigilar

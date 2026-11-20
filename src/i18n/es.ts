@@ -1160,6 +1160,7 @@ export const es = {
     allCategories: 'Todas',
   },
   account: {
+    eyebrow: 'Hecha para la planta',
     slogan: 'La mejora continua, en tu bolsillo.',
     verbsLead: 'Lean y Seis Sigma para',
     verbs: ['medir', 'calcular', 'analizar', 'documentar', 'mejorar'],
