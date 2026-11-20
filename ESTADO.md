@@ -226,7 +226,9 @@ cada bloque; el glosario «Ver más» por tandas mientras el dueño prueba.
    arreglar lo que salga, retirar la pantalla de prueba de Google tras el
    2026-11-21, causa del atasco del almacenamiento si vuelve.
 1. **Base para todo lo que falta:** formato de ordenador para toda la app;
-   proyectos separados por cuenta; maqueta y construcción de la pantalla del
+   proyectos separados por cuenta; botón **«Salir»** (pedido del dueño el
+   2026-11-20: cierra la sesión de Google y lleva a la bienvenida; va con la
+   separación por cuenta); maqueta y construcción de la pantalla del
    proyecto con pestañas (Fases, Hoja, Acciones, Informe); propuestas del
    diseño común de lo exportado.
 2. **Gráficos y estadística (Fases 2 y 3):** motor de gráficos común
