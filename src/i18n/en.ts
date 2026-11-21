@@ -1,11 +1,12 @@
 import type { Messages } from './types';
 import { corridaEn, dataColumnEn, descriptivaEn, paretoEn } from './tools/phase2';
 import { capacidadEn, cartasEn } from './tools/phase3';
+import { auditoria5sEn, captureEn, conteoEn, cronometroEn, desperdiciosEn } from './tools/phase4';
 import { a3En, accionesEn, espinaEn, kaizenEn, planControlEn, porquesEn } from './tools/phase5';
 
 export const en: Messages = {
   dataColumn: dataColumnEn,
-  headlines: { mean: 'Mean', vital: 'Vital few', median: 'Median', cpk: 'Cpk', ppk: 'Ppk', signals: 'Signals' },
+  headlines: { mean: 'Mean', vital: 'Vital few', median: 'Median', cpk: 'Cpk', ppk: 'Ppk', signals: 'Signals', cycle: 'Average cycle', total: 'Total', waste: 'Wastes', score5s: '5S' },
   app: {
     name: 'Gemba Kit',
   },
@@ -250,6 +251,10 @@ export const en: Messages = {
     kaizen: kaizenEn,
     plancontrol: planControlEn,
     acciones: accionesEn,
+    cronometro: cronometroEn,
+    conteo: conteoEn,
+    desperdicios: desperdiciosEn,
+    auditoria5s: auditoria5sEn,
     title: 'Tools',
     search: 'Search tools',
     noResults: (q) => `No tool matches “${q}”.`,
@@ -1210,10 +1215,7 @@ export const en: Messages = {
     subheading: (version, date) => `Created with Gemba Kit ${version} on ${date}`,
     readingNote: '“How to read it” describes the data as exported; it does not change if you edit the data.',
   },
-  capture: {
-    title: 'Capture',
-    body: 'Here you will choose the project and what to capture: cycle timer, check sheet, waste walk with photos or 5S audit. Arrives in phase 4.',
-  },
+  capture: captureEn,
   recipes: {
     title: 'My lines',
     count: (n) => (n === 1 ? '1 recipe' : `${n} recipes`),

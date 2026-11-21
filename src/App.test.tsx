@@ -489,3 +489,45 @@ test('Acciones: se añaden en el proyecto y la lista de proyectos avisa de las v
   await screen.findByRole('heading', { level: 1, name: /^(Proyectos|Projects)$/ });
   expect((await screen.findAllByText(/^(1 vencida|1 overdue)$/)).length).toBeGreaterThan(0);
 });
+
+test('Capturar: el botón central ofrece las cuatro capturas y abre el cronómetro', async () => {
+  const user = userEvent.setup();
+  localStorage.removeItem('gk.crono');
+  render(<App />);
+  await user.click((await screen.findAllByRole('button', { name: /^(Capturar|Capture)$/ }))[0]!);
+  const dialog = await screen.findByRole('dialog');
+  for (const name of [/Cronómetro de ciclos|Cycle stopwatch/, /Hoja de conteo|Tally sheet/, /Recorrido de desperdicios|Waste walk/, /Auditoría 5S|5S audit/]) expect(within(dialog).getByRole('button', { name })).toBeInTheDocument();
+  await user.click(within(dialog).getByRole('button', { name: /Cronómetro de ciclos|Cycle stopwatch/ }));
+  // Empezar, dos ciclos y parar: tres ciclos apuntados.
+  await user.click(await screen.findByRole('button', { name: /^(Empezar|Start)$/ }));
+  await user.click(screen.getByRole('button', { name: /^(Ciclo|Cycle)$/ }));
+  await user.click(screen.getByRole('button', { name: /^(Ciclo|Cycle)$/ }));
+  await user.click(screen.getByRole('button', { name: /^(Parar|Stop)$/ }));
+  expect(await screen.findByText(/^(3 ciclos|3 cycles)$/)).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /^(Seguir|Resume)$/ })).toBeInTheDocument();
+  localStorage.removeItem('gk.crono');
+});
+
+test('Hoja de conteo: cada toque suma y el Pareto sale al momento', async () => {
+  const user = userEvent.setup();
+  localStorage.removeItem('gk.conteo');
+  window.location.hash = '#/herramientas/conteo';
+  render(<App />);
+  const plus = await screen.findByRole('button', { name: /^(Sumar uno a Categoría A|Add one to Category A)$/ });
+  await user.click(plus);
+  await user.click(plus);
+  await user.click(screen.getByRole('button', { name: /^(Sumar uno a Otros|Add one to Other)$/ }));
+  expect(await screen.findByText(/^(Total|Total): 3$/)).toBeInTheDocument();
+  expect(screen.getByRole('img', { name: /^Pareto/ })).toBeInTheDocument();
+  localStorage.removeItem('gk.conteo');
+});
+
+test('Auditoría 5S: el ejemplo da 64 % y marca Limpiar como la más floja', async () => {
+  const user = userEvent.setup();
+  window.location.hash = '#/herramientas/auditoria5s';
+  render(<App />);
+  await user.click(await screen.findByRole('button', { name: /Cargar ejemplo|Load example/ }));
+  await user.click(await screen.findByRole('button', { name: /^(Puesto de encajonado|Case packing station)/ }));
+  expect(await screen.findByText(/^64\s%$/)).toBeInTheDocument();
+  expect(screen.getByText(/^(Mejorable|Needs work)$/)).toBeInTheDocument();
+});

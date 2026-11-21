@@ -42,7 +42,8 @@ export const GUIDE: readonly GuideTopic[] = [
       body: [
         'Abajo tienes la barra con Proyectos (el inicio), Herramientas, el botón central Capturar, Referencia y Ajustes. En el ordenador, la misma barra está a la izquierda.',
         'Para volver atrás desde una herramienta, usa la flecha de arriba a la izquierda o el botón Atrás del teléfono.',
-        'Las herramientas se pueden usar sin guardar. Para guardar un resultado, va dentro de un proyecto (ver «Proyectos y mediciones»). La captura en planta llega más adelante.',
+        'Las herramientas se pueden usar sin guardar. Para guardar un resultado, va dentro de un proyecto (ver «Proyectos y mediciones»).',
+        'El botón central «+» es para capturar en planta: eliges el proyecto (sale el último que usaste) y qué capturas: cronómetro de ciclos, hoja de conteo, recorrido de desperdicios con fotos o auditoría 5S. Lo que estás capturando se guarda a cada toque: si la app se cierra, sigue donde estaba.',
       ],
     },
     en: {
@@ -50,7 +51,8 @@ export const GUIDE: readonly GuideTopic[] = [
       body: [
         'At the bottom you have the bar with Projects (the home screen), Tools, the central Capture button, Reference and Settings. On a computer, the same bar is on the left.',
         'To go back from a tool, use the arrow at the top left or the phone’s Back button.',
-        'The tools can be used without saving. To save a result, it goes inside a project (see “Projects and measurements”). Shop-floor capture arrives later.',
+        'The tools can be used without saving. To save a result, it goes inside a project (see “Projects and measurements”).',
+        'The central “+” button is for capturing on the shop floor: you choose the project (the last one you used comes up) and what you capture: cycle stopwatch, tally sheet, waste walk with photos or 5S audit. What you are capturing is saved with every tap: if the app closes, it carries on where it was.',
       ],
     },
   },

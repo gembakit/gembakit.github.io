@@ -1,7 +1,6 @@
 import { Suspense, useCallback, useState } from 'react';
-import { Timer } from 'lucide-react';
 import { useI18n } from '../i18n';
-import { Sheet } from '../ui/Sheet';
+import { CaptureSheet } from './CaptureSheet';
 import { Screen, DetailHeader } from '../ui/Layout';
 import { findTool } from '../tools/registry';
 import { BottomNav, SideNav } from './Nav';
@@ -64,7 +63,6 @@ function MeasurementRoute({ projectId, id }: { projectId: string; id: string }) 
 }
 
 export function AppShell({ persisted }: { persisted: boolean | null }) {
-  const { t } = useI18n();
   const [section = 'proyectos', sub, kind, third] = useRoute();
   useAutoSync();
   useDeviceSync();
@@ -106,14 +104,7 @@ export function AppShell({ persisted }: { persisted: boolean | null }) {
         {screen}
       </main>
       <BottomNav active={navSection} onCapture={openCapture} />
-      <Sheet open={capture} onClose={closeCapture} title={t.capture.title}>
-        <div className="flex items-start gap-3">
-          <span className="grid size-12 shrink-0 place-items-center rounded-[14px] bg-soft text-accent-ink">
-            <Timer aria-hidden size={22} />
-          </span>
-          <p className="text-[15.5px] leading-relaxed">{t.capture.body}</p>
-        </div>
-      </Sheet>
+      <CaptureSheet open={capture} onClose={closeCapture} />
     </div>
   );
 }

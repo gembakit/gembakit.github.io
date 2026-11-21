@@ -314,8 +314,12 @@ Orden de trabajo y estado:
    `textSections` y se salta las secciones de números vacías. Acciones en
    cada proyecto (`src/projects/Actions.tsx`, tabla `actions` con quién,
    fecha, estado, nota) y «lo que vence» en la lista de proyectos.
-7. [ ] Fase 4: captura en planta (cronómetro, conteo, desperdicios con
-   fotos, auditoría 5S), botón Capturar.
+7. [x] Fase 4: captura en planta (`docs/fichas/fase-4.md`): cronómetro de
+   ciclos, hoja de conteo, recorrido de desperdicios con fotos (reducidas a
+   1280 px en `src/ui/photo.ts`, dentro de la medición) y auditoría 5S;
+   botón central «Capturar» (`src/app/CaptureSheet.tsx`: proyecto, el
+   último usado, y qué capturar). El cronómetro y el conteo en curso se
+   guardan en el teléfono a cada toque.
    [x] Sincronización entre aparatos (PLAN.md 4.4): `src/data/merge.ts`
    (foto de todos los registros, combina registro a registro, gana el más
    reciente, conmutativa e idempotente, con pruebas al azar),

@@ -2,12 +2,13 @@
 // las mismas claves (TypeScript y una prueba lo comprueban).
 import { corridaEs, dataColumnEs, descriptivaEs, paretoEs } from './tools/phase2';
 import { capacidadEs, cartasEs } from './tools/phase3';
+import { auditoria5sEs, captureEs, conteoEs, cronometroEs, desperdiciosEs } from './tools/phase4';
 import { a3Es, accionesEs, espinaEs, kaizenEs, planControlEs, porquesEs } from './tools/phase5';
 
 export const es = {
   dataColumn: dataColumnEs,
   /** Nombre del resultado principal guardado de las herramientas nuevas. */
-  headlines: { mean: 'Media', vital: 'Pocos vitales', median: 'Mediana', cpk: 'Cpk', ppk: 'Ppk', signals: 'Señales' } as Record<string, string>,
+  headlines: { mean: 'Media', vital: 'Pocos vitales', median: 'Mediana', cpk: 'Cpk', ppk: 'Ppk', signals: 'Señales', cycle: 'Ciclo medio', total: 'Total', waste: 'Desperdicios', score5s: '5S' } as Record<string, string>,
   app: {
     name: 'Gemba Kit',
   },
@@ -252,6 +253,10 @@ export const es = {
     kaizen: kaizenEs,
     plancontrol: planControlEs,
     acciones: accionesEs,
+    cronometro: cronometroEs,
+    conteo: conteoEs,
+    desperdicios: desperdiciosEs,
+    auditoria5s: auditoria5sEs,
     title: 'Herramientas',
     search: 'Buscar herramienta',
     noResults: (q: string) => `Ninguna herramienta coincide con «${q}».`,
@@ -1218,10 +1223,7 @@ export const es = {
     subheading: (version: string, date: string) => `Creada con Gemba Kit ${version} el ${date}`,
     readingNote: '«Cómo leerlo» describe los datos tal como se exportaron; no cambia si editas los datos.',
   },
-  capture: {
-    title: 'Capturar',
-    body: 'Aquí elegirás el proyecto y qué capturar: cronómetro de ciclos, hoja de conteo, recorrido con fotos o auditoría 5S. Llega en la fase 4.',
-  },
+  capture: captureEs,
   recipes: {
     title: 'Mis líneas',
     count: (n: number) => (n === 1 ? '1 receta' : `${n} recetas`),
