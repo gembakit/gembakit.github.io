@@ -324,6 +324,7 @@ export const GUIDE: readonly GuideTopic[] = [
       body: [
         'Las siglas subrayadas se pueden tocar: se abre su definición sin salir de la pantalla. En los resultados, además, se ve de dónde sale cada valor con tus números.',
         'Todos los términos están en el glosario, en esta misma pantalla de Referencia: toca «Glosario» para abrirlo. Tiene buscador: busca por la sigla, por el nombre o por una palabra de la definición. La guía y el glosario empiezan cerrados para no llenar la pantalla; se quedan como los dejes mientras la app esté abierta.',
+        'En Referencia también están «¿Qué herramienta uso?» (eliges lo que quieres conseguir y te enseña las herramientas para eso) y «Fórmulas» (las fórmulas de cada herramienta de cálculo, con un botón para abrirla).',
       ],
     },
     en: {
@@ -331,6 +332,7 @@ export const GUIDE: readonly GuideTopic[] = [
       body: [
         'Underlined acronyms can be tapped: their definition opens without leaving the screen. In results, you also see where each value comes from, with your numbers.',
         'Every term is in the glossary, on this same Reference screen: tap “Glossary” to open it. It has a search box: search by acronym, by name or by a word in the definition. The guide and the glossary start closed so the screen is not crowded; they stay as you leave them while the app is open.',
+        'Reference also has “Which tool do I use?” (you choose what you want to achieve and it shows the tools for it) and “Formulas” (the formulas of each calculation tool, with a button to open it).',
       ],
     },
   },

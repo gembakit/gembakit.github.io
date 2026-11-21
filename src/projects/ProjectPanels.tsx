@@ -45,13 +45,13 @@ export function ProjectTabs({ value, onChange }: { value: ProjectTab; onChange: 
   );
 }
 
-/** Abre una herramienta con este proyecto ya elegido para guardar. */
-async function openTool(projectId: string, toolId: string) {
-  await rememberLast(projectId, {});
+/** Abre una herramienta; con proyecto, lo deja elegido para guardar. */
+async function openTool(projectId: string | undefined, toolId: string) {
+  if (projectId) await rememberLast(projectId, {});
   navigate(`/herramientas/${toolId}`);
 }
 
-function ToolChip({ projectId, toolId }: { projectId: string; toolId: string }) {
+export function ToolChip({ projectId, toolId }: { projectId?: string; toolId: string }) {
   const { t } = useI18n();
   const tool = findTool(toolId);
   if (!tool) return null;
@@ -107,7 +107,6 @@ export function PhasePanel({ project }: { project: Project }) {
 export function AssistantPanel({ projectId }: { projectId: string }) {
   const { t } = useI18n();
   const x = t.projectPlus;
-  const [open, setOpen] = useState<string | null>(null);
   return (
     <Card>
       <div className="flex items-center gap-2.5">
@@ -115,6 +114,17 @@ export function AssistantPanel({ projectId }: { projectId: string }) {
         <h2 className="font-display text-[18px] font-bold">{x.assistant}</h2>
       </div>
       <p className="text-[14px] leading-relaxed text-muted">{x.assistantHint}</p>
+      <NeedsList projectId={projectId} />
+    </Card>
+  );
+}
+
+/** Lista plegable de necesidades, cada una con sus herramientas (también en Referencia). */
+export function NeedsList({ projectId }: { projectId?: string }) {
+  const { t } = useI18n();
+  const x = t.projectPlus;
+  const [open, setOpen] = useState<string | null>(null);
+  return (
       <ul className="flex flex-col">
         {NEEDS.map((n) => (
           <li key={n.key} className="border-b border-line last:border-b-0">
@@ -132,7 +142,6 @@ export function AssistantPanel({ projectId }: { projectId: string }) {
           </li>
         ))}
       </ul>
-    </Card>
   );
 }
 

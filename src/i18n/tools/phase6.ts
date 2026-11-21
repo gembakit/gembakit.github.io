@@ -65,6 +65,14 @@ export const projectPlusEs = {
     contextIntro: 'Contexto de un proyecto de mejora continua exportado de Gemba Kit. Responde a mis preguntas con estos datos.',
     measuredOn: (date: string) => `medida el ${date}`,
   },
+  ref: {
+    decide: '¿Qué herramienta uso?',
+    decideCount: (n: number) => `${n} situaciones`,
+    decideHint: 'Elige lo que quieres conseguir y abre la herramienta. Dentro de un proyecto, el mismo asistente está en la pestaña Fases y guarda en ese proyecto.',
+    formulas: 'Fórmulas',
+    formulasCount: (n: number) => (n === 1 ? '1 herramienta' : `${n} herramientas`),
+    formulasMore: 'Dentro de cada herramienta, toca cualquier resultado para ver su fórmula con tus números.',
+  },
 };
 
 export const projectPlusEn: Widen<typeof projectPlusEs> = {
@@ -128,5 +136,13 @@ export const projectPlusEn: Widen<typeof projectPlusEs> = {
     actionLine: (who, due, status) => [who, due, status].filter(Boolean).join(' · '),
     contextIntro: 'Context of a continuous improvement project exported from Gemba Kit. Answer my questions using these data.',
     measuredOn: (date) => `measured on ${date}`,
+  },
+  ref: {
+    decide: 'Which tool do I use?',
+    decideCount: (n) => `${n} situations`,
+    decideHint: 'Choose what you want to achieve and open the tool. Inside a project, the same assistant is in the Phases tab and saves to that project.',
+    formulas: 'Formulas',
+    formulasCount: (n) => (n === 1 ? '1 tool' : `${n} tools`),
+    formulasMore: 'Inside each tool, tap any result to see its formula with your numbers.',
   },
 };

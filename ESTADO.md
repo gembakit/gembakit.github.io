@@ -335,7 +335,11 @@ Orden de trabajo y estado:
    una deja el proyecto elegido) y el asistente «¿Qué necesitas hacer?». En
    Informe, «Crear PDF del proyecto» y «Copiar contexto para IA»
    (`src/projects/report.ts`, conclusiones sacadas de cada herramienta).
-9. [ ] Formato de ordenador; Referencia con fórmulas y árboles de decisión.
+9. [x] Referencia: «¿Qué herramienta uso?» (las mismas necesidades del
+   asistente, sin proyecto) y «Fórmulas» (las de cada herramienta de
+   cálculo, sacadas de sus textos, con botón para abrirla). Revisado el
+   formato de ordenador (1280 px): herramientas en dos columnas, proyecto en
+   columna centrada; sin cortes. Revisado a 320 px en claro y oscuro.
 
 Preguntas de producto para el final:
 - Anderson-Darling: no encontré un caso publicado con el valor p ya

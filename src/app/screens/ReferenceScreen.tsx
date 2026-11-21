@@ -1,13 +1,25 @@
 import { useId, useMemo, useState, type ReactNode } from 'react';
-import { BookA, BookOpenText, ChevronDown, Factory, Search, type LucideIcon } from 'lucide-react';
+import { BookA, BookOpenText, ChevronDown, Factory, Search, Signpost, Sigma, type LucideIcon } from 'lucide-react';
 import { useI18n } from '../../i18n';
 import { BigHeader, Screen } from '../../ui/Layout';
 import { GLOSSARY_CATEGORIES, normalize, searchGlossary, type GlossaryCategory } from '../../reference/glossary';
 import { guideFor } from '../../reference/guide';
 import { MyLines, useRecipeCount } from '../../recipes/RecipeUI';
+import { NeedsList, ToolChip } from '../../projects/ProjectPanels';
+import { NEEDS } from '../../projects/phaseGuide';
+import { TOOLS } from '../../tools/registry';
 
 // Qué bloques dejó abiertos el usuario: se recuerda mientras la app está abierta.
-const remembered = { guide: false, glossary: false, lines: false };
+const remembered = { guide: false, glossary: false, lines: false, decide: false, formulas: false };
+
+/** Fórmulas de cada herramienta que tiene cálculo (las de documento no tienen). */
+function toolFormulas(tools: unknown): { id: string; lines: string[] }[] {
+  const all = tools as Record<string, { formula?: unknown }>;
+  return TOOLS.flatMap((tool) => {
+    const f = all[tool.id]?.formula;
+    return Array.isArray(f) && f.length > 0 ? [{ id: tool.id, lines: f as string[] }] : [];
+  });
+}
 
 /** Bloque plegable de la pantalla (Guía de uso, Glosario): cerrado por defecto. */
 function Block({ icon: Icon, title, count, open, onToggle, children }: { icon: LucideIcon; title: string; count: string; open: boolean; onToggle: () => void; children: ReactNode }) {
@@ -108,10 +120,43 @@ export function ReferenceScreen() {
   const [openLines, setOpenLines] = useState(remembered.lines);
   const toggleLines = () => setOpenLines((v) => (remembered.lines = !v));
   const recipeCount = useRecipeCount();
+  const [openDecide, setOpenDecide] = useState(remembered.decide);
+  const toggleDecide = () => setOpenDecide((v) => (remembered.decide = !v));
+  const [openFormulas, setOpenFormulas] = useState(remembered.formulas);
+  const toggleFormulas = () => setOpenFormulas((v) => (remembered.formulas = !v));
+  const [openTools, toggleTool] = useOpenSet();
+  const formulas = useMemo(() => toolFormulas(t.tools), [t]);
+  const r = t.projectPlus.ref;
 
   return (
     <Screen>
       <BigHeader title={t.reference.title} />
+
+      <Block icon={Signpost} title={r.decide} count={r.decideCount(NEEDS.length)} open={openDecide} onToggle={toggleDecide}>
+        <p className="border-b border-line px-4 py-3 text-[14.5px] leading-relaxed text-muted">{r.decideHint}</p>
+        <div className="px-4">
+          <NeedsList />
+        </div>
+      </Block>
+
+      <Block icon={Sigma} title={r.formulas} count={r.formulasCount(formulas.length)} open={openFormulas} onToggle={toggleFormulas}>
+        {formulas.map((f) => {
+          const tool = TOOLS.find((x) => x.id === f.id)!;
+          return (
+            <Fold key={f.id} title={tool.text(t).name} open={openTools.has(f.id)} onToggle={() => toggleTool(f.id)}>
+              <ul className="flex flex-col gap-1.5 rounded-[14px] bg-surface-2 p-3.5 text-[14.5px] font-semibold">
+                {f.lines.map((l) => (
+                  <li key={l}>{l}</li>
+                ))}
+              </ul>
+              <div>
+                <ToolChip toolId={f.id} />
+              </div>
+            </Fold>
+          );
+        })}
+        <p className="border-t border-line px-4 py-3 text-[13.5px] text-muted">{r.formulasMore}</p>
+      </Block>
 
       <Block icon={Factory} title={t.recipes.title} count={t.recipes.count(recipeCount ?? 0)} open={openLines} onToggle={toggleLines}>
         <p className="border-b border-line px-4 py-3 text-[14.5px] leading-relaxed text-muted">{t.recipes.intro}</p>
