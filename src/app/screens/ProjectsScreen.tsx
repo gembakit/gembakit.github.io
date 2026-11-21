@@ -1,11 +1,11 @@
-import { ChevronRight, CircleCheck, CloudUpload, FolderPlus, LayoutGrid } from 'lucide-react';
+import { ChevronRight, CircleCheck, CloudUpload, FolderPlus, LayoutGrid, TriangleAlert } from 'lucide-react';
 import { sheetStatus, type SheetStatus } from '../../projects/sheetSync';
 import { useI18n } from '../../i18n';
 import { db } from '../../data/db';
 import { Button, IconButton } from '../../ui/Button';
 import { BigHeader, Card, Screen } from '../../ui/Layout';
 import { useLive } from '../../projects/live';
-import { listProjects } from '../../projects/store';
+import { actionDue, listProjects, normalizeAction } from '../../projects/store';
 import { PhaseTrack } from '../../projects/PhaseTrack';
 import { navigate } from '../router';
 
@@ -19,6 +19,13 @@ export function ProjectsScreen() {
     const c: Record<string, number> = {};
     for (const a of all) c[a.projectId] = (c[a.projectId] ?? 0) + 1;
     return c;
+  }, []);
+  // Lo que vence: acciones vencidas y de esta semana de cada proyecto.
+  const due = useLive(async () => {
+    const all = (await db.actions.where('deleted').equals(0).toArray()).map(normalizeAction);
+    const by: Record<string, typeof all> = {};
+    for (const a of all) (by[a.projectId] ??= []).push(a);
+    return Object.fromEntries(Object.entries(by).map(([id, list]) => [id, actionDue(list)]));
   }, []);
   // Estado de la hoja de Google de cada proyecto que tiene una.
   const sheets = useLive(async () => {
@@ -69,6 +76,12 @@ export function ProjectsScreen() {
                   <span className="text-[13.5px] text-muted">
                     {p.count(counts?.[pr.id] ?? 0)} · {date(pr.updatedAt)}
                   </span>
+                  {due?.[pr.id] && (due[pr.id]!.overdue > 0 || due[pr.id]!.soon > 0) && (
+                    <span className={`flex items-center gap-1.5 text-[13.5px] font-semibold ${due[pr.id]!.overdue ? 'text-bad' : 'text-text'}`}>
+                      <TriangleAlert aria-hidden size={16} className={`shrink-0 ${due[pr.id]!.overdue ? 'text-bad' : 'text-warn'}`} />
+                      {[due[pr.id]!.overdue ? t.tools.acciones.overdue(due[pr.id]!.overdue) : null, due[pr.id]!.soon ? t.tools.acciones.dueSoon(due[pr.id]!.soon) : null].filter(Boolean).join(' · ')}
+                    </span>
+                  )}
                   {sheets?.[pr.id] && (
                     <span className={`flex items-center gap-1.5 text-[13.5px] ${sheets[pr.id]!.pending ? 'text-text' : 'text-muted'}`}>
                       {sheets[pr.id]!.pending ? (

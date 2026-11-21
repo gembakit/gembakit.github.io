@@ -73,9 +73,18 @@ export interface Dataset extends SyncedRecord {
   projectId: string;
   name: string;
 }
+export type ActionStatus = 'open' | 'doing' | 'done';
+/** Acción de un proyecto: qué, quién y para cuándo (fase 5). */
 export interface Action extends SyncedRecord {
   projectId: string;
   what: string;
+  who: string;
+  /** Fecha límite (medianoche local, ms) o null. */
+  due: number | null;
+  status: ActionStatus;
+  /** Cuándo se marcó hecha. */
+  doneAt: number | null;
+  note: string;
 }
 export interface Setting {
   key: string;

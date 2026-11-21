@@ -308,8 +308,12 @@ Orden de trabajo y estado:
 5. [x] Fase 3: capacidad (Cp, Cpk, Pp, Ppk) y cartas I-MR y X-barra R con
    las pruebas de Nelson (`docs/fichas/fase-3.md`). La hoja admite ahora
    {clave[n]} (celda n de una columna) y {^clave} (fila anterior).
-6. [ ] Fase 5: 5 porqués, espina de pescado, acciones, A3, Kaizen, plan de
-   control.
+6. [x] Fase 5: 5 porqués, espina de pescado, acciones, A3, Kaizen y plan
+   de control (`docs/fichas/fase-5.md`). Motor de documentos en
+   `src/tools/doc/` (esquema + textos + análisis); la hoja admite
+   `textSections` y se salta las secciones de números vacías. Acciones en
+   cada proyecto (`src/projects/Actions.tsx`, tabla `actions` con quién,
+   fecha, estado, nota) y «lo que vence» en la lista de proyectos.
 7. [ ] Fase 4: captura en planta (cronómetro, conteo, desperdicios con
    fotos, auditoría 5S), botón Capturar; sincronización entre aparatos.
 8. [ ] Fase 6: proyecto completo (fases y lo que falta, asistente, informe

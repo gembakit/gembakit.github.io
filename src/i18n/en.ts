@@ -1,6 +1,7 @@
 import type { Messages } from './types';
 import { corridaEn, dataColumnEn, descriptivaEn, paretoEn } from './tools/phase2';
 import { capacidadEn, cartasEn } from './tools/phase3';
+import { a3En, accionesEn, espinaEn, kaizenEn, planControlEn, porquesEn } from './tools/phase5';
 
 export const en: Messages = {
   dataColumn: dataColumnEn,
@@ -26,6 +27,9 @@ export const en: Messages = {
     loadExample: 'Load example',
     clear: 'Clear data',
     cleared: 'Data cleared',
+    removed: (s) => `Removed: ${s}`,
+    removeItem: (s) => `Remove ${s}`,
+    items: (n) => (n === 1 ? '1 item' : `${n} items`),
     comingInPhase: (n) => `Arrives in build phase ${n}.`,
     yes: 'Yes',
     no: 'No',
@@ -240,6 +244,12 @@ export const en: Messages = {
     corrida: corridaEn,
     capacidad: capacidadEn,
     cartas: cartasEn,
+    porques: porquesEn,
+    espina: espinaEn,
+    a3: a3En,
+    kaizen: kaizenEn,
+    plancontrol: planControlEn,
+    acciones: accionesEn,
     title: 'Tools',
     search: 'Search tools',
     noResults: (q) => `No tool matches “${q}”.`,

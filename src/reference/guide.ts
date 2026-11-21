@@ -157,6 +157,25 @@ export const GUIDE: readonly GuideTopic[] = [
     },
   },
   {
+    id: 'causa-accion',
+    es: {
+      title: 'Causa y acción',
+      body: [
+        'En Herramientas, «Buscar la causa» tiene los 5 porqués y la espina de pescado; «Actuar y documentar», el informe A3, el evento Kaizen, el plan de control y la lista de acciones. Son documentos: se rellenan por apartados, con «Cargar ejemplo» para ver uno hecho.',
+        'Cada documento se guarda en un proyecto como una medición más y se exporta a la hoja de Google o a PDF desde «Exportar».',
+        'Las acciones viven en cada proyecto, en la sección «Acciones»: qué, quién, para cuándo y su estado. Las vencidas salen en rojo, con icono y texto, en el proyecto y en la lista de proyectos.',
+      ],
+    },
+    en: {
+      title: 'Cause and action',
+      body: [
+        'Under Tools, “Find the cause” has the 5 whys and the fishbone; “Act and document”, the A3 report, the Kaizen event, the control plan and the action list. They are documents: you fill them in section by section, with “Load example” to see a finished one.',
+        'Each document is saved to a project like any other measurement and exported to a Google Sheet or a PDF from “Export”.',
+        'Actions live in each project, in the “Actions” section: what, who, by when and their status. Overdue ones appear in red, with an icon and text, in the project and in the project list.',
+      ],
+    },
+  },
+  {
     id: 'recetas',
     es: {
       title: 'Líneas y recetas',

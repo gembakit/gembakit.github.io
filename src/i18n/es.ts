@@ -2,6 +2,7 @@
 // las mismas claves (TypeScript y una prueba lo comprueban).
 import { corridaEs, dataColumnEs, descriptivaEs, paretoEs } from './tools/phase2';
 import { capacidadEs, cartasEs } from './tools/phase3';
+import { a3Es, accionesEs, espinaEs, kaizenEs, planControlEs, porquesEs } from './tools/phase5';
 
 export const es = {
   dataColumn: dataColumnEs,
@@ -28,6 +29,9 @@ export const es = {
     loadExample: 'Cargar ejemplo',
     clear: 'Borrar datos',
     cleared: 'Datos borrados',
+    removed: (s: string) => `Quitado: ${s}`,
+    removeItem: (s: string) => `Quitar ${s}`,
+    items: (n: number) => (n === 1 ? '1 elemento' : `${n} elementos`),
     comingInPhase: (n: number) => `Llega en la fase ${n} de la construcción.`,
     yes: 'Sí',
     no: 'No',
@@ -242,6 +246,12 @@ export const es = {
     corrida: corridaEs,
     capacidad: capacidadEs,
     cartas: cartasEs,
+    porques: porquesEs,
+    espina: espinaEs,
+    a3: a3Es,
+    kaizen: kaizenEs,
+    plancontrol: planControlEs,
+    acciones: accionesEs,
     title: 'Herramientas',
     search: 'Buscar herramienta',
     noResults: (q: string) => `Ninguna herramienta coincide con «${q}».`,

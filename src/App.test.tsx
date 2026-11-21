@@ -445,3 +445,47 @@ test('Cartas de control: el llenado en X-barra R marca el desajuste desde el sub
   expect(screen.getByRole('img', { name: /^(Carta de medias por subgrupo|Chart of subgroup means)/ })).toBeInTheDocument();
   expect(screen.getAllByText(/(subgrupos 20|subgroups 20)/).length).toBeGreaterThan(0);
 });
+
+test('5 porqués: el ejemplo enseña la cadena hasta la causa raíz y la contramedida', async () => {
+  const user = userEvent.setup();
+  window.location.hash = '#/herramientas/porques';
+  render(<App />);
+  await user.click(await screen.findByRole('button', { name: /Cargar ejemplo|Load example/ }));
+  await user.click(await screen.findByRole('button', { name: /^(Botellas sin tapón|Bottles without a cap)/ }));
+  expect((await screen.findAllByText(/^(Causa raíz|Root cause)$/)).length).toBeGreaterThan(0);
+  expect(screen.getAllByText(/^(Por qué 5|Why 5)$/).length).toBeGreaterThan(0);
+  expect(screen.getByText(/^(5 porqués hasta la causa raíz|5 whys down to the root cause)/)).toBeInTheDocument();
+});
+
+test('Espina de pescado: el ejemplo dibuja las seis espinas y agrupa las causas', async () => {
+  const user = userEvent.setup();
+  window.location.hash = '#/herramientas/espina';
+  render(<App />);
+  await user.click(await screen.findByRole('button', { name: /Cargar ejemplo|Load example/ }));
+  await user.click(await screen.findByRole('button', { name: /^(Variación de peso en el llenado|Fill weight variation)/ }));
+  expect(await screen.findByRole('img', { name: /^(Espina de pescado del efecto|Fishbone of the effect)/ })).toBeInTheDocument();
+  expect(screen.getByText(/^(9 causas en 6 categorías|9 causes in 6 categories)/)).toBeInTheDocument();
+});
+
+test('Acciones: se añaden en el proyecto y la lista de proyectos avisa de las vencidas', async () => {
+  const user = userEvent.setup();
+  window.location.hash = '#/proyectos/nuevo';
+  render(<App />);
+  await user.type(await screen.findByRole('textbox', { name: /^(Nombre|Name)$/ }), 'Kaizen acciones');
+  await user.click(screen.getByRole('button', { name: /Crear proyecto|Create project/ }));
+  expect(await screen.findByRole('heading', { level: 1, name: 'Kaizen acciones' })).toBeInTheDocument();
+  await user.click(await screen.findByRole('button', { name: /^(Añadir acción|Add action)$/ }));
+  const dialog = await screen.findByRole('dialog');
+  await user.type(within(dialog).getByRole('textbox', { name: /^(Qué hay que hacer|What needs doing)$/ }), 'Comprar guías');
+  await user.type(within(dialog).getByRole('textbox', { name: /^(Quién|Who)$/ }), 'Compras');
+  const due = within(dialog).getByLabelText(/^(Para cuándo|By when)$/);
+  await user.type(due, '2020-01-15');
+  await user.click(within(dialog).getByRole('button', { name: /^(Guardar|Save)$/ }));
+  await screen.findByText(/^Comprar guías$/);
+  expect((await screen.findAllByText(/^(1 vencida|1 overdue)$/)).length).toBeGreaterThan(0);
+  await act(async () => {
+    window.location.hash = '#/proyectos';
+  });
+  await screen.findByRole('heading', { level: 1, name: /^(Proyectos|Projects)$/ });
+  expect((await screen.findAllByText(/^(1 vencida|1 overdue)$/)).length).toBeGreaterThan(0);
+});

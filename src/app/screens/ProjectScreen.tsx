@@ -11,6 +11,7 @@ import { PhaseTrack } from '../../projects/PhaseTrack';
 import { FilterSheet } from '../../projects/FilterSheet';
 import { MilestoneSheet } from '../../projects/MilestoneSheet';
 import { SheetCard } from '../../projects/SheetCard';
+import { ActionsSection } from '../../projects/Actions';
 import { activeFilters, applyFilter, isDefault, NO_FILTER, recallFilter, rememberFilter, type MeasurementFilter } from '../../projects/filter';
 import { formatDateTime, formatHeadline, useLive } from '../../projects/live';
 import { deleteProject, getProject, latest, listMeasurements, listMilestones, restoreProject, updateProject } from '../../projects/store';
@@ -146,6 +147,8 @@ export function ProjectScreen({ id }: { id: string }) {
           {p.goTools}
         </Button>
       </section>
+
+      <ActionsSection projectId={project.id} />
 
       <section className="flex flex-col gap-3">
         <Label>{p.milestones.title}</Label>

@@ -1,4 +1,4 @@
-import { db as defaultDb, type Analysis, type GembaDB, type Headline, type Milestone, type Project, type ProjectType, type ContextField } from '../data/db';
+import { db as defaultDb, type Action, type ActionStatus, type Analysis, type GembaDB, type Headline, type Milestone, type Project, type ProjectType, type ContextField } from '../data/db';
 import { create, listActive, restore, softDelete, update } from '../data/repo';
 import { now } from '../data/record';
 import { firstPhase } from './model';
@@ -180,6 +180,70 @@ export function deleteMilestone(id: string, database: GembaDB = defaultDb) {
 
 export function restoreMilestone(id: string, database: GembaDB = defaultDb) {
   return restore(database.milestones, id);
+}
+
+// ── Acciones ─────────────────────────────────────────────────────────────
+
+export interface ActionInput {
+  what: string;
+  who: string;
+  due: number | null;
+  status: ActionStatus;
+  note: string;
+}
+
+export function addAction(projectId: string, a: ActionInput, database: GembaDB = defaultDb): Promise<Action> {
+  return create(database.actions, { projectId, what: a.what.trim(), who: a.who.trim(), due: a.due, status: a.status, note: a.note.trim(), doneAt: a.status === 'done' ? Date.now() : null });
+}
+
+/** Acciones vivas de un proyecto (las antiguas, sin quién ni estado, se completan al leerlas). */
+export async function listActions(projectId: string, database: GembaDB = defaultDb): Promise<Action[]> {
+  const all = await database.actions.where('projectId').equals(projectId).toArray();
+  return all.filter((a) => !a.deleted).map(normalizeAction).sort(compareActions);
+}
+
+export const normalizeAction = (a: Action): Action => ({ ...a, who: a.who ?? '', due: a.due ?? null, status: a.status ?? 'open', doneAt: a.doneAt ?? null, note: a.note ?? '' });
+
+/** Primero las pendientes (las vencidas antes), por fecha; después las hechas, la última hecha primero. */
+export function compareActions(a: Action, b: Action): number {
+  const done = (x: Action) => (x.status === 'done' ? 1 : 0);
+  if (done(a) !== done(b)) return done(a) - done(b);
+  if (done(a)) return (b.doneAt ?? 0) - (a.doneAt ?? 0);
+  return (a.due ?? Infinity) - (b.due ?? Infinity) || a.createdAt - b.createdAt;
+}
+
+export async function updateAction(id: string, a: ActionInput, database: GembaDB = defaultDb): Promise<void> {
+  const before = await database.actions.get(id);
+  const doneAt = a.status === 'done' ? (before?.status === 'done' ? (before.doneAt ?? Date.now()) : Date.now()) : null;
+  await update(database.actions, id, { what: a.what.trim(), who: a.who.trim(), due: a.due, status: a.status, note: a.note.trim(), doneAt });
+}
+
+export function deleteAction(id: string, database: GembaDB = defaultDb) {
+  return softDelete(database.actions, id);
+}
+
+export function restoreAction(id: string, database: GembaDB = defaultDb) {
+  return restore(database.actions, id);
+}
+
+/** Medianoche local de hoy. */
+export const today = (now = Date.now()) => {
+  const d = new Date(now);
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+};
+
+/** Vencidas (pendientes con fecha anterior a hoy) y que vencen en los próximos 7 días. */
+export function actionDue(list: Action[], now = Date.now()): { overdue: number; soon: number } {
+  const t0 = today(now);
+  const week = t0 + 7 * 86_400_000;
+  let overdue = 0;
+  let soon = 0;
+  for (const a of list) {
+    if (a.status === 'done' || a.due === null) continue;
+    if (a.due < t0) overdue++;
+    else if (a.due < week) soon++;
+  }
+  return { overdue, soon };
 }
 
 // ── Lo último usado (para no volver a elegirlo) ──────────────────────────
