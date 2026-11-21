@@ -12,8 +12,11 @@ export interface OeeSaved {
   /** Paradas planificadas, con su motivo o comentario. */
   planned: { name: string; value: number; unit: TimeUnit; note: string }[];
   categories: string[];
-  /** Paradas no planificadas: minutos, posición de su categoría, estándar (min) opcional y motivo o comentario. */
-  stops: { name: string; minutes: number; category: number; standard: number | null; note: string }[];
+  /**
+   * Paradas no planificadas: minutos, posición de su categoría, estándar (min) opcional, motivo o
+   * comentario y la máquina que la causó (vacío: sin indicar).
+   */
+  stops: { name: string; minutes: number; category: number; standard: number | null; note: string; machine: string }[];
   measure: Measure;
   measureUnit: TimeUnit;
   /** Ciclo ideal (en la unidad elegida) o velocidad ideal (unidades por esa unidad). */
@@ -23,10 +26,18 @@ export interface OeeSaved {
   unitName: string;
   /** Porciones desmarcadas en la torta del turno («p0», «c1», «s1», «speed», «quality»). */
   off: string[];
-  pareto: { by: 'category' | 'stop'; losses: boolean };
+  pareto: { by: 'category' | 'stop' | 'machine'; losses: boolean };
+  /** Receta cargada o guardada (planta, línea y nombre). */
+  recipe?: { plant: string; line: string; name: string };
+  /** Máquinas de la línea (de la receta), para elegir la que causó cada parada. */
+  machines?: string[];
+  /** Cambios de la receta con su tiempo estándar, para añadirlos como parada. */
+  changeovers?: { name: string; minutes: number }[];
 }
 
 const isNum = (x: unknown): x is number => typeof x === 'number' && Number.isFinite(x);
+const isNames = (x: unknown): x is { plant: string; line: string; name: string } =>
+  typeof x === 'object' && x !== null && ['plant', 'line', 'name'].every((k) => typeof (x as Record<string, unknown>)[k] === 'string');
 const isUnit = (x: unknown): x is TimeUnit => x === 's' || x === 'min' || x === 'h';
 const obj = (x: unknown): Record<string, unknown> | null => (typeof x === 'object' && x !== null ? (x as Record<string, unknown>) : null);
 
@@ -65,7 +76,7 @@ export function readOeeSaved(x: unknown, t: Messages): OeeSaved | null {
       shiftUnit: s.shiftUnit,
       planned: planned.map((p) => ({ name: text(p!.name), value: p!.value as number, unit: p!.unit as TimeUnit, note: text(p!.note) })),
       categories,
-      stops: stops.map((p) => ({ name: text(p!.name), minutes: p!.minutes as number, category: p!.category as number, standard: p!.standard as number | null, note: text(p!.note) })),
+      stops: stops.map((p) => ({ name: text(p!.name), minutes: p!.minutes as number, category: p!.category as number, standard: p!.standard as number | null, note: text(p!.note), machine: text(p!.machine) })),
       measure: s.measure,
       measureUnit: s.measureUnit,
       ideal: s.ideal,
@@ -73,7 +84,12 @@ export function readOeeSaved(x: unknown, t: Messages): OeeSaved | null {
       rejects: s.rejects,
       unitName: typeof s.unitName === 'string' ? s.unitName : '',
       off,
-      pareto: { by: pareto?.by === 'stop' ? 'stop' : 'category', losses: pareto?.losses === true },
+      pareto: { by: pareto?.by === 'stop' || pareto?.by === 'machine' ? pareto.by : 'category', losses: pareto?.losses === true },
+      ...(isNames(s.recipe) ? { recipe: s.recipe } : {}),
+      ...(Array.isArray(s.machines) && s.machines.every((m) => typeof m === 'string') ? { machines: s.machines as string[] } : {}),
+      ...(Array.isArray(s.changeovers) && s.changeovers.every((c) => typeof c?.name === 'string' && isNum(c?.minutes))
+        ? { changeovers: s.changeovers as { name: string; minutes: number }[] }
+        : {}),
     };
   }
   // Versión 1: un número por tipo de parada, todo en minutos y el ciclo ideal en segundos.
@@ -87,7 +103,7 @@ export function readOeeSaved(x: unknown, t: Messages): OeeSaved | null {
     shiftUnit: 'min',
     planned: n('plannedStops') > 0 ? [{ name: d.plannedStops, value: n('plannedStops'), unit: 'min', note: '' }] : [],
     categories,
-    stops: n('unplannedStops') > 0 ? [{ name: d.exampleData.unplanned, minutes: n('unplannedStops'), category: categories.length - 1, standard: null, note: '' }] : [],
+    stops: n('unplannedStops') > 0 ? [{ name: d.exampleData.unplanned, minutes: n('unplannedStops'), category: categories.length - 1, standard: null, note: '', machine: '' }] : [],
     measure: 'time',
     measureUnit: 's',
     ideal: n('idealCycle'),
@@ -110,6 +126,21 @@ export function toOeeInput(s: OeeSaved): OeeInput {
     total: s.total,
     rejects: s.rejects,
   };
+}
+
+/**
+ * Minutos de paradas por máquina que las causó, en el orden en que aparecen
+ * (sin distinguir mayúsculas). Las que no la indican van juntas, con nombre vacío.
+ */
+export function machineMinutes(stops: OeeSaved['stops']): { name: string; minutes: number }[] {
+  const out: { name: string; minutes: number }[] = [];
+  for (const x of stops) {
+    const name = x.machine.trim();
+    const row = out.find((y) => y.name.toLocaleLowerCase() === name.toLocaleLowerCase());
+    if (row) row.minutes += x.minutes;
+    else out.push({ name, minutes: x.minutes });
+  }
+  return out;
 }
 
 /** Nombre de una categoría (o «Categoría n» si está vacía). */
@@ -192,7 +223,7 @@ export const VORNE = (t: Messages): OeeSaved => {
     shiftUnit: 'min',
     planned: [{ name: d.exampleData.breaks, value: 60, unit: 'min', note: '' }],
     categories,
-    stops: [{ name: d.exampleData.unplanned, minutes: 47, category: categories.length - 1, standard: null, note: '' }],
+    stops: [{ name: d.exampleData.unplanned, minutes: 47, category: categories.length - 1, standard: null, note: '', machine: '' }],
     measure: 'time',
     measureUnit: 's',
     ideal: 1,
@@ -220,10 +251,10 @@ export const BOTTLING = (t: Messages): OeeSaved => {
     planned: [{ name: x.meeting, value: 10, unit: 'min', note: '' }],
     categories: [...d.defaultCategories],
     stops: [
-      { name: x.breakdown, minutes: 25, category: 0, standard: null, note: '' },
-      { name: x.changeover, minutes: 40, category: 1, standard: 30, note: x.changeoverNote },
-      { name: x.material, minutes: 12, category: 2, standard: null, note: '' },
-      { name: x.jams, minutes: 18, category: 3, standard: null, note: '' },
+      { name: x.breakdown, minutes: 25, category: 0, standard: null, note: '', machine: x.filler },
+      { name: x.changeover, minutes: 40, category: 1, standard: 30, note: x.changeoverNote, machine: x.labeller },
+      { name: x.material, minutes: 12, category: 2, standard: null, note: '', machine: x.depalletizer },
+      { name: x.jams, minutes: 18, category: 3, standard: null, note: '', machine: x.labeller },
     ],
     measure: 'rate',
     measureUnit: 'h',
@@ -231,6 +262,7 @@ export const BOTTLING = (t: Messages): OeeSaved => {
     total: 270_000,
     rejects: 4_000,
     unitName: x.bottles,
+    machines: [x.depalletizer, x.filler, x.labeller, x.caser],
     off: [],
     pareto: { by: 'category', losses: false },
   };

@@ -7,6 +7,7 @@ import {
   duplicateRecipe,
   findRecipe,
   groupRecipes,
+  lineSpeedOf,
   listRecipes,
   recipeLabel,
   RecipeExistsError,
@@ -80,6 +81,31 @@ describe('recetas', () => {
     expect((await listRecipes(db)).length).toBe(2);
     await restoreRecipe(copy.id, db);
     expect((await listRecipes(db)).length).toBe(3);
+  });
+
+  test('cada herramienta guarda su parte: el OEE no borra las estaciones ni el takt la velocidad de la línea', async () => {
+    await saveRecipe(L3('12 oz'), { unitName: 'botellas', stations: content(48_000).stations }, db);
+    await saveRecipe(L3('12 oz'), { unitName: 'botellas', lineSpeed: { value: 45_000, measure: 'rate', unit: 'h' }, changeovers: [{ name: 'Cambio de sabor', minutes: 30 }] }, db);
+    let r = (await findRecipe(L3('12 oz'), db))!;
+    expect(r.stations.length).toBe(2);
+    expect(r.changeovers).toEqual([{ name: 'Cambio de sabor', minutes: 30 }]);
+    await saveRecipe(L3('12 oz'), { unitName: 'botellas', stations: content(50_000).stations }, db);
+    r = (await findRecipe(L3('12 oz'), db))!;
+    expect(r.lineSpeed).toEqual({ value: 45_000, measure: 'rate', unit: 'h' });
+    expect(r.stations[0]!.standard).toBe(50_000);
+  });
+
+  test('velocidad de la línea: la escrita o la de la estación más lenta, en lo que produce', () => {
+    // Llenadora 48.000 botellas/h = 800/min; encajonadora 42 cajas/min de 24 = 1.008 botellas/min → manda la llenadora.
+    expect(lineSpeedOf(content(48_000))).toEqual({ value: 48_000, measure: 'rate', unit: 'h' });
+    // Si la llenadora fuera de 70.000/h (1.167/min), la más lenta sería la encajonadora: 42 × 24 = 1.008 botellas/min.
+    expect(lineSpeedOf(content(70_000))).toEqual({ value: 1008, measure: 'rate', unit: 'min' });
+    // En tiempo: 0,05 min por paquete de 12 → 0,05 ÷ 12 min por botella.
+    const timed = lineSpeedOf({ lineSpeed: null, stations: [{ name: 'Empaquetadora', measure: 'time', unit: 'min', item: 'paquetes', per: 12, standard: 0.05 }] })!;
+    expect(timed.measure).toBe('time');
+    expect(timed.value).toBeCloseTo(0.05 / 12, 12);
+    expect(lineSpeedOf({ ...content(48_000), lineSpeed: { value: 45_000, measure: 'rate', unit: 'h' } })).toEqual({ value: 45_000, measure: 'rate', unit: 'h' });
+    expect(lineSpeedOf({ lineSpeed: null, stations: [] })).toBeNull();
   });
 
   test('van en la copia de seguridad, y al restaurar se queda la más reciente', async () => {

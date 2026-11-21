@@ -94,7 +94,7 @@ export function oeeSheet(s: OeeSaved, r: OeeResult, t: Messages, lang: 'es' | 'e
 
   const stopNotes = s.stops.map(
     (x, k) =>
-      sh.stopNote(stopName(s, k, t), num(x.minutes), categoryName(s, x.category, t)) + (x.standard !== null ? sh.stopStandard(num(x.standard)) : '') + '.' + (x.note.trim() ? sh.notePart(x.note.trim()) : ''),
+      sh.stopNote(stopName(s, k, t), num(x.minutes), categoryName(s, x.category, t)) + (x.standard !== null ? sh.stopStandard(num(x.standard)) : '') + '.' + (x.machine.trim() ? sh.machinePart(x.machine.trim()) : '') + (x.note.trim() ? sh.notePart(x.note.trim()) : ''),
   );
   const plannedNotes = s.planned.flatMap((p, k) => (p.note.trim() ? [`${plannedName(s, k, t)}:${sh.notePart(p.note.trim())}`] : []));
   return {

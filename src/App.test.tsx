@@ -138,12 +138,12 @@ test('Recetas: guardar las estaciones del takt como receta, verla en Mis líneas
   expect(await screen.findByText(/^(Receta guardada|Recipe saved): Planta Norte · Línea 3 · 12 oz$/)).toBeInTheDocument();
   expect(screen.getByText(/^(Receta|Recipe): Planta Norte · Línea 3 · 12 oz$/)).toBeInTheDocument();
 
-  // Volver a guardarla con el mismo nombre la reemplaza (se avisa antes).
+  // Volver a guardarla con el mismo nombre la actualiza (se avisa antes).
   await user.click(screen.getByRole('button', { name: /^(Guardar como receta|Save as recipe)$/ }));
   const again = await screen.findByRole('dialog');
-  expect(within(again).getByText(/(se reemplaza|it will be replaced)/)).toBeInTheDocument();
-  await user.click(within(again).getByRole('button', { name: /^(Reemplazar receta|Replace recipe)$/ }));
-  expect(await screen.findByText(/^(Receta reemplazada|Recipe replaced): Planta Norte · Línea 3 · 12 oz$/)).toBeInTheDocument();
+  expect(within(again).getByText(/(se actualiza|it is updated)/)).toBeInTheDocument();
+  await user.click(within(again).getByRole('button', { name: /^(Actualizar receta|Update recipe)$/ }));
+  expect(await screen.findByText(/^(Receta actualizada|Recipe updated): Planta Norte · Línea 3 · 12 oz$/)).toBeInTheDocument();
 
   // Cargarla: las estaciones vuelven, sin las medidas reales.
   await user.click(screen.getByRole('button', { name: /^(Cargar receta|Load recipe)$/ }));
@@ -357,6 +357,20 @@ test('OEE: la embotelladora enseña el oficial, la torta que se desmarca y el Pa
   expect(screen.getByText(/^42[,.]1\s% (de las paradas|of the stops)$/)).toBeInTheDocument();
   // Las paradas, plegadas, dicen cuántas son y cuántos minutos suman.
   expect(screen.getByRole('button', { name: /^(Paradas no planificadas|Unplanned stops)\s*4 (paradas|stops) · 95 min/ })).toBeInTheDocument();
+});
+
+test('OEE: Pareto por máquina, con la velocidad y la calidad como «Toda la línea»', async () => {
+  const user = userEvent.setup();
+  window.location.hash = '#/herramientas/oee';
+  render(<App />);
+  await user.click(await screen.findByRole('button', { name: /Cargar ejemplo|Load example/ }));
+  await user.click(await screen.findByRole('button', { name: /^(Embotelladora|Bottling plant)/ }));
+  await user.click(await screen.findByRole('button', { name: /^(Máquina|Machine)$/ }));
+  // Etiquetadora: cambio de formato 40 + atascos 18 = 58 min de 95 → 61,1 %.
+  expect(screen.getByText(/^(Etiquetadora|Labeller)$/)).toBeInTheDocument();
+  expect(screen.getByText(/^61[,.]1\s% (de las paradas|of the stops)$/)).toBeInTheDocument();
+  await user.click(screen.getByRole('checkbox', { name: /^(Incluir la pérdida por velocidad|Include the speed loss)/ }));
+  expect(screen.getByText(/^(Toda la línea · Pérdida por velocidad|Whole line · Speed loss)$/)).toBeInTheDocument();
 });
 
 test('OEE: cambiar la unidad de la velocidad estándar convierte el número y el OEE no cambia', async () => {

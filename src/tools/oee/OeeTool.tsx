@@ -18,7 +18,10 @@ import { Check, convertText, ExampleOption, Fold, Group, Hint, isBad, MeasureBox
 import { oeeExplain, oeeFormat, oeeLook } from './explain';
 import { oeeSheet } from './sheet';
 import { oeeConclusion, oeeReadingLines, oeeWarnings } from './reading';
-import { BOTTLING, categoryName, isOfficial, readOeeSaved, sliceName, stopName, toOeeInput, utilizationLabel, VORNE, type OeeSaved } from './model';
+import type { Recipe } from '../../data/db';
+import { lineSpeedOf, recipeLabel, type RecipeContent, type RecipeNames } from '../../recipes/store';
+import { RecipeBar } from '../../recipes/RecipeUI';
+import { BOTTLING, categoryName, isOfficial, machineMinutes, readOeeSaved, sliceName, stopName, toOeeInput, utilizationLabel, VORNE, type OeeSaved } from './model';
 
 interface PlanRow {
   id: number;
@@ -35,6 +38,8 @@ interface StopRow {
   cat: number;
   standard: string;
   note: string;
+  /** Máquina que causó la parada (vacío: sin indicar). */
+  machine: string;
 }
 interface CatRow {
   id: number;
@@ -56,8 +61,16 @@ interface State {
   unitName: string;
   /** Porciones desmarcadas en la torta, por id: «p:3» (parada planificada), «c:5» y «s:5» (categoría y su estándar), «speed», «quality». */
   off: string[];
-  paretoBy: 'category' | 'stop';
+  paretoBy: 'category' | 'stop' | 'machine';
   paretoLosses: boolean;
+  /** Receta cargada o guardada. */
+  recipe: RecipeNames | null;
+  /** Máquinas de la línea (de la receta). */
+  machines: string[];
+  /** Cambios de la receta con su tiempo estándar, para añadirlos como parada. */
+  changeovers: { name: string; minutes: number }[];
+  /** Velocidad de la estación más lenta de la receta cargada: si no se cambia, la receta no guarda una escrita. */
+  slowest: { value: number; measure: Measure; unit: TimeUnit } | null;
 }
 
 const MAX_ROWS = 40;
@@ -80,6 +93,10 @@ function emptyState(t: Messages, keep?: Pick<State, 'shiftUnit' | 'measure' | 'm
     off: [],
     paretoBy: 'category',
     paretoLosses: false,
+    recipe: null,
+    machines: [],
+    changeovers: [],
+    slowest: null,
   };
 }
 
@@ -111,7 +128,7 @@ function fromSaved(s: OeeSaved, lang: 'es' | 'en'): State {
     shiftUnit: s.shiftUnit,
     planned,
     cats,
-    stops: s.stops.map((x) => ({ id: nextId(), name: x.name, minutes: txt(x.minutes), cat: cats[x.category]!.id, standard: x.standard === null ? '' : txt(x.standard), note: x.note })),
+    stops: s.stops.map((x) => ({ id: nextId(), name: x.name, minutes: txt(x.minutes), cat: cats[x.category]!.id, standard: x.standard === null ? '' : txt(x.standard), note: x.note, machine: x.machine })),
     measure: s.measure,
     measureUnit: s.measureUnit,
     ideal: txt(s.ideal),
@@ -121,6 +138,10 @@ function fromSaved(s: OeeSaved, lang: 'es' | 'en'): State {
     off: offToIds(s.off, planned, cats),
     paretoBy: s.pareto.by,
     paretoLosses: s.pareto.losses,
+    recipe: s.recipe ?? null,
+    machines: s.machines ?? [],
+    changeovers: s.changeovers ?? [],
+    slowest: null,
   };
 }
 
@@ -151,7 +172,7 @@ function toSaved(st: State, t: Messages): { saved: OeeSaved | null; bad: string 
     const where = x.name.trim() || d.stopName(i + 1);
     const minutes = num(x.minutes, where);
     const standard = num(x.standard, where);
-    if (minutes !== null) stops.push({ name: x.name.trim(), minutes, category: catIndex.get(x.cat) ?? st.cats.length - 1, standard, note: x.note.trim() });
+    if (minutes !== null) stops.push({ name: x.name.trim(), minutes, category: catIndex.get(x.cat) ?? st.cats.length - 1, standard, note: x.note.trim(), machine: x.machine.trim() });
     else if (x.name.trim() || x.standard.trim()) bad ??= where;
   });
   const shift = num(st.shift, d.shift);
@@ -175,6 +196,9 @@ function toSaved(st: State, t: Messages): { saved: OeeSaved | null; bad: string 
       unitName: st.unitName.trim(),
       off: offToPositions(st.off, plannedRows, st.cats),
       pareto: { by: st.paretoBy, losses: st.paretoLosses },
+      ...(st.recipe ? { recipe: st.recipe } : {}),
+      ...(st.machines.length ? { machines: st.machines } : {}),
+      ...(st.changeovers.length ? { changeovers: st.changeovers } : {}),
     },
     bad: null,
   };
@@ -371,7 +395,7 @@ export default function OeeTool() {
   const updateStop = (id: number, patch: Partial<StopRow>) => change((s) => ({ ...s, stops: s.stops.map((x) => (x.id === id ? { ...x, ...patch } : x)) }));
   const addStop = () => {
     const id = nextId();
-    change((s) => ({ ...s, stops: [...s.stops, { id, name: '', minutes: '', cat: s.cats[0]?.id ?? 0, standard: '', note: '' }] }));
+    change((s) => ({ ...s, stops: [...s.stops, { id, name: '', minutes: '', cat: s.cats[0]?.id ?? 0, standard: '', note: '', machine: '' }] }));
     setOpen((o) => new Set([...o, `st${id}`]));
   };
 
@@ -385,6 +409,57 @@ export default function OeeTool() {
     setOpen(new Set(['planned', 'production']));
     toast(t.common.cleared, { action: { label: t.common.undo, onAction: () => setState(previous) } });
   };
+  // ── Recetas ──
+  const loadRecipe = (rec: Recipe) => {
+    const previous = state;
+    const speed = lineSpeedOf(rec);
+    const slowest = lineSpeedOf({ stations: rec.stations, lineSpeed: null });
+    change((s) => ({
+      ...s,
+      unitName: rec.unitName || s.unitName,
+      ...(speed ? { measure: speed.measure, measureUnit: speed.unit, ideal: toFieldText(speed.value, lang), idealExact: speed.value } : {}),
+      recipe: { plant: rec.plant, line: rec.line, name: rec.name },
+      machines: rec.stations.map((x) => x.name.trim()).filter(Boolean),
+      changeovers: rec.changeovers,
+      slowest,
+    }));
+    if (rec.changeovers.length) setOpen((o) => new Set([...o, 'stops']));
+    toast(t.recipes.loadedToast(recipeLabel(rec)), { action: { label: t.common.undo, onAction: () => setState(previous) } });
+  };
+  const recipeContent = (): Partial<RecipeContent> | string => {
+    const value = state.idealExact ?? parseDecimal(state.ideal);
+    if (value === null || !(value > 0)) return t.recipes.needSpeed;
+    const sl = state.slowest;
+    // Si sigue siendo la de la estación más lenta, la receta no guarda una escrita: se recalcula con sus estaciones.
+    const same = sl && sl.measure === state.measure && sl.unit === state.measureUnit && Math.abs(sl.value - value) <= 1e-9 * Math.max(1, Math.abs(value));
+    const changeovers = new Map(state.changeovers.map((c) => [c.name.trim().toLocaleLowerCase(), c]));
+    state.stops.forEach((x, i) => {
+      const std = parseDecimal(x.standard);
+      if (std !== null && std > 0) {
+        const name = x.name.trim() || d.stopName(i + 1);
+        changeovers.set(name.toLocaleLowerCase(), { name, minutes: std });
+      }
+    });
+    return {
+      unitName: state.unitName.trim(),
+      lineSpeed: same ? null : { value, measure: state.measure, unit: state.measureUnit },
+      changeovers: [...changeovers.values()],
+    };
+  };
+  const addChangeover = (c: { name: string; minutes: number }) => {
+    const id = nextId();
+    // A la categoría de los cambios (la segunda de las de siempre), si sigue existiendo.
+    const changeCat = state.cats.find((x) => x.name.trim().toLocaleLowerCase() === d.defaultCategories[1]!.toLocaleLowerCase()) ?? state.cats[0];
+    change((s) => ({
+      ...s,
+      stops: [...s.stops, { id, name: c.name, minutes: '', cat: changeCat?.id ?? 0, standard: toFieldText(c.minutes, lang), note: '', machine: '' }],
+    }));
+    setOpen((o) => new Set([...o, 'stops', `st${id}`]));
+  };
+  // Máquinas para elegir: las de la receta y las ya escritas en esta medición.
+  const machineOptions = [...new Set([...state.machines, ...state.stops.map((x) => x.machine.trim()).filter(Boolean)])];
+  const machineList = useId();
+
   const loadExample = (which: 'vorne' | 'bottling') => {
     touched.current = true;
     setState(fromSaved(which === 'vorne' ? VORNE(t) : BOTTLING(t), lang));
@@ -418,6 +493,18 @@ export default function OeeTool() {
 
   const data = (
     <>
+      <RecipeBar
+        current={state.recipe}
+        onLoad={loadRecipe}
+        build={recipeContent}
+        saveHint={t.recipes.saveHintOee}
+        onSaved={(n) => set({ recipe: { plant: n.plant, line: n.line, name: n.name } })}
+      />
+      <datalist id={machineList}>
+        {machineOptions.map((m) => (
+          <option key={m} value={m} />
+        ))}
+      </datalist>
       <div className="flex flex-col border-b border-line">
         <Group
           title={d.groups.planned!}
@@ -484,6 +571,7 @@ export default function OeeTool() {
                   : [
                       minutes !== null ? f.min(minutes) : null,
                       catName(row.cat),
+                      row.machine.trim() || null,
                       minutes !== null && standard !== null && standard > 0 ? d.standardPart(f.min(Math.min(standard, minutes)), f.min(Math.max(0, minutes - standard))) : null,
                     ]
                       .filter(Boolean)
@@ -499,6 +587,21 @@ export default function OeeTool() {
                     </div>
                     <NumberField compact label={d.stopMinutes} unit="min" value={row.minutes} invalidText={d.invalidNumber} onChange={(v) => updateStop(row.id, { minutes: v })} />
                     <CategorySelect label={d.category} aria={d.categoryOf(name)} value={row.cat} cats={state.cats} nameOf={catName} onChange={(cat) => updateStop(row.id, { cat })} />
+                    <label className="flex flex-col gap-1.5">
+                      <span className="text-[13px] font-semibold text-muted">{d.machine}</span>
+                      <input
+                        type="text"
+                        value={row.machine}
+                        list={machineList}
+                        placeholder={d.machinePlaceholder}
+                        aria-label={d.machineOf(name)}
+                        autoComplete="off"
+                        maxLength={40}
+                        onChange={(e) => updateStop(row.id, { machine: e.target.value })}
+                        className="h-12 w-full rounded-[15px] border-[1.5px] border-line bg-surface px-4 text-[16px] outline-none placeholder:text-muted focus:border-accent"
+                      />
+                      <Hint>{d.machineHint}</Hint>
+                    </label>
                     <div className="flex flex-col gap-1.5">
                       <NumberField compact label={d.standard} unit="min" value={row.standard} invalidText={d.invalidNumber} onChange={(v) => updateStop(row.id, { standard: v })} />
                       <Hint>{d.standardHint}</Hint>
@@ -519,6 +622,16 @@ export default function OeeTool() {
             <Button icon={Plus} className="self-start" onClick={addStop}>
               {d.addStop}
             </Button>
+          )}
+          {state.changeovers.length > 0 && state.stops.length < MAX_ROWS && (
+            <div className="flex flex-col gap-2">
+              <Hint>{d.changeoversHint}</Hint>
+              {state.changeovers.map((c) => (
+                <Button key={c.name} icon={Plus} className="self-start text-left" onClick={() => addChangeover(c)}>
+                  {d.addChangeover(c.name, f.min(c.minutes))}
+                </Button>
+              ))}
+            </div>
           )}
           <ul className="flex flex-col">
             <Fold name={d.categories} summary={d.categoriesCount(state.cats.length)} bad={false} open={open.has('cats')} onToggle={() => toggle('cats')}>
@@ -667,19 +780,29 @@ export default function OeeTool() {
     };
     // Pareto: por categoría o por parada; con la casilla, también la pérdida por velocidad y la de calidad.
     type Item = { key: string; name: string; minutes: number; color: string };
+    const byMachine = saved.pareto.by === 'machine';
+    const machines = byMachine ? machineMinutes(saved.stops) : [];
     const items: Item[] =
       saved.pareto.by === 'category'
         ? r.byCategory.map((m, c) => ({ key: `c${c}`, name: categoryName(saved, c, t), minutes: m, color: backgroundOf(paint.get(`cat${c}`) ?? { color: POOL[0]!, tint: false, dots: false }) }))
-        : saved.stops.map((x, k) => ({
-            key: `s${k}`,
-            name: stopName(saved, k, t),
-            minutes: x.minutes,
-            color: backgroundOf(paint.get(`cat${x.category}`) ?? { color: POOL[0]!, tint: false, dots: false }),
-          }));
+        : byMachine
+          ? machines.map((x, k) => ({
+              key: `m${k}`,
+              name: x.name || d.noMachine,
+              minutes: x.minutes,
+              // Cada máquina con su color, en el orden en que aparecen; sin indicar, en gris.
+              color: x.name ? backgroundOf({ color: POOL[k % POOL.length]!, tint: false, dots: k >= POOL.length }) : 'var(--faint)',
+            }))
+          : saved.stops.map((x, k) => ({
+              key: `s${k}`,
+              name: stopName(saved, k, t),
+              minutes: x.minutes,
+              color: backgroundOf(paint.get(`cat${x.category}`) ?? { color: POOL[0]!, tint: false, dots: false }),
+            }));
     if (saved.pareto.losses)
       items.push(
-        { key: 'speed', name: d.losses.speed!, minutes: Math.max(0, r.minutes.speed), color: FIXED.speed! },
-        { key: 'quality', name: d.losses.quality!, minutes: r.minutes.quality, color: FIXED.quality! },
+        { key: 'speed', name: byMachine ? d.lineWide(d.losses.speed!) : d.losses.speed!, minutes: Math.max(0, r.minutes.speed), color: FIXED.speed! },
+        { key: 'quality', name: byMachine ? d.lineWide(d.losses.quality!) : d.losses.quality!, minutes: r.minutes.quality, color: FIXED.quality! },
       );
     const byKey = new Map(items.map((x) => [x.key, x]));
     const rows = pareto(items.map((x) => ({ key: x.key, minutes: x.minutes })));
@@ -811,7 +934,7 @@ export default function OeeTool() {
             <Segmented
               label={d.paretoBy}
               value={state.paretoBy}
-              options={(['category', 'stop'] as const).map((b) => ({ value: b, label: d.paretoBys[b]! }))}
+              options={(['category', 'stop', 'machine'] as const).map((b) => ({ value: b, label: d.paretoBys[b]! }))}
               onChange={(b) => set({ paretoBy: b })}
             />
             <Check label={d.paretoLosses} checked={state.paretoLosses} onChange={(on) => set({ paretoLosses: on })} />

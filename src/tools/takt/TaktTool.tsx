@@ -304,7 +304,7 @@ export default function TaktTool() {
     setOpen((o) => new Set([...o, 'stations']));
     toast(t.recipes.loadedToast(recipeLabel(rec)), { action: { label: t.common.undo, onAction: () => setState(previous) } });
   };
-  const recipeContent = (): RecipeContent | string => {
+  const recipeContent = (): Partial<RecipeContent> | string => {
     const list: RecipeStation[] = [];
     for (const s of state.stations) {
       if (!s.name.trim() && !s.theo.text.trim()) continue;
@@ -314,7 +314,7 @@ export default function TaktTool() {
       list.push({ name: s.name.trim(), measure: s.measure, unit: s.unit, item: s.item.trim(), per, standard });
     }
     if (!list.length) return t.recipes.nothing;
-    return { unitName: state.unitName.trim(), stations: list, lineSpeed: null, changeovers: [] };
+    return { unitName: state.unitName.trim(), stations: list };
   };
 
   const loadExample = (which: 'bottling' | 'packs') => {

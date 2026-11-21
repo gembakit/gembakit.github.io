@@ -31,9 +31,11 @@ Construcción en dos pasos:
    «Guardar como receta», y Referencia › «Mis líneas» (planta → línea →
    receta; ver estaciones, cambiar nombre, duplicar, borrar con «Deshacer»).
    La medición del takt guarda de qué receta salió.
-2. OEE: cargar y guardar receta (velocidad de la línea = la estación más
-   lenta, o la escrita; cambios con su estándar), máquina que causó cada
-   parada y Pareto por máquina.
+2. (2026-11-21, hecho) OEE: cargar y guardar receta (velocidad de la línea
+   = la estación más lenta, o la escrita; cambios con su estándar), máquina
+   que causó cada parada y Pareto por máquina. Cada herramienta guarda solo
+   su parte de la receta: el takt, las estaciones; el OEE, la velocidad de
+   la línea y los cambios.
 
 ## Para qué sirve
 

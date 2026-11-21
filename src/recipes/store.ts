@@ -34,11 +34,15 @@ export async function findRecipe(names: RecipeNames, database: GembaDB = default
   return (await listRecipes(database)).find((r) => sameNames(r, names)) ?? null;
 }
 
+const EMPTY: RecipeContent = { unitName: '', stations: [], lineSpeed: null, changeovers: [] };
+
 /**
- * Guarda una receta. Si ya hay una con los mismos nombres, la reemplaza (mismo
- * identificador) y devuelve cómo estaba, para poder deshacerlo.
+ * Guarda una receta. Cada herramienta guarda solo su parte (el takt, las
+ * estaciones; el OEE, la velocidad de la línea y los cambios): lo demás de la
+ * receta se queda como estaba. Si ya hay una con los mismos nombres, la
+ * actualiza (mismo identificador) y devuelve cómo estaba, para poder deshacerlo.
  */
-export async function saveRecipe(names: RecipeNames, content: RecipeContent, database: GembaDB = defaultDb): Promise<{ recipe: Recipe; previous: Recipe | null }> {
+export async function saveRecipe(names: RecipeNames, content: Partial<RecipeContent>, database: GembaDB = defaultDb): Promise<{ recipe: Recipe; previous: Recipe | null }> {
   const n = clean(names);
   const previous = await findRecipe(n, database);
   if (previous) {
@@ -46,7 +50,7 @@ export async function saveRecipe(names: RecipeNames, content: RecipeContent, dat
     await database.recipes.put(recipe);
     return { recipe, previous };
   }
-  const recipe = newRecord({ ...n, ...content }) as Recipe;
+  const recipe = newRecord({ ...EMPTY, ...n, ...content }) as Recipe;
   await database.recipes.add(recipe);
   return { recipe, previous: null };
 }
@@ -98,6 +102,25 @@ export async function deleteRecipe(id: string, database: GembaDB = defaultDb): P
 
 export async function restoreRecipe(id: string, database: GembaDB = defaultDb): Promise<void> {
   await database.recipes.update(id, { deleted: 0, updatedAt: now() });
+}
+
+/**
+ * Velocidad estándar de la línea en lo que produce, para el OEE: la escrita
+ * en la receta o, si no hay, la de la estación más lenta, en la unidad de esa
+ * estación (42 cajas/min de 24 botellas → 1.008 botellas/min).
+ */
+export function lineSpeedOf(r: Pick<RecipeContent, 'stations' | 'lineSpeed'>): { value: number; measure: 'time' | 'rate'; unit: 's' | 'min' | 'h' } | null {
+  if (r.lineSpeed) return r.lineSpeed;
+  const SECONDS = { s: 1, min: 60, h: 3600 } as const;
+  let best: { perSecond: number; value: number; measure: 'time' | 'rate'; unit: 's' | 'min' | 'h' } | null = null;
+  for (const st of r.stations) {
+    if (st.standard === null || !(st.standard > 0) || !(st.per > 0)) continue;
+    // En unidades de lo que produce la línea: una caja de 24 son 24 botellas.
+    const value = st.measure === 'rate' ? st.standard * st.per : st.standard / st.per;
+    const perSecond = st.measure === 'rate' ? value / SECONDS[st.unit] : 1 / (value * SECONDS[st.unit]);
+    if (!best || perSecond < best.perSecond) best = { perSecond, value, measure: st.measure, unit: st.unit };
+  }
+  return best && { value: best.value, measure: best.measure, unit: best.unit };
 }
 
 /** «Planta Norte · Línea 3 · 12 oz». */

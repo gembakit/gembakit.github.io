@@ -163,10 +163,13 @@ export function RecipeBar({
   onLoad,
   build,
   onSaved,
+  saveHint,
 }: {
   current: RecipeNames | null;
   onLoad: (r: Recipe) => void;
-  build: () => RecipeContent | string;
+  build: () => Partial<RecipeContent> | string;
+  /** Qué guarda esta herramienta en la receta. */
+  saveHint?: string;
   onSaved: (names: RecipeNames) => void;
 }) {
   const { t } = useI18n();
@@ -223,7 +226,7 @@ export function RecipeBar({
         open={save}
         onClose={closeSave}
         title={r.saveTitle}
-        hint={r.saveHint}
+        hint={saveHint ?? r.saveHint}
         initial={current ?? { plant: '', line: '', name: '' }}
         submit={{ save: r.save, replace: r.replace }}
         onSubmit={doSave}

@@ -286,7 +286,13 @@ Orden de trabajo y estado:
 1. [x] Exportables: paleta estándar (`src/google/exportStyle.ts`: azul
    marino de oficina, datos editables en amarillo claro, resultados en azul
    muy claro) para la exportación y la hoja del proyecto. Ya no usan el tema.
-2. [ ] Recetas paso 2 (OEE, máquina por parada, Pareto por máquina).
+2. [x] Recetas paso 2: el OEE carga y guarda receta (`saveRecipe` guarda
+   solo la parte de cada herramienta; `lineSpeedOf` da la velocidad de la
+   estación más lenta en lo que produce la línea, o la escrita), máquina que
+   causó cada parada (lista de la receta), botones para añadir los cambios de
+   la receta con su estándar y Pareto por máquina («Toda la línea» para
+   velocidad y calidad). Formato OEE v3 con `machine`, `recipe`, `machines`,
+   `changeovers` opcionales.
 3. [ ] Motor de gráficos común (SVG, tocables).
 4. [ ] Fase 2: descriptiva con histograma, Pareto, gráfico de corrida.
 5. [ ] Fase 3: capacidad (Cp, Cpk, Pp, Ppk), cartas I-MR y X-barra R.

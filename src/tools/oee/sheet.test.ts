@@ -38,7 +38,7 @@ describe('hoja de OEE: fórmulas = cálculo', () => {
     expect(def.inputs.find((x) => x.key === 'idealCycle')).toMatchObject({ value: 0.075, note: 's por unidad (= 48.000 botellas/h)' });
     expect(def.inputs.find((x) => x.key === 'shift')).toMatchObject({ value: 480, note: 'min (= 8 h)' });
     expect(def.results.find((x) => x.key === 'utilization')).toMatchObject({ label: 'Utilización de la línea', formula: '{useful}/{shift}' });
-    expect(def.notes[1]).toBe('Cambio de 330 ml a 500 ml: 40 min (Cambios de formato), estándar 30 min. Motivo: Se atascó la guía de la etiquetadora al ajustarla a 500 ml.');
+    expect(def.notes[1]).toBe('Cambio de 330 ml a 500 ml: 40 min (Cambios de formato), estándar 30 min. Causa: Etiquetadora. Motivo: Se atascó la guía de la etiquetadora al ajustarla a 500 ml.');
   });
 
   test('torta: cada porción desmarcada entra en la fórmula una sola vez', () => {
@@ -63,7 +63,7 @@ describe('mediciones guardadas', () => {
     const s = readOeeSaved(V1, t)!;
     expect(s).toMatchObject({ v: 3, shift: 480, shiftUnit: 'min', measure: 'time', measureUnit: 's', ideal: 1, total: 19271, rejects: 423, off: [] });
     expect(s.planned).toEqual([{ name: 'Paradas planificadas', value: 60, unit: 'min', note: '' }]);
-    expect(s.stops).toEqual([{ name: 'Paradas no planificadas', minutes: 47, category: 6, standard: null, note: '' }]);
+    expect(s.stops).toEqual([{ name: 'Paradas no planificadas', minutes: 47, category: 6, standard: null, note: '', machine: '' }]);
     expect(Math.round(oee(toOeeInput(s)).result!.oee * 10000) / 100).toBe(74.79);
     expect(readOeeSaved({}, t)).toBeNull();
   });
