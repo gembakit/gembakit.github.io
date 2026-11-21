@@ -1,4 +1,4 @@
-import { Check, ChevronRight, Cloud, Copy, DatabaseBackup, Monitor, Moon, ShieldCheck, ShieldAlert, Sun } from 'lucide-react';
+import { Check, ChevronRight, Copy, DatabaseBackup, Monitor, Moon, ShieldCheck, ShieldAlert, Sun } from 'lucide-react';
 import { navigate } from '../router';
 import { Button } from '../../ui/Button';
 import { useCopyHealth } from '../HealthBanner';
@@ -141,20 +141,6 @@ export function SettingsScreen({ persisted }: { persisted: boolean | null }) {
         <Card>
           <GoogleAccountPanel />
         </Card>
-        <button
-          type="button"
-          onClick={() => navigate('/prueba-google')}
-          className="press raised grid min-h-18 grid-cols-[48px_minmax(0,1fr)_20px] items-center gap-3 rounded-[20px] p-3 text-left"
-        >
-          <span className="grid size-12 place-items-center rounded-[14px] bg-soft text-accent-ink">
-            <Cloud aria-hidden size={22} />
-          </span>
-          <span className="min-w-0">
-            <span className="block text-[15.5px] font-semibold">{t.settings.googleTest}</span>
-            <span className="block text-[13px] text-muted">{t.settings.googleTestDesc}</span>
-          </span>
-          <ChevronRight aria-hidden size={20} className="text-muted" />
-        </button>
       </section>
 
       <section className="flex flex-col gap-2.5">

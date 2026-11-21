@@ -144,7 +144,6 @@ const SHOTS = [
   { name: 'datos-descargada', hash: '#/ajustes/datos', click: /^Descargar copia$/, full: true, only: 'light' },
   { name: 'bienvenida', hash: '#/bienvenida', full: true, wait: 2600 },
   { name: 'bienvenida-conectar', hash: '#/bienvenida', click: /^Conectar con Google$/, full: true, wait: 800 },
-  { name: 'prueba-google', hash: '#/prueba-google', full: true },
   { name: 'capturar', hash: '#/proyectos', click: /^(Capturar|Capture)$/, byLabel: true },
 ];
 

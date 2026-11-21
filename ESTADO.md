@@ -205,7 +205,7 @@ Todas en el Android, después de pulsar **Actualizar**:
 5. **Importar un .xlsx real suyo** y un .csv descargado de Google Sheets en
    FPY o takt.
 6. ~~Prueba de Google a los 8 días~~: hecha el 2026-11-21 (ver Fase 0).
-   Falta retirar la pantalla de prueba.
+   Pantalla de prueba retirada el mismo día.
 7. **Bienvenida y cuenta de Google** (2026-11-19): Ajustes › Cuenta de
    Google, ver su cuenta, «Abrir la carpeta en Drive», «Desconectar», y
    conectar de nuevo; la bienvenida se ve en el navegador abriendo
@@ -380,13 +380,13 @@ Android con una mano y en modo avión, los textos están en los dos idiomas y
 cada herramienta nueva tiene su ejemplo cargable. Detalle completo en
 PLAN.md, sección 5.
 
-### Fase 0 — Cimientos: falta solo la prueba de Google
+### Fase 0 — Cimientos: hecha (2026-11-21)
 
 - [x] Propuestas visuales y elección del dueño.
 - [x] Git, esqueleto, idiomas, temas, piezas comunes, navegación, registro
       de herramientas, plantilla única, base local, modo sin conexión,
       publicación y comprobación del dueño en su Android.
-- [ ] **Prueba de viabilidad de Google** (opción A de arriba, elegida por el
+- [x] **Prueba de viabilidad de Google** (opción A de arriba, elegida por el
       dueño el 2026-11-13). Resultados que hay que anotar aquí: permisos
       mínimos que funcionan, pantalla de aviso que ve el usuario, cada cuánto
       pide reconfirmar, comportamiento en la app instalada en Android y en el
@@ -462,7 +462,7 @@ PLAN.md, sección 5.
         la app (paso 7 del plan) debería desaparecer, porque `drive.file` y
         `drive.appdata` no son permisos confidenciales; comprobarlo
         entonces con otra cuenta.
-  - [ ] Al terminar, retirar la pantalla: `src/app/screens/GoogleTestScreen.tsx`,
+  - [x] (2026-11-21) Retirada la pantalla: `src/app/screens/GoogleTestScreen.tsx`,
         su ruta en `AppShell.tsx`, el enlace de Ajustes, los textos
         `googleTest` y `settings.googleTest*`, su prueba en `App.test.tsx` y
         su captura en `scripts/screens.mjs`. Se quedan `src/google/gis.ts` y

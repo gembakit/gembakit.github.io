@@ -11,7 +11,6 @@ import { ProjectsScreen } from './screens/ProjectsScreen';
 import { ToolsScreen } from './screens/ToolsScreen';
 import { ReferenceScreen } from './screens/ReferenceScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
-import { GoogleTestScreen } from './screens/GoogleTestScreen';
 import { DataScreen } from './screens/DataScreen';
 import { WelcomeScreen } from './screens/WelcomeScreen';
 import { welcomeDone } from '../google/account';
@@ -89,15 +88,13 @@ export function AppShell({ persisted }: { persisted: boolean | null }) {
   else if (section === 'referencia') screen = <ReferenceScreen />;
   else if (section === 'ajustes' && sub === 'datos') screen = <DataScreen />;
   else if (section === 'ajustes') screen = <SettingsScreen persisted={persisted} />;
-  else if (section === 'prueba-google') screen = <GoogleTestScreen />;
   else if (sub === 'nuevo') screen = <ProjectFormScreen />;
   else if (sub && kind === 'editar') screen = <ProjectFormScreen key={sub} id={sub} />;
   else if (sub && kind === 'historial') screen = <ProjectHistoryScreen key={sub} id={sub} />;
   else if (sub && kind === 'm' && third) screen = <MeasurementRoute key={third} projectId={sub} id={third} />;
   else if (sub) screen = <ProjectScreen key={sub} id={sub} />;
   else screen = <ProjectsScreen />;
-  // La prueba de Google cuelga de Ajustes: la barra marca Ajustes.
-  const navSection = section === 'prueba-google' ? 'ajustes' : section;
+  const navSection = section;
 
   return (
     <div className="min-h-dvh bg-bg text-text">

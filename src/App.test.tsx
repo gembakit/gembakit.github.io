@@ -261,17 +261,6 @@ test('proyecto: crearlo, guardar una medición de DPMO, abrirla, guardar la vers
   expect(screen.getByRole('button', { name: /Volver al proyecto|Back to the project/ })).toBeInTheDocument();
 });
 
-test('Ajustes lleva a la prueba provisional de Google, con sus siete pasos', async () => {
-  const user = userEvent.setup();
-  window.location.hash = '#/ajustes';
-  render(<App />);
-  await user.click(await screen.findByRole('button', { name: /Prueba de conexión con Google|Google connection test/ }));
-  expect(await screen.findByRole('heading', { level: 1, name: /Prueba de Google|Google test/ })).toBeInTheDocument();
-  expect(screen.getAllByRole('heading', { level: 2, name: /^(Paso|Step) \d/ })).toHaveLength(7);
-  // Al abrir anota en el registro dónde se está usando.
-  expect(screen.getByText(/Pantalla abierta como|Screen opened as/)).toBeInTheDocument();
-});
-
 test('el botón central abre la hoja de Capturar y se cierra', async () => {
   const user = userEvent.setup();
   render(<App />);
