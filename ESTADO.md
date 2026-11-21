@@ -315,7 +315,15 @@ Orden de trabajo y estado:
    cada proyecto (`src/projects/Actions.tsx`, tabla `actions` con quién,
    fecha, estado, nota) y «lo que vence» en la lista de proyectos.
 7. [ ] Fase 4: captura en planta (cronómetro, conteo, desperdicios con
-   fotos, auditoría 5S), botón Capturar; sincronización entre aparatos.
+   fotos, auditoría 5S), botón Capturar.
+   [x] Sincronización entre aparatos (PLAN.md 4.4): `src/data/merge.ts`
+   (foto de todos los registros, combina registro a registro, gana el más
+   reciente, conmutativa e idempotente, con pruebas al azar),
+   `src/google/deviceSync.ts` (archivo `gemba-sync.json` en la carpeta
+   oculta de Drive) y `useDeviceSync` (al abrir, al volver, al recuperar
+   red, tras cada cambio y cada 90 s, solo con permiso vigente). En Ajustes
+   › Cuenta de Google, «Tus aparatos» con «Sincronizar ahora». Las fotos
+   viajan dentro de las mediciones (no como archivos aparte).
 8. [ ] Fase 6: proyecto completo (fases y lo que falta, asistente, informe
    PDF, contexto para IA).
 9. [ ] Formato de ordenador; Referencia con fórmulas y árboles de decisión.

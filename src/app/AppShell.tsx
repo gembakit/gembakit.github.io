@@ -20,6 +20,7 @@ import { ProjectScreen } from './screens/ProjectScreen';
 import { ProjectHistoryScreen } from './screens/ProjectHistoryScreen';
 import { SavedProvider, useLive } from '../projects/live';
 import { useAutoSync } from '../projects/useAutoSync';
+import { useDeviceSync } from '../google/useDeviceSync';
 import { getMeasurement, getProject } from '../projects/store';
 
 function ToolRoute({ id }: { id: string }) {
@@ -66,6 +67,7 @@ export function AppShell({ persisted }: { persisted: boolean | null }) {
   const { t } = useI18n();
   const [section = 'proyectos', sub, kind, third] = useRoute();
   useAutoSync();
+  useDeviceSync();
   const [capture, setCapture] = useState(false);
   const closeCapture = useCallback(() => setCapture(false), []);
   const openCapture = useCallback(() => setCapture(true), []);

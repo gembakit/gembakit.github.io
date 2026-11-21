@@ -1,5 +1,5 @@
 import { useState, useSyncExternalStore, type ReactNode } from 'react';
-import { CircleAlert, CircleCheck, ExternalLink, Folder, FolderPlus, Loader2, LogIn, LogOut, ShieldCheck, WifiOff, type LucideIcon } from 'lucide-react';
+import { CircleAlert, CircleCheck, ExternalLink, Folder, FolderPlus, Loader2, LogIn, LogOut, RefreshCw, ShieldCheck, WifiOff, type LucideIcon } from 'lucide-react';
 import { useI18n } from '../i18n';
 import { Button } from '../ui/Button';
 import { useToast } from '../ui/Toast';
@@ -11,6 +11,7 @@ import { folderMemory } from '../google/folderMemory';
 import { adoptAccount, disconnectGoogle, ensureAppFolders, rootFolderId } from '../google/account';
 import { currentAccount, ensureToken, forgetToken, signIn, subscribeAccount } from '../google/session';
 import { useGoogleReady } from '../google/useGoogleReady';
+import { syncDevicesNow, useDeviceSyncStatus } from '../google/useDeviceSync';
 
 type Op = { k: 'idle' } | { k: 'busy'; text: string } | { k: 'done'; text: string } | { k: 'error'; text: string };
 
@@ -148,6 +149,32 @@ export function OpenFolderLink({ id, className = '' }: { id: string; className?:
 }
 
 /** Ajustes › Cuenta de Google: conectar, ver la cuenta, abrir su carpeta y desconectar. */
+/** Sincronización entre los aparatos de la cuenta: cuándo fue la última y «Sincronizar ahora». */
+function DevicesSync() {
+  const { t, lang } = useI18n();
+  const a = t.account;
+  const s = useDeviceSyncStatus();
+  const when = s.last ? new Date(s.last).toLocaleString(lang === 'es' ? 'es-ES' : 'en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : null;
+  return (
+    <div className="flex flex-col gap-2 border-t border-line pt-3">
+      <h3 className="text-[15px] font-semibold">{a.devicesTitle}</h3>
+      <p className="text-[14px] leading-relaxed text-muted">{a.devicesHint}</p>
+      {s.k === 'syncing' ? (
+        <Status icon={Loader2} spin tone="muted" text={a.devicesSyncing} />
+      ) : s.k === 'error' ? (
+        <Status icon={CircleAlert} tone="bad" text={a.devicesError(s.error ?? '')} />
+      ) : when ? (
+        <Status icon={CircleCheck} tone="ok" text={a.devicesLast(when)} />
+      ) : (
+        <Status icon={CircleAlert} tone="muted" text={a.devicesNever} />
+      )}
+      <Button icon={RefreshCw} onClick={() => void syncDevicesNow(true)} disabled={s.k === 'syncing'} className="self-start">
+        {a.devicesNow}
+      </Button>
+    </div>
+  );
+}
+
 export function GoogleAccountPanel() {
   const { t } = useI18n();
   const a = t.account;
@@ -189,6 +216,7 @@ export function GoogleAccountPanel() {
         )
       )}
       {g.opStatus}
+      <DevicesSync />
       <div className="flex flex-col gap-1.5 border-t border-line pt-3">
         <Button variant="ghost" icon={LogOut} onClick={g.disconnect} disabled={g.busy} className="self-start px-0">
           {a.disconnect}

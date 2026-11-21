@@ -1289,6 +1289,13 @@ export const es = {
     allCategories: 'Todas',
   },
   account: {
+    devicesTitle: 'Tus aparatos',
+    devicesHint: 'Lo que haces aquí aparece en tus otros aparatos con la misma cuenta (y al revés) en un minuto o dos: proyectos, mediciones, acciones, hitos y recetas. Se guarda en una carpeta oculta de tu Drive que solo ve la app.',
+    devicesSyncing: 'Sincronizando…',
+    devicesLast: (when: string) => `Sincronizado: ${when}`,
+    devicesNever: 'Todavía no se ha sincronizado este aparato.',
+    devicesError: (msg: string) => `No se pudo sincronizar: ${msg}. Se reintentará solo.`,
+    devicesNow: 'Sincronizar ahora',
     eyebrow: 'Hecha para la planta',
     slogan: 'La mejora continua, en tu bolsillo.',
     verbsLead: 'Lean y Seis Sigma para',

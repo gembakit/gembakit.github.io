@@ -111,6 +111,25 @@ export const GUIDE: readonly GuideTopic[] = [
     },
   },
   {
+    id: 'aparatos',
+    es: {
+      title: 'Tus aparatos sincronizados',
+      body: [
+        'Con la cuenta de Google conectada, lo que haces en el móvil aparece en el ordenador (y al revés) en un minuto o dos: proyectos, mediciones, acciones, hitos y recetas.',
+        'Se sincroniza solo al abrir la app, al volver a ella, al recuperar la conexión, unos segundos después de cada cambio y cada minuto y medio. En Ajustes › Cuenta de Google, «Tus aparatos» dice cuándo fue la última vez y tiene «Sincronizar ahora».',
+        'Si cambias lo mismo en dos aparatos, se queda el cambio más reciente; lo que borras se borra también en los demás. Los datos van a una carpeta oculta de tu Drive que solo ve la app; nada pasa por otro servidor.',
+      ],
+    },
+    en: {
+      title: 'Your devices in sync',
+      body: [
+        'With the Google account connected, what you do on the phone appears on the computer (and vice versa) within a minute or two: projects, measurements, actions, milestones and recipes.',
+        'It syncs by itself when you open the app, when you come back to it, when the connection returns, a few seconds after each change and every minute and a half. In Settings › Google account, “Your devices” shows when it last synced and has “Sync now”.',
+        'If you change the same thing on two devices, the most recent change is kept; what you delete is deleted on the others too. The data go to a hidden folder in your Drive that only the app can see; nothing goes through any other server.',
+      ],
+    },
+  },
+  {
     id: 'hoja',
     es: {
       title: 'Hoja de Google del proyecto',

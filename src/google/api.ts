@@ -284,15 +284,15 @@ export async function slidesBatch(token: string, id: string, requests: unknown[]
 
 const APPDATA_NAME = 'prueba-conexion.json';
 
-async function findAppDataFile(token: string, f: Fetch): Promise<DriveFile | null> {
-  const q = new URLSearchParams({ spaces: 'appDataFolder', q: `name='${APPDATA_NAME}'`, fields: 'files(id,name,modifiedTime)' });
+async function findAppDataFile(token: string, f: Fetch, name = APPDATA_NAME): Promise<DriveFile | null> {
+  const q = new URLSearchParams({ spaces: 'appDataFolder', q: `name='${name}'`, fields: 'files(id,name,modifiedTime)' });
   const body = (await (await call(token, `${DRIVE}?${q}`, {}, f)).json()) as { files?: DriveFile[] };
   return body.files?.[0] ?? null;
 }
 
 /** Guarda un archivo pequeño en la carpeta oculta de la app (lo crea o lo reemplaza). */
-export async function saveAppData(token: string, content: string, f: Fetch = fetch): Promise<void> {
-  const existing = await findAppDataFile(token, f);
+export async function saveAppData(token: string, content: string, f: Fetch = fetch, name = APPDATA_NAME): Promise<void> {
+  const existing = await findAppDataFile(token, f, name);
   if (existing) {
     await call(token, `${UPLOAD}/${existing.id}?uploadType=media`, { method: 'PATCH', headers: json, body: content }, f);
     return;
@@ -302,7 +302,7 @@ export async function saveAppData(token: string, content: string, f: Fetch = fet
     `--${boundary}`,
     'Content-Type: application/json; charset=UTF-8',
     '',
-    JSON.stringify({ name: APPDATA_NAME, parents: ['appDataFolder'] }),
+    JSON.stringify({ name, parents: ['appDataFolder'] }),
     `--${boundary}`,
     'Content-Type: application/json; charset=UTF-8',
     '',
@@ -313,8 +313,8 @@ export async function saveAppData(token: string, content: string, f: Fetch = fet
 }
 
 /** Lee el archivo de la carpeta oculta, o null si no existe. */
-export async function loadAppData(token: string, f: Fetch = fetch): Promise<string | null> {
-  const file = await findAppDataFile(token, f);
+export async function loadAppData(token: string, f: Fetch = fetch, name = APPDATA_NAME): Promise<string | null> {
+  const file = await findAppDataFile(token, f, name);
   if (!file) return null;
   return (await call(token, `${DRIVE}/${file.id}?alt=media`, {}, f)).text();
 }

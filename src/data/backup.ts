@@ -24,7 +24,7 @@ export const BACKUP_TABLES = ['projects', ...CHILD_TABLES] as const;
 export type BackupTable = (typeof BACKUP_TABLES)[number];
 
 /** Ajustes que son de este aparato y de su cuenta de Google: no viajan en la copia. */
-const LOCAL_SETTINGS = [/^drive\./, /^lastBackup$/];
+const LOCAL_SETTINGS = [/^drive\./, /^lastBackup$/, /^deviceSync\./];
 
 export interface Backup {
   format: typeof BACKUP_FORMAT;

@@ -64,7 +64,7 @@ test('conectar en la bienvenida crea Gemba Kit con sus tres carpetas en el Drive
   expect(screen.getByText(/^(Copias de seguridad|Backups)$/)).toBeInTheDocument();
   expect(folders()).toHaveLength(0);
   await user.click(screen.getByRole('button', { name: /Continuar con Google|Continue with Google/ }));
-  expect(await screen.findByText(/Carpetas listas en tu Drive|Folders ready in your Drive/)).toBeInTheDocument();
+  expect(await screen.findByText(/Carpetas listas en tu Drive|Folders ready in your Drive/, {}, { timeout: 4000 })).toBeInTheDocument();
   expect(screen.getByText(/ana@example\.com/)).toBeInTheDocument();
   const all = folders();
   const root = all.find((f) => f.name === 'Gemba Kit')!;

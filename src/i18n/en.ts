@@ -1281,6 +1281,13 @@ export const en: Messages = {
     allCategories: 'All',
   },
   account: {
+    devicesTitle: 'Your devices',
+    devicesHint: 'What you do here appears on your other devices with the same account (and vice versa) within a minute or two: projects, measurements, actions, milestones and recipes. It is kept in a hidden folder in your Drive that only the app can see.',
+    devicesSyncing: 'Syncing…',
+    devicesLast: (when) => `Synced: ${when}`,
+    devicesNever: 'This device has not been synced yet.',
+    devicesError: (msg) => `Could not sync: ${msg}. It will retry by itself.`,
+    devicesNow: 'Sync now',
     eyebrow: 'Made for the shop floor',
     slogan: 'Continuous improvement, in your pocket.',
     verbsLead: 'Lean and Six Sigma to',
