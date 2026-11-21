@@ -204,8 +204,12 @@ Todas en el Android, después de pulsar **Actualizar**:
    copia».
 5. **Importar un .xlsx real suyo** y un .csv descargado de Google Sheets en
    FPY o takt.
-6. **El 2026-11-21**: paso 3 de la pantalla de prueba de Google (que el
-   permiso sigue valiendo a los 8 días). Después se retira la pantalla de
+6. **Desde el 2026-11-21**: paso 3 de la pantalla de prueba de Google (que
+   el permiso sigue valiendo a los 8 días). Camino: barra de abajo →
+   Ajustes → sección «Cuenta de Google» → tarjeta «Prueba de conexión con
+   Google» → círculo 3, «Escribir y leer» → botón «Escribir y leer» (si dice
+   «Primero crea la hoja», antes el botón «Crear hoja» del círculo 2) → al
+   final, sección «Registro» → botón «Copiar registro» → pegar en el chat. Después se retira la pantalla de
    prueba (`GoogleTestScreen` y `projectTest.*`).
 7. **Bienvenida y cuenta de Google** (2026-11-19): Ajustes › Cuenta de
    Google, ver su cuenta, «Abrir la carpeta en Drive», «Desconectar», y
@@ -249,12 +253,22 @@ con sus decisiones del mismo día:
   tres factores con dos decimales (97,80 %), Pareto con solo «44,4 % de las
   paradas» (o «de todo lo perdido» con la casilla de pérdidas).
 
-**Siguiente, pedido por el dueño (decisión B):** «Líneas» guardadas con sus
-**recetas** (p. ej. «Línea 3» con recetas «12 oz» y «20 oz», cada una con las
-estaciones, sus unidades, equivalencias y velocidades estándar), para no
-volver a escribirlas en cada proyecto. Antes de construir: dónde viven
-(propuesta: Referencia o Ajustes, y un botón «Cargar receta» en el takt y en
-el OEE) y si se sincronizan con Drive (sí, con la copia de seguridad).
+### Comentarios del dueño del 2026-11-21 (fichas por aprobar)
+
+- **Recetas:** aprobado que vivan en Referencia, ordenadas Planta o compañía
+  → Línea → Receta, y que se carguen desde cada proyecto. Borrador:
+  `docs/fichas/recetas.md` (preguntas A y B al final).
+- **«Otras vistas» del OEE:** el dueño preguntó por qué con «Cambios de
+  formato» (40 min) + «Falta de material» (12) + «Tiempo estándar de las
+  paradas» (30) el divisor quita 52 y no 82. Es lo aprobado en la ficha v2
+  (B: «quitar una categoría ya incluye su estándar»): el estándar de 30 min
+  es el de la parada «Cambio de formato» del ejemplo (40 = 30 + 10 de
+  exceso), así que ya va dentro de los 40. Pero la casilla seguía marcada sin
+  aportar nada, y eso confunde. El dueño pide otro enfoque, como el LU de
+  su embotelladora: una torta con todas las afectaciones del turno que se
+  pueden desmarcar. Borrador: `docs/fichas/oee-v3.md` (preguntas A, B y C).
+- **Prueba de Google del paso 3:** las instrucciones eran vagas; se le dan
+  de nuevo con el camino completo (ver la prueba 6 de la lista).
 
 ### Plan hasta terminar la app (propuesto el 2026-11-20, pendiente de aprobar)
 
