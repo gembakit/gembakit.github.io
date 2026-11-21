@@ -299,7 +299,9 @@ Orden de trabajo y estado:
    (fichas en `docs/fichas/fase-2.md`; textos de herramientas nuevas en
    `src/i18n/tools/`, español e inglés juntos; columna de datos común en
    `src/tools/DataColumn.tsx`).
-5. [ ] Fase 3: capacidad (Cp, Cpk, Pp, Ppk), cartas I-MR y X-barra R.
+5. [x] Fase 3: capacidad (Cp, Cpk, Pp, Ppk) y cartas I-MR y X-barra R con
+   las pruebas de Nelson (`docs/fichas/fase-3.md`). La hoja admite ahora
+   {clave[n]} (celda n de una columna) y {^clave} (fila anterior).
 6. [ ] Fase 5: 5 porqués, espina de pescado, acciones, A3, Kaizen, plan de
    control.
 7. [ ] Fase 4: captura en planta (cronómetro, conteo, desperdicios con
@@ -312,6 +314,11 @@ Preguntas de producto para el final:
 - Anderson-Darling: no encontré un caso publicado con el valor p ya
   calculado (NIST da A² y el valor crítico; Minitab, la tabla del valor p).
   Si el dueño tiene Minitab a mano en algún momento, comparar un caso.
+- Capacidad con subgrupos: la app usa R̄/d2 (NIST); Minitab, por defecto, la
+  desviación combinada. ¿Se cambia a la de Minitab?
+- Cartas: tabla de constantes A2, D3, D4 (NIST) y d2 (ASTM), pendiente de
+  que el dueño la valide (lo pedía ESTADO.md). Pruebas marcadas por
+  defecto: 1, 2, 3, 5 y 6; ¿prefiere otras?
 
 ### Recetas, paso 1 de 2 (2026-11-21, hecho)
 

@@ -24,7 +24,7 @@ export interface SheetResult extends SheetRowBase {
    * Fórmula en sintaxis inglesa de hoja de cálculo (comas, punto decimal,
    * nombres de función en inglés), sin el «=» inicial. Las referencias a
    * otras filas van entre llaves: {units}, {dpo}. Una columna entera de la
-   * tabla, como rango: {fpy[]}; su primera celda: {fpy[1]}; la columna de nombres de la tabla: {label[]}.
+   * tabla, como rango: {fpy[]}; su celda n: {fpy[1]}, {fpy[20]}; la columna de nombres de la tabla: {label[]}.
    */
   formula: string;
   /** Resultado principal: se destaca en la tabla y encabeza el resumen. */
@@ -38,8 +38,10 @@ export interface SheetTableColumn {
   key: string;
   head: string;
   format: NumFormat;
-  /** Fórmula de cada fila; {.clave} es la celda de la misma fila en otra columna. */
+  /** Fórmula de cada fila; {.clave} es la celda de la misma fila en otra columna y {^clave}, la de la fila anterior. */
   formula?: string;
+  /** Fórmula de la primera fila, si es distinta (vacía: la celda queda en blanco, como el primer rango móvil). */
+  formulaFirst?: string;
 }
 
 /**

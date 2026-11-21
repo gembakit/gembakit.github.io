@@ -1,6 +1,7 @@
 // Textos en español. Es el idioma de referencia: en.ts debe tener exactamente
 // las mismas claves (TypeScript y una prueba lo comprueban).
 import { corridaEs, dataColumnEs, descriptivaEs, paretoEs } from './tools/phase2';
+import { capacidadEs, cartasEs } from './tools/phase3';
 
 export const es = {
   dataColumn: dataColumnEs,
@@ -239,6 +240,8 @@ export const es = {
     descriptiva: descriptivaEs,
     pareto: paretoEs,
     corrida: corridaEs,
+    capacidad: capacidadEs,
+    cartas: cartasEs,
     title: 'Herramientas',
     search: 'Buscar herramienta',
     noResults: (q: string) => `Ninguna herramienta coincide con «${q}».`,

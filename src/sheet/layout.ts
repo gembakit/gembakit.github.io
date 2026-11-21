@@ -115,8 +115,8 @@ export function layoutSheet(def: SheetDef): Grid {
     setAddress('label[]', `B${first}:B${last}`);
     table.columns.forEach((c, i) => {
       setAddress(`${c.key}[]`, `${TABLE_COLUMNS[i]}${first}:${TABLE_COLUMNS[i]}${last}`);
-      // La primera celda de la columna, para acumulados: SUM({valor[1]}:{.valor}).
-      setAddress(`${c.key}[1]`, `${TABLE_COLUMNS[i]}${first}`);
+      // Celda n de la columna ({valor[1]}, {valor[20]}), para acumulados y límites con los primeros puntos.
+      table.rows.forEach((_, n) => (address[`${c.key}[${n + 1}]`] = `${TABLE_COLUMNS[i]}${first + n}`));
     });
     if (table.highlightMin) highlightMin = address[`${table.highlightMin}[]`];
     if (table.highlightMax) highlightMax = address[`${table.highlightMax}[]`];
@@ -124,13 +124,19 @@ export function layoutSheet(def: SheetDef): Grid {
       const r = rows.length + 1;
       const own: Record<string, string> = {};
       table.columns.forEach((c, i) => (own[c.key] = `${TABLE_COLUMNS[i]}${r}`));
+      // La fila anterior: {^clave} (rango móvil).
+      if (n > 0) table.columns.forEach((c, i) => (own[`^${c.key}`] = `${TABLE_COLUMNS[i]}${r - 1}`));
       const cells = empty();
       cells[1] = { text: tr.label };
       table.columns.forEach((c, i) => {
         if (c.formula) {
           const cell: GridCell = { format: c.format };
-          pending.push({ cell, formula: c.formula, row: own });
-          cells[i + 2] = cell;
+          const formula = n === 0 && c.formulaFirst !== undefined ? c.formulaFirst : c.formula;
+          if (formula === '') cells[i + 2] = { text: '' };
+          else {
+            pending.push({ cell, formula, row: own });
+            cells[i + 2] = cell;
+          }
         } else {
           const v = tr.values[c.key];
           if (v === undefined) throw new SheetDefError(`Falta el dato ${c.key} en la fila «${tr.label}»`);
@@ -168,8 +174,8 @@ export function layoutSheet(def: SheetDef): Grid {
   // Las fórmulas se resuelven al final: un resultado puede citar a otro, y el
   // resumen cita resultados que van más abajo.
   for (const { cell, formula, row } of pending) {
-    cell.formula = formula.replace(/\{(\.?)(\w+(?:\[1?\])?)\}/g, (_, dot: string, k: string) => {
-      const a = dot ? row?.[k] : address[k];
+    cell.formula = formula.replace(/\{([.^]?)(\w+(?:\[\d*\])?)\}/g, (_, dot: string, k: string) => {
+      const a = dot === '.' ? row?.[k] : dot === '^' ? row?.[`^${k}`] : address[k];
       if (!a) throw new SheetDefError(`Referencia desconocida en la fórmula: {${dot}${k}}`);
       return a;
     });

@@ -8,11 +8,13 @@ import { roiTool } from './roi';
 import { descriptivaTool } from './descriptiva';
 import { paretoTool } from './pareto';
 import { corridaTool } from './corrida';
+import { capacidadTool } from './capacidad';
+import { cartasTool } from './cartas';
 
 // Registro central de herramientas (CLAUDE.md, arquitectura).
 // Cada herramienta vive en su carpeta y se añade aquí; la navegación y el
 // catálogo se construyen a partir de esta lista.
-export const TOOLS: readonly ToolDef[] = [paretoTool, corridaTool, descriptivaTool, dpmoTool, fpyTool, taktTool, oeeTool, kanbanTool, roiTool];
+export const TOOLS: readonly ToolDef[] = [paretoTool, corridaTool, descriptivaTool, dpmoTool, fpyTool, taktTool, oeeTool, capacidadTool, cartasTool, kanbanTool, roiTool];
 
 export function findTool(id: string): ToolDef | undefined {
   return TOOLS.find((t) => t.id === id);

@@ -78,7 +78,25 @@ export type CalcWarning =
   /** Gráfico de corrida: menos corridas de lo esperable por azar. */
   | { code: 'few-runs'; p: number }
   /** Gráfico de corrida: más corridas de lo esperable por azar. */
-  | { code: 'many-runs'; p: number };
+  | { code: 'many-runs'; p: number }
+  /** Cartas: el tamaño de subgrupo está fuera de la tabla de constantes. */
+  | { code: 'subgroup-size'; min: number; max: number }
+  /** Cartas: hacen falta al menos `min` subgrupos completos. */
+  | { code: 'few-subgroups'; min: number }
+  /** Cartas: datos al final que no completan un subgrupo y no se usan. */
+  | { code: 'leftover'; count: number }
+  /** Cartas: puntos con señal de causa especial. */
+  | { code: 'out-of-control'; count: number }
+  /** Capacidad: sin ningún límite de especificación. */
+  | { code: 'no-spec' }
+  /** Capacidad: el límite superior no es mayor que el inferior. */
+  | { code: 'spec-order' }
+  /** Capacidad: el objetivo cae fuera de los límites. */
+  | { code: 'target-outside' }
+  /** Capacidad: la sigma global es mucho mayor que la de corto plazo (proceso inestable). */
+  | { code: 'unstable-process' }
+  /** Capacidad: Cpk menor que 1. */
+  | { code: 'not-capable' };
 
 export interface CalcOutput<T> {
   result: T | null;

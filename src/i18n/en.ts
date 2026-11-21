@@ -1,5 +1,6 @@
 import type { Messages } from './types';
 import { corridaEn, dataColumnEn, descriptivaEn, paretoEn } from './tools/phase2';
+import { capacidadEn, cartasEn } from './tools/phase3';
 
 export const en: Messages = {
   dataColumn: dataColumnEn,
@@ -237,6 +238,8 @@ export const en: Messages = {
     descriptiva: descriptivaEn,
     pareto: paretoEn,
     corrida: corridaEn,
+    capacidad: capacidadEn,
+    cartas: cartasEn,
     title: 'Tools',
     search: 'Search tools',
     noResults: (q) => `No tool matches “${q}”.`,

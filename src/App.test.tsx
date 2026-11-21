@@ -422,3 +422,25 @@ test('Gráfico de corrida: el ejemplo SMED da tres señales', async () => {
   expect(await screen.findAllByText(/^(Desplazamiento hacia abajo|Downward shift): 12/)).not.toHaveLength(0);
   expect(screen.getByRole('img', { name: /^(Gráfico de corrida|Run chart)/ })).toBeInTheDocument();
 });
+
+test('Capacidad: el caudal de NIST da Cpk 1,16 y Ppk 0,95 con veredicto', async () => {
+  const user = userEvent.setup();
+  window.location.hash = '#/herramientas/capacidad';
+  render(<App />);
+  await user.click(await screen.findByRole('button', { name: /Cargar ejemplo|Load example/ }));
+  await user.click(await screen.findByRole('button', { name: /^(Caudal \(NIST\)|Flow rate \(NIST\))/ }));
+  expect(await screen.findByRole('button', { name: /^Cpk\s*1[,.]16/ })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /^Ppk\s*0[,.]95/ })).toBeInTheDocument();
+  expect(screen.getByText(/^(Justo|Borderline)$/)).toBeInTheDocument();
+});
+
+test('Cartas de control: el llenado en X-barra R marca el desajuste desde el subgrupo 20', async () => {
+  const user = userEvent.setup();
+  window.location.hash = '#/herramientas/cartas';
+  render(<App />);
+  await user.click(await screen.findByRole('button', { name: /Cargar ejemplo|Load example/ }));
+  await user.click(await screen.findByRole('button', { name: /^(Llenado en subgrupos de 5|Filling in subgroups of 5)/ }));
+  expect((await screen.findAllByText(/(puntos con señal|points with a special-cause signal)/)).length).toBeGreaterThan(0);
+  expect(screen.getByRole('img', { name: /^(Carta de medias por subgrupo|Chart of subgroup means)/ })).toBeInTheDocument();
+  expect(screen.getAllByText(/(subgrupos 20|subgroups 20)/).length).toBeGreaterThan(0);
+});
