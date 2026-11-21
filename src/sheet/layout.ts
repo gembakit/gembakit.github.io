@@ -81,6 +81,12 @@ export function layoutSheet(def: SheetDef): Grid {
     gap();
   }
 
+  for (const sec of def.textSections ?? []) {
+    rows.push(wide('section', sec.title));
+    sec.rows.forEach((r, n) => rows.push({ kind: 'info', cells: [E, { text: r.label }, { text: r.value }, E, E], alt: n % 2 === 1 }));
+    gap();
+  }
+
   // Resumen: el resultado principal primero, después los demás marcados.
   const summary = [...def.results.filter((r) => r.main), ...def.results.filter((r) => r.summary && !r.main)];
   if (summary.length) {
@@ -93,7 +99,9 @@ export function layoutSheet(def: SheetDef): Grid {
     gap();
   }
 
-  rows.push(wide('section', T.inputs));
+  // Sin datos ni tabla (un documento), no hay sección de datos.
+  const hasData = def.inputs.length > 0 || !!def.table;
+  if (hasData) rows.push(wide('section', T.inputs));
   if (def.inputs.length) {
     rows.push({ kind: 'heads', cells: [E, { text: T.inputHeads[0] }, { text: T.inputHeads[1] }, { text: T.inputHeads[2] }, E] });
     def.inputs.forEach((i, n) => {
@@ -146,17 +154,19 @@ export function layoutSheet(def: SheetDef): Grid {
       rows.push({ kind: 'trow', cells, alt: n % 2 === 1 });
     });
   }
-  rows.push(wide('hint', T.editHint));
-  gap();
+  if (hasData) {
+    rows.push(wide('hint', T.editHint));
+    gap();
+  }
 
-  rows.push(wide('section', T.results), { kind: 'heads', cells: [E, { text: T.resultHeads[0] }, { text: T.resultHeads[1] }, { text: T.resultHeads[2] }, E] });
+  if (def.results.length) rows.push(wide('section', T.results), { kind: 'heads', cells: [E, { text: T.resultHeads[0] }, { text: T.resultHeads[1] }, { text: T.resultHeads[2] }, E] });
   def.results.forEach((r, n) => {
     place(r.key);
     const value: GridCell = {};
     pending.push({ cell: value, formula: r.formula });
     rows.push({ kind: 'result', cells: [E, { text: r.label }, value, r.note ? { text: r.note } : E, E], format: r.format, main: r.main, alt: n % 2 === 1 });
   });
-  gap();
+  if (def.results.length) gap();
 
   rows.push(wide('section', T.reading));
   for (const line of def.reading) {

@@ -1,6 +1,6 @@
 import type { Messages } from '../../i18n';
 import type { DescriptiveResult } from '../../calc/descriptive';
-import type { ReadingLine, SheetDef, SheetResult } from '../../sheet/types';
+import { fixed, type ReadingLine, type SheetDef, type SheetResult } from '../../sheet/types';
 import { descriptivaFormat } from './explain';
 import { descriptivaName, type DescriptivaSaved } from './model';
 
@@ -16,17 +16,18 @@ export function descriptivaSheet(s: DescriptivaSaved, r: DescriptiveResult, t: M
   const c = t.sheet;
   const f = descriptivaFormat(lang, s.values, s.unit);
   const unit = s.unit.trim();
+  const v = fixed(f.d);
   const results: SheetResult[] = [
     { key: 'n', label: d.n, formula: 'COUNT({x[]})', note: n.n, format: 'integer' },
-    { key: 'mean', label: d.mean, formula: 'AVERAGE({x[]})', note: unit ? `${unit} · ${n.mean}` : n.mean, format: 'auto', main: true },
-    { key: 'sd', label: d.sd, formula: 'STDEV.S({x[]})', note: unit ? `${unit} · ${n.sd}` : n.sd, format: 'auto', summary: true },
-    { key: 'median', label: d.median, formula: 'MEDIAN({x[]})', note: n.median, format: 'auto', summary: true },
-    ...(r.q1 !== null ? [{ key: 'q1', label: d.q1, formula: 'QUARTILE.EXC({x[]},1)', note: n.q1, format: 'auto' as const }] : []),
-    ...(r.q3 !== null ? [{ key: 'q3', label: d.q3, formula: 'QUARTILE.EXC({x[]},3)', note: n.q3, format: 'auto' as const }] : []),
+    { key: 'mean', label: d.mean, formula: 'AVERAGE({x[]})', note: unit ? `${unit} · ${n.mean}` : n.mean, format: v, main: true },
+    { key: 'sd', label: d.sd, formula: 'STDEV.S({x[]})', note: unit ? `${unit} · ${n.sd}` : n.sd, format: v, summary: true },
+    { key: 'median', label: d.median, formula: 'MEDIAN({x[]})', note: n.median, format: v, summary: true },
+    ...(r.q1 !== null ? [{ key: 'q1', label: d.q1, formula: 'QUARTILE.EXC({x[]},1)', note: n.q1, format: v }] : []),
+    ...(r.q3 !== null ? [{ key: 'q3', label: d.q3, formula: 'QUARTILE.EXC({x[]},3)', note: n.q3, format: v }] : []),
     { key: 'min', label: d.min, formula: 'MIN({x[]})', note: n.min, format: 'auto' },
     { key: 'max', label: d.max, formula: 'MAX({x[]})', note: n.max, format: 'auto' },
-    { key: 'range', label: d.range, formula: '{max}-{min}', note: n.range, format: 'auto' },
-    { key: 'se', label: d.se, formula: '{sd}/SQRT({n})', note: n.se, format: 'auto' },
+    { key: 'range', label: d.range, formula: '{max}-{min}', note: n.range, format: v },
+    { key: 'se', label: d.se, formula: '{sd}/SQRT({n})', note: n.se, format: v },
     ...(r.skewness !== null ? [{ key: 'skewness', label: d.skewness, formula: 'SKEW({x[]})', note: n.skewness, format: 'decimal4' as const }] : []),
     ...(r.kurtosis !== null ? [{ key: 'kurtosis', label: d.kurtosis, formula: 'KURT({x[]})', note: n.kurtosis, format: 'decimal4' as const }] : []),
   ];

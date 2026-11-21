@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { CircleAlert, CircleCheck, ExternalLink, FileSpreadsheet, Loader2, Sheet as SheetIcon, WifiOff } from 'lucide-react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { CircleAlert, CircleCheck, ExternalLink, FileSpreadsheet, FileText, Loader2, Sheet as SheetIcon, WifiOff } from 'lucide-react';
 import { useI18n } from '../i18n';
 import { gisReady, GoogleAuthError, loadGis } from '../google/gis';
 import { GoogleApiError } from '../google/api';
@@ -12,16 +12,19 @@ import type { SheetDef } from '../sheet/types';
 import { EXPORT_PALETTE } from '../google/exportStyle';
 import { Button } from './Button';
 import { Sheet } from './Sheet';
+import { PrintNow } from './PrintDoc';
 
 type Phase = { k: 'idle' } | { k: 'creating' } | { k: 'done'; url: string } | { k: 'error'; text: string };
 
 /** Hoja inferior «Exportar»: crea la hoja de Google de la herramienta; Excel, próximamente. */
-export function ExportPanel({ open, onClose, build }: { open: boolean; onClose: () => void; build: () => SheetDef | null }) {
+export function ExportPanel({ open, onClose, build, figure }: { open: boolean; onClose: () => void; build: () => SheetDef | null; figure?: ReactNode }) {
   const { t, lang } = useI18n();
   const e = t.exporting;
   const [gis, setGis] = useState<'loading' | 'ready' | 'failed'>(gisReady() ? 'ready' : 'loading');
   const [online, setOnline] = useState(navigator.onLine);
   const [phase, setPhase] = useState<Phase>({ k: 'idle' });
+  const [printing, setPrinting] = useState<SheetDef | null>(null);
+  const donePrinting = useCallback(() => setPrinting(null), []);
 
   useEffect(() => {
     if (!open) return;
@@ -111,6 +114,22 @@ export function ExportPanel({ open, onClose, build }: { open: boolean; onClose: 
           </Button>
         )}
       </section>
+
+      <section className="flex flex-col gap-3 rounded-[18px] bg-surface p-4 shadow-[inset_0_0_0_1.5px_var(--line)]">
+        <div className="grid grid-cols-[44px_minmax(0,1fr)] items-start gap-3">
+          <span className="grid size-11 place-items-center rounded-[13px] bg-soft text-accent-ink">
+            <FileText aria-hidden size={22} />
+          </span>
+          <div className="min-w-0">
+            <h3 className="text-[16px] font-semibold">{e.pdf}</h3>
+            <p className="text-[14px] leading-snug text-muted">{e.pdfDesc}</p>
+          </div>
+        </div>
+        <Button icon={FileText} onClick={() => setPrinting(build())} className="w-full">
+          {e.pdfButton}
+        </Button>
+      </section>
+      {printing && <PrintNow def={printing} figure={figure} onDone={donePrinting} />}
 
       <section aria-disabled="true" className="grid grid-cols-[44px_minmax(0,1fr)] items-center gap-3 rounded-[18px] p-4 opacity-70 shadow-[inset_0_0_0_1.5px_var(--line)]">
         <span className="grid size-11 place-items-center rounded-[13px] bg-surface-2 text-muted">

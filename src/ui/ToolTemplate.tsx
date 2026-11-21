@@ -36,6 +36,7 @@ export function ToolTemplate({
   sheet,
   toolId,
   save,
+  figure,
 }: {
   name: string;
   subtitle?: string;
@@ -53,6 +54,8 @@ export function ToolTemplate({
   toolId?: string;
   /** Datos actuales y resultado principal, para guardarlos en un proyecto. */
   save?: () => SavePayload | null;
+  /** Gráfico principal para el PDF. */
+  figure?: ReactNode;
 }) {
   const { t, lang } = useI18n();
   const toast = useToast();
@@ -186,7 +189,7 @@ export function ToolTemplate({
           )}
         </div>
       </div>
-      {sheet && <ExportPanel open={exportOpen} onClose={closeExport} build={sheet} />}
+      {sheet && <ExportPanel open={exportOpen} onClose={closeExport} build={sheet} figure={figure} />}
       {save && toolId && !saved && <SaveSheet open={saveOpen} onClose={closeSave} toolId={toolId} defaultName={`${name} · ${today}`} payload={save} />}
       <BottomAction>{bottom}</BottomAction>
     </Screen>

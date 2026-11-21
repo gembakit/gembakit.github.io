@@ -119,6 +119,7 @@ export default function CartasTool() {
   const signals = ok ? signalLines(c, t, lang) : [];
   const ex = ok ? cartasExplain(c, saved, t, lang) : null;
   let result: ReactNode;
+  let figure: ReactNode = null;
   if (!ok || !ex) {
     result =
       warnings.length && parsed.values.length ? (
@@ -151,6 +152,44 @@ export default function CartasTool() {
         <LegendItem kind="limit" label={d.legendLimit} />
       </>
     );
+    const mainChart = (
+      <SeriesChart
+        values={main.values}
+        lang={lang}
+        label={main.aria}
+        lines={[
+          { value: main.lim.center, label: d.center, kind: 'center' },
+          { value: main.lim.ucl, label: d.ucl, kind: 'limit' },
+          { value: main.lim.lcl, label: d.lcl, kind: 'limit' },
+        ]}
+        flags={new Set(main.sig.flatMap((s) => s.points))}
+        pointLabel={(i, v) => main.text(i + 1, `${f.val(v)}${u}`)}
+        legend={legend}
+      />
+    );
+    const secChart = (
+      <SeriesChart
+        values={sec.values}
+        lang={lang}
+        height={150}
+        label={sec.aria}
+        lines={[
+          { value: sec.lim.center, label: d.center, kind: 'center' },
+          { value: sec.lim.ucl, label: d.ucl, kind: 'limit' },
+          ...(sec.lim.lcl > 0 ? [{ value: sec.lim.lcl, label: d.lcl, kind: 'limit' as const }] : []),
+        ]}
+        flags={new Set(sec.sig.flatMap((s) => s.points))}
+        pointLabel={(i, v) => sec.text(i + 1, `${f.val(v)}${u}`)}
+      />
+    );
+    figure = (
+      <div className="flex flex-col gap-3">
+        <SubTitle>{main.title}</SubTitle>
+        {mainChart}
+        <SubTitle>{sec.title}</SubTitle>
+        {secChart}
+      </div>
+    );
     result = (
       <div className="flex flex-col gap-4">
         <p className={`flex items-start gap-2.5 rounded-[14px] p-3 ${n ? 'bg-warn-soft' : 'bg-ok-soft'}`}>
@@ -164,19 +203,7 @@ export default function CartasTool() {
         </div>
         <div className="flex flex-col gap-1.5">
           <SubTitle>{main.title}</SubTitle>
-          <SeriesChart
-            values={main.values}
-            lang={lang}
-            label={main.aria}
-            lines={[
-              { value: main.lim.center, label: d.center, kind: 'center' },
-              { value: main.lim.ucl, label: d.ucl, kind: 'limit' },
-              { value: main.lim.lcl, label: d.lcl, kind: 'limit' },
-            ]}
-            flags={new Set(main.sig.flatMap((s) => s.points))}
-            pointLabel={(i, v) => main.text(i + 1, `${f.val(v)}${u}`)}
-            legend={legend}
-          />
+          {mainChart}
         </div>
         <div className="flex flex-col gap-1.5">
           <SubTitle>{sec.title}</SubTitle>
@@ -184,19 +211,7 @@ export default function CartasTool() {
             <Stat label={c.kind === 'imr' ? d.mrBar : d.rBar} value={f.val(sec.lim.center)} calc={ex.bar} />
             <Stat label={d.ucl} value={f.val(sec.lim.ucl)} calc={ex.secUcl} />
           </div>
-          <SeriesChart
-            values={sec.values}
-            lang={lang}
-            height={150}
-            label={sec.aria}
-            lines={[
-              { value: sec.lim.center, label: d.center, kind: 'center' },
-              { value: sec.lim.ucl, label: d.ucl, kind: 'limit' },
-              ...(sec.lim.lcl > 0 ? [{ value: sec.lim.lcl, label: d.lcl, kind: 'limit' as const }] : []),
-            ]}
-            flags={new Set(sec.sig.flatMap((s) => s.points))}
-            pointLabel={(i, v) => sec.text(i + 1, `${f.val(v)}${u}`)}
-          />
+          {secChart}
         </div>
         {signals.length > 0 && (
           <div className="flex flex-col gap-2 border-t border-line pt-3">
@@ -244,6 +259,7 @@ export default function CartasTool() {
       reading={reading}
       formula={formula}
       sheet={sheet}
+      figure={figure}
       toolId="cartas"
       save={save}
     />

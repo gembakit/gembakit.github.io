@@ -1,5 +1,6 @@
 import type { Messages } from '../../i18n';
-import type { ReadingLine, SheetDef } from '../../sheet/types';
+import { fixed, type ReadingLine, type SheetDef } from '../../sheet/types';
+import { descriptivaFormat } from '../descriptiva/explain';
 import { measuredName } from '../descriptiva/model';
 import type { CorridaSaved } from './model';
 
@@ -40,7 +41,7 @@ export function corridaSheet(s: CorridaSaved, t: Messages, opts: { reading: Read
     },
     results: [
       { key: 'n', label: t.tools.descriptiva.n, formula: 'COUNT({x[]})', note: sh.notes.n, format: 'integer' },
-      { key: 'median', label: d.median, formula: 'MEDIAN({x[]})', note: unit ? `${unit} · ${sh.notes.median}` : sh.notes.median, format: 'auto', main: true },
+      { key: 'median', label: d.median, formula: 'MEDIAN({x[]})', note: unit ? `${unit} · ${sh.notes.median}` : sh.notes.median, format: fixed(descriptivaFormat('es', s.values, s.unit).d), main: true },
     ],
     reading: opts.reading,
     notes: [sh.sideNote, sh.signalsNote, c.readingNote],

@@ -3,8 +3,15 @@
 // qué notas lleva su hoja; los módulos de salida (hoja de Google ahora,
 // .xlsx más adelante) la convierten sin que la herramienta sepa cómo.
 
-/** Formato de número de una celda. «auto»: los decimales que pida el valor. «text»: la fórmula da un texto. */
-export type NumFormat = 'integer' | 'decimal2' | 'decimal4' | 'percent' | 'auto' | 'text';
+/**
+ * Formato de número de una celda. «auto»: los decimales que pida el valor.
+ * «text»: la fórmula da un texto. «fixedN»: siempre N decimales (los de los
+ * datos más dos, por ejemplo).
+ */
+export type NumFormat = 'integer' | 'decimal2' | 'decimal4' | 'percent' | 'auto' | 'text' | `fixed${number}`;
+
+/** «fixed3» con 3 decimales; los decimales de los datos más `extra`, hasta 8. */
+export const fixed = (decimals: number): NumFormat => `fixed${Math.max(0, Math.min(8, Math.round(decimals)))}`;
 
 interface SheetRowBase {
   /** Nombre para referirse a la fila desde las fórmulas: {clave}. */
@@ -101,4 +108,6 @@ export interface SheetDef {
   notes: string[];
   /** Datos de una medición guardada (proyecto, fecha, contexto…): van arriba, en su propia sección. */
   info?: { title: string; rows: { label: string; value: string }[] };
+  /** Secciones de texto (documentos: 5 porqués, A3, plan de control…), después de «info». */
+  textSections?: { title: string; rows: { label: string; value: string }[] }[];
 }

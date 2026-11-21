@@ -95,6 +95,7 @@ export default function CapacidadTool() {
   );
 
   let result: ReactNode;
+  let figure: ReactNode = null;
   if (!r) {
     const show = parsed.values.length > 0 || lsl.trim() || usl.trim();
     result =
@@ -123,6 +124,24 @@ export default function CapacidadTool() {
     const tone = v === 'good' ? 'bg-ok-soft' : v === 'marginal' ? 'bg-warn-soft' : 'bg-bad-soft';
     const Icon = v === 'good' ? CircleCheck : v === 'marginal' ? TriangleAlert : CircleX;
     const iconTone = v === 'good' ? 'text-ok' : v === 'marginal' ? 'text-warn' : 'text-bad';
+    figure = (
+      <Histogram
+        bins={bins}
+        lang={lang}
+        label={d.histLabel(measuredName(saved.name, d.defaultName))}
+        curve={(x) => r.n * width * normalPdf(x, r.mean, r.sigmaOverall)}
+        lines={lines}
+        binLabel={(b) => t.tools.descriptiva.binText(f.raw(b.from), f.raw(b.to), b.count)}
+        legend={
+          <>
+            <LegendItem kind="bar" label={t.tools.descriptiva.legendBars} />
+            <LegendItem kind="curve" label={t.tools.descriptiva.legendCurve} />
+            <LegendItem kind="spec" label={d.legendSpec} />
+            {saved.target !== null && <LegendItem kind="target" label={d.legendTarget} />}
+          </>
+        }
+      />
+    );
     result = (
       <div className="flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-3">
@@ -161,22 +180,7 @@ export default function CapacidadTool() {
         </div>
         <div className="flex flex-col gap-2 border-t border-line pt-4">
           <SubTitle>{t.tools.descriptiva.histTitle}</SubTitle>
-          <Histogram
-            bins={bins}
-            lang={lang}
-            label={d.histLabel(measuredName(saved.name, d.defaultName))}
-            curve={(x) => r.n * width * normalPdf(x, r.mean, r.sigmaOverall)}
-            lines={lines}
-            binLabel={(b) => t.tools.descriptiva.binText(f.raw(b.from), f.raw(b.to), b.count)}
-            legend={
-              <>
-                <LegendItem kind="bar" label={t.tools.descriptiva.legendBars} />
-                <LegendItem kind="curve" label={t.tools.descriptiva.legendCurve} />
-                <LegendItem kind="spec" label={d.legendSpec} />
-                {saved.target !== null && <LegendItem kind="target" label={d.legendTarget} />}
-              </>
-            }
-          />
+          {figure}
         </div>
       </div>
     );
@@ -213,6 +217,7 @@ export default function CapacidadTool() {
       reading={reading}
       formula={formula}
       sheet={sheet}
+      figure={figure}
       toolId="capacidad"
       save={save}
     />

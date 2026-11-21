@@ -216,3 +216,31 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Documento para imprimir o guardar como PDF (src/ui/PrintDoc.tsx): solo se ve al imprimir. */
+@media screen {
+  .print-root {
+    display: none;
+  }
+}
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+  body > *:not(.print-root) {
+    display: none !important;
+  }
+  html,
+  body {
+    background: #fff !important;
+  }
+  .print-root {
+    display: block;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .print-avoid {
+    break-inside: avoid;
+  }
+}

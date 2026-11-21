@@ -59,6 +59,7 @@ export default function DescriptivaTool() {
   );
 
   let result: ReactNode;
+  let figure: ReactNode = null;
   if (!r) {
     const problems = parsed.values.length ? warnings : [];
     result = problems.length ? (
@@ -78,6 +79,23 @@ export default function DescriptivaTool() {
     const normal = r.normality ? r.normality.p >= 0.05 : null;
     const width = r.bins.length ? r.bins[0]!.to - r.bins[0]!.from : 1;
     const label = descriptivaName(t, saved);
+    figure = (
+      <Histogram
+        bins={r.bins}
+        lang={lang}
+        label={d.histLabel(label)}
+        curve={r.sd > 0 ? (x) => r.n * width * normalPdf(x, r.mean, r.sd) : undefined}
+        lines={[{ value: r.mean, label: d.legendMean, kind: 'mean' }]}
+        binLabel={(b) => d.binText(f.raw(b.from), f.raw(b.to), b.count)}
+        legend={
+          <>
+            <LegendItem kind="bar" label={d.legendBars} />
+            {r.sd > 0 && <LegendItem kind="curve" label={d.legendCurve} />}
+            <LegendItem kind="mean" label={d.legendMean} />
+          </>
+        }
+      />
+    );
     result = (
       <div className="flex flex-col gap-4">
         <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2">
@@ -124,21 +142,7 @@ export default function DescriptivaTool() {
         </div>
         <div className="flex flex-col gap-2 border-t border-line pt-4">
           <SubTitle>{d.histTitle}</SubTitle>
-          <Histogram
-            bins={r.bins}
-            lang={lang}
-            label={d.histLabel(label)}
-            curve={r.sd > 0 ? (x) => r.n * width * normalPdf(x, r.mean, r.sd) : undefined}
-            lines={[{ value: r.mean, label: d.legendMean, kind: 'mean' }]}
-            binLabel={(b) => d.binText(f.raw(b.from), f.raw(b.to), b.count)}
-            legend={
-              <>
-                <LegendItem kind="bar" label={d.legendBars} />
-                {r.sd > 0 && <LegendItem kind="curve" label={d.legendCurve} />}
-                <LegendItem kind="mean" label={d.legendMean} />
-              </>
-            }
-          />
+          {figure}
         </div>
       </div>
     );
@@ -187,6 +191,7 @@ export default function DescriptivaTool() {
       reading={reading}
       formula={formula}
       sheet={sheet}
+      figure={figure}
       toolId="descriptiva"
       save={save}
     />

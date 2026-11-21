@@ -162,6 +162,7 @@ export default function ParetoTool() {
   );
 
   let result: ReactNode;
+  let figure: ReactNode = null;
   if (!r) {
     result =
       warnings.length && saved.items.length ? (
@@ -179,6 +180,33 @@ export default function ParetoTool() {
   } else {
     const ex = paretoExplain(r, t, lang);
     const vitalShare = r.rows[r.vital - 1]!.cumulative;
+    figure = (
+      <ParetoChart
+        rows={r.rows}
+        lang={lang}
+        label={d.chartLabel}
+        rowLabel={(i) => `${i + 1}. ${d.rowText(r.rows[i]!.name, f.value(r.rows[i]!.value), f.pct(r.rows[i]!.share), f.pct(r.rows[i]!.cumulative))}`}
+        colors={r.rows.map((x) => (x.vital ? 'var(--series-1)' : 'var(--faint)'))}
+        legend={
+          <>
+            <LegendItem kind="bar" label={d.legendBars} />
+            <span className="inline-flex items-center gap-1.5">
+              <svg aria-hidden width={18} height={12}>
+                <line x1={1} x2={17} y1={6} y2={6} stroke="var(--text)" strokeWidth={2} />
+                <circle cx={9} cy={6} r={3} fill="var(--surface)" stroke="var(--text)" strokeWidth={1.6} />
+              </svg>
+              {d.legendLine}
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <svg aria-hidden width={18} height={12}>
+                <line x1={1} x2={17} y1={6} y2={6} stroke="var(--muted)" strokeWidth={1.5} strokeDasharray="3 3" />
+              </svg>
+              {d.legend80}
+            </span>
+          </>
+        }
+      />
+    );
     result = (
       <div className="flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-3">
@@ -193,31 +221,7 @@ export default function ParetoTool() {
             <span className="font-display text-[40px] leading-[0.95] font-bold tracking-[-0.03em] tabular-nums">{f.pct(vitalShare)}</span>
           </Explained>
         </div>
-        <ParetoChart
-          rows={r.rows}
-          lang={lang}
-          label={d.chartLabel}
-          rowLabel={(i) => `${i + 1}. ${d.rowText(r.rows[i]!.name, f.value(r.rows[i]!.value), f.pct(r.rows[i]!.share), f.pct(r.rows[i]!.cumulative))}`}
-          colors={r.rows.map((x) => (x.vital ? 'var(--series-1)' : 'var(--faint)'))}
-          legend={
-            <>
-              <LegendItem kind="bar" label={d.legendBars} />
-              <span className="inline-flex items-center gap-1.5">
-                <svg aria-hidden width={18} height={12}>
-                  <line x1={1} x2={17} y1={6} y2={6} stroke="var(--text)" strokeWidth={2} />
-                  <circle cx={9} cy={6} r={3} fill="var(--surface)" stroke="var(--text)" strokeWidth={1.6} />
-                </svg>
-                {d.legendLine}
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <svg aria-hidden width={18} height={12}>
-                  <line x1={1} x2={17} y1={6} y2={6} stroke="var(--muted)" strokeWidth={1.5} strokeDasharray="3 3" />
-                </svg>
-                {d.legend80}
-              </span>
-            </>
-          }
-        />
+        {figure}
         <div className="flex flex-col gap-1 border-t border-line pt-3">
           <SubTitle>{t.tools.pareto.items}</SubTitle>
           <ol className="flex flex-col">
@@ -279,6 +283,7 @@ export default function ParetoTool() {
       reading={reading}
       formula={formula}
       sheet={sheet}
+      figure={figure}
       toolId="pareto"
       save={save}
     />

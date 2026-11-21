@@ -80,6 +80,7 @@ export default function CorridaTool() {
 
   const signals = r ? signalTexts(r, t, lang) : [];
   let result: ReactNode;
+  let figure: ReactNode = null;
   if (!r) {
     result =
       warnings.length && parsed.values.length ? (
@@ -97,6 +98,23 @@ export default function CorridaTool() {
   } else {
     const label = measuredName(saved.name, d.defaultName);
     const exp = expectedExplain(r, t, lang);
+    figure = (
+      <SeriesChart
+        values={saved.values}
+        lang={lang}
+        label={d.chartLabel(label)}
+        lines={[{ value: r.median, label: d.legendMedian, kind: 'center' }]}
+        flags={new Set(r.flagged)}
+        pointLabel={(i, v) => d.pointText(i + 1, `${f.raw(v)}${saved.unit ? ` ${saved.unit}` : ''}`)}
+        legend={
+          <>
+            <LegendItem kind="point" label={d.legendPoint} />
+            {r.flagged.length > 0 && <LegendItem kind="flag" label={d.legendFlag} />}
+            <LegendItem kind="center" label={d.legendMedian} />
+          </>
+        }
+      />
+    );
     result = (
       <div className="flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-2">
@@ -105,21 +123,7 @@ export default function CorridaTool() {
           <Stat label={d.useful} value={f.count(r.useful)} calc={null} />
           {r.expectedRuns !== null && <Stat label={d.expected} value={formatNumber(r.expectedRuns, lang, 1)} calc={exp} />}
         </div>
-        <SeriesChart
-          values={saved.values}
-          lang={lang}
-          label={d.chartLabel(label)}
-          lines={[{ value: r.median, label: d.legendMedian, kind: 'center' }]}
-          flags={new Set(r.flagged)}
-          pointLabel={(i, v) => d.pointText(i + 1, `${f.raw(v)}${saved.unit ? ` ${saved.unit}` : ''}`)}
-          legend={
-            <>
-              <LegendItem kind="point" label={d.legendPoint} />
-              {r.flagged.length > 0 && <LegendItem kind="flag" label={d.legendFlag} />}
-              <LegendItem kind="center" label={d.legendMedian} />
-            </>
-          }
-        />
+        {figure}
         <div className="flex flex-col gap-2 border-t border-line pt-3">
           <SubTitle>{d.signals}</SubTitle>
           {signals.length === 0 ? (
@@ -171,6 +175,7 @@ export default function CorridaTool() {
       reading={reading}
       formula={formula}
       sheet={sheet}
+      figure={figure}
       toolId="corrida"
       save={save}
     />

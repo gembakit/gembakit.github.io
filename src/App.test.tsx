@@ -170,7 +170,8 @@ test('DPMO: «Exportar» abre el panel con la hoja de Google y Excel como próxi
   await user.click(await screen.findByRole('button', { name: /Cargar ejemplo|Load example/ }));
   await user.click(screen.getByRole('button', { name: /^(Exportar|Export)$/ }));
   const dialog = await screen.findByRole('dialog');
-  expect(within(dialog).getByText(/Hoja de Google|Google Sheet/)).toBeInTheDocument();
+  expect(within(dialog).getByRole('heading', { name: /^(Hoja de Google|Google Sheet)$/ })).toBeInTheDocument();
+  expect(within(dialog).getByRole('button', { name: /^(Crear PDF|Create PDF)$/ })).toBeInTheDocument();
   expect(within(dialog).getByText(/Próximamente|Coming soon/)).toBeInTheDocument();
   expect(within(dialog).getByRole('button', { name: /Crear hoja|Create sheet/ })).toBeInTheDocument();
 });

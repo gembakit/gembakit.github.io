@@ -286,6 +286,12 @@ Orden de trabajo y estado:
 1. [x] Exportables: paleta estándar (`src/google/exportStyle.ts`: azul
    marino de oficina, datos editables en amarillo claro, resultados en azul
    muy claro) para la exportación y la hoja del proyecto. Ya no usan el tema.
+   PDF de cualquier herramienta (`src/ui/PrintDoc.tsx`): Exportar → «Crear
+   PDF» abre el diálogo de imprimir (guardar como PDF), con la misma
+   definición que la hoja, colores estándar y el gráfico de la herramienta
+   (`figure` en ToolTemplate). Formato `fixedN` para resultados con los
+   decimales de los datos más dos; los datos se enseñan tal como se
+   escribieron (antes «auto» los redondeaba a 3 cifras).
 2. [x] Recetas paso 2: el OEE carga y guarda receta (`saveRecipe` guarda
    solo la parte de cada herramienta; `lineSpeedOf` da la velocidad de la
    estación más lenta en lo que produce la línea, o la escrita), máquina que

@@ -27,6 +27,7 @@ export function decimalsFor(v: number, format: NumFormat): number {
   if (format === 'integer') return 0;
   if (format === 'decimal2') return 2;
   if (format === 'decimal4') return 4;
+  if (format.startsWith('fixed')) return Number(format.slice(5)) || 0;
   if (!Number.isFinite(v) || v === 0) return 0;
   if (format === 'percent') {
     // Al menos dos decimales; más si hace falta para no mostrar 100 % cuando no lo es.
@@ -40,9 +41,21 @@ export function decimalsFor(v: number, format: NumFormat): number {
   return s.includes('.') ? s.replace(/0+$/, '').split('.')[1]!.length : 0;
 }
 
-/** Patrón de número en notación inglesa; Google lo muestra con la coma o el punto de la región. */
-export function patternFor(v: Value | undefined, format: NumFormat): string {
-  const d = decimalsFor(typeof v === 'number' ? v : 0, format);
+/** Decimales con que está escrito un dato (hasta 10): un dato se enseña tal cual, sin redondear. */
+export function exactDecimals(v: number): number {
+  const s = String(Number(v.toPrecision(12)));
+  if (s.includes('e')) return 10;
+  const i = s.indexOf('.');
+  return i < 0 ? 0 : Math.min(10, s.length - i - 1);
+}
+
+/**
+ * Patrón de número en notación inglesa; Google lo muestra con la coma o el
+ * punto de la región. Un dato escrito por el usuario (`entered`) con formato
+ * «auto» se enseña con todos sus decimales.
+ */
+export function patternFor(v: Value | undefined, format: NumFormat, entered = false): string {
+  const d = entered && format === 'auto' && typeof v === 'number' ? exactDecimals(v) : decimalsFor(typeof v === 'number' ? v : 0, format);
   const base = d === 0 ? '#,##0' : `#,##0.${'0'.repeat(d)}`;
   return format === 'percent' ? `${d === 0 ? '0' : `0.${'0'.repeat(d)}`}%` : base;
 }
@@ -244,7 +257,7 @@ export function buildTab(def: SheetDef, grid: Grid, palette: Palette, sheetId = 
       }
       const fmt = row.kind === 'trow' ? cell.format : val && (row.kind === 'input' || row.kind === 'result' || row.kind === 'kpi') ? (row.format ?? 'auto') : undefined;
       if (fmt && fmt !== 'text') {
-        f.numberFormat = { type: fmt === 'percent' ? 'PERCENT' : 'NUMBER', pattern: patternFor(computed[addr] ?? cell.number, fmt) };
+        f.numberFormat = { type: fmt === 'percent' ? 'PERCENT' : 'NUMBER', pattern: patternFor(computed[addr] ?? cell.number, fmt, computed[addr] === undefined && cell.number !== undefined) };
       }
       const out: Record<string, unknown> = { ...value(cell), userEnteredFormat: f };
       if (cell.boldPrefix) {

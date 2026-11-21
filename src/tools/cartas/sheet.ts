@@ -1,6 +1,7 @@
 import type { Messages } from '../../i18n';
 import { SPC_CONSTANTS } from '../../calc/spc';
-import type { ReadingLine, SheetDef, SheetInput, SheetResult, SheetTable } from '../../sheet/types';
+import { fixed, type ReadingLine, type SheetDef, type SheetInput, type SheetResult, type SheetTable } from '../../sheet/types';
+import { descriptivaFormat } from '../descriptiva/explain';
 import { measuredName } from '../descriptiva/model';
 import type { CartasSaved } from './model';
 import type { ChartOut } from './reading';
@@ -21,6 +22,7 @@ export function cartasSheet(s: CartasSaved, c: ChartOut, t: Messages, opts: { re
   let results: SheetResult[];
   let inputs: SheetInput[] = [];
   const notes: string[] = [];
+  const v = fixed(descriptivaFormat('es', s.values, s.unit).d);
   if (c.kind === 'imr') {
     const r = c.out.result!;
     const m = r.limitPoints;
@@ -36,11 +38,11 @@ export function cartasSheet(s: CartasSaved, c: ChartOut, t: Messages, opts: { re
       rows: r.values.map((v, i) => ({ label: `${i + 1}`, values: { x: v } })),
     };
     results = [
-      { key: 'center', label: d.center, formula: `AVERAGE(${x})`, note: n.center, format: 'auto', main: true },
-      { key: 'mrBar', label: d.mrBar, formula: `AVERAGE(${mr})`, note: n.mrBar, format: 'auto' },
-      { key: 'ucl', label: d.ucl, formula: '{center}+3*{mrBar}/1.128', note: n.ucl, format: 'auto', summary: true },
-      { key: 'lcl', label: d.lcl, formula: '{center}-3*{mrBar}/1.128', note: n.lcl, format: 'auto', summary: true },
-      { key: 'mrUcl', label: `${d.ucl} (MR)`, formula: '3.267*{mrBar}', note: n.mrUcl, format: 'auto' },
+      { key: 'center', label: d.center, formula: `AVERAGE(${x})`, note: n.center, format: v, main: true },
+      { key: 'mrBar', label: d.mrBar, formula: `AVERAGE(${mr})`, note: n.mrBar, format: v },
+      { key: 'ucl', label: d.ucl, formula: '{center}+3*{mrBar}/1.128', note: n.ucl, format: v, summary: true },
+      { key: 'lcl', label: d.lcl, formula: '{center}-3*{mrBar}/1.128', note: n.lcl, format: v, summary: true },
+      { key: 'mrUcl', label: `${d.ucl} (MR)`, formula: '3.267*{mrBar}', note: n.mrUcl, format: v },
     ];
     if (m < r.values.length) notes.push(d.limitNote(m));
   } else {
@@ -63,12 +65,12 @@ export function cartasSheet(s: CartasSaved, c: ChartOut, t: Messages, opts: { re
       { key: 'd4', label: `D4 (n = ${r.size})`, value: k.D4, note: n.a2, format: 'auto' },
     ];
     results = [
-      { key: 'center', label: d.center, formula: `AVERAGE(${mean})`, note: n.center, format: 'auto', main: true },
-      { key: 'rBar', label: d.rBar, formula: `AVERAGE(${range})`, note: n.rBar, format: 'auto' },
-      { key: 'ucl', label: d.ucl, formula: '{center}+{a2}*{rBar}', note: n.xUcl, format: 'auto', summary: true },
-      { key: 'lcl', label: d.lcl, formula: '{center}-{a2}*{rBar}', note: n.xLcl, format: 'auto', summary: true },
-      { key: 'rUcl', label: `${d.ucl} (R)`, formula: '{d4}*{rBar}', note: n.rUcl, format: 'auto' },
-      { key: 'rLcl', label: `${d.lcl} (R)`, formula: '{d3}*{rBar}', note: n.rLcl, format: 'auto' },
+      { key: 'center', label: d.center, formula: `AVERAGE(${mean})`, note: n.center, format: v, main: true },
+      { key: 'rBar', label: d.rBar, formula: `AVERAGE(${range})`, note: n.rBar, format: v },
+      { key: 'ucl', label: d.ucl, formula: '{center}+{a2}*{rBar}', note: n.xUcl, format: v, summary: true },
+      { key: 'lcl', label: d.lcl, formula: '{center}-{a2}*{rBar}', note: n.xLcl, format: v, summary: true },
+      { key: 'rUcl', label: `${d.ucl} (R)`, formula: '{d4}*{rBar}', note: n.rUcl, format: v },
+      { key: 'rLcl', label: `${d.lcl} (R)`, formula: '{d3}*{rBar}', note: n.rLcl, format: v },
     ];
     notes.push(sh.groupNote);
     if (m < r.means.length) notes.push(d.limitNote(m));
