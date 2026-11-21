@@ -215,6 +215,34 @@ Todas en el Android, después de pulsar **Actualizar**:
 8. Si el almacenamiento vuelve a quedarse pegado: Ajustes → Diagnóstico →
    copiar y pegarlo en el chat.
 
+### Comentarios del dueño sobre takt v2 y OEE v2 (2026-11-21, por aplicar)
+
+Probó las dos en su Android. Pide:
+- **Unidades completas en un desplegable** (s/unidad, min/unidad, h/unidad,
+  unidad/s, unidad/min, unidad/h, con el nombre de la unidad: «s/botella»),
+  en lugar de «Cómo mides la línea» + «Unidad» (s, min, h). Campo del valor
+  más estrecho, con la unidad completa al lado. En takt y en OEE.
+- **Cambiar la forma de medir no puede estropear los datos:** hoy, con datos
+  escritos, cambiar «Tiempo por unidad / Unidades por tiempo» (o la unidad)
+  reinterpreta los números (10 unid/h pasa a 10 h/unid). Debe convertirlos
+  (10 unid/h → 6 min/unid) y solo cambiar cómo se presentan. Pidió además
+  el selector en cada máquina, unido al de arriba (por decidir: uno solo
+  arriba basta si cada fila enseña la unidad completa).
+- «Ritmo objetivo con tu OEE» confunde: es la velocidad estándar (capacidad
+  instalada) que necesita la línea para que, con su OEE, salga la demanda.
+  Si no es término estándar de la industria, renombrarlo.
+- «Tipo de línea»: solo cambia el balanceo y las palabras (puesto/máquina);
+  si no influye, quitarlo (por decidir cómo).
+- OEE: «Ciclo ideal» → «Velocidad estándar»; «de placa» no se entiende
+  (usar capacidad instalada o velocidad estándar).
+- Explicaciones de calidad: aclarar que las rechazadas (desechadas o
+  retrabajadas) van incluidas en las producidas y que buenas = producidas −
+  rechazadas. En «Donde», cómo sale el tiempo en marcha (planificado −
+  paradas).
+- Pareto del OEE: quitar «acumulado …» y «no cuenta en la otra vista» de
+  cada fila; basta con los minutos y su porcentaje (de lo perdido).
+- Calidad sale «97,8 %» y los otros factores con dos decimales: igualar.
+
 ### Plan hasta terminar la app (propuesto el 2026-11-20, pendiente de aprobar)
 
 Ideas para ir más rápido: piezas comunes antes que herramientas (formato de
