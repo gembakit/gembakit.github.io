@@ -1,4 +1,4 @@
-import { CHILD_TABLES, type ChildRecord, type ChildrenMap, type GembaDB, type Project, type ProjectState, type ProjectVersion, type Setting } from './db';
+import { CHILD_TABLES, type ChildRecord, type ChildrenMap, type GembaDB, type Project, type ProjectState, type ProjectVersion, type Recipe, type Setting } from './db';
 import { applyState, historyTables, keepVersion, projectNow, pruneVersions, type ProjectNow } from './history';
 import type { SyncedRecord } from './record';
 
@@ -11,6 +11,9 @@ import type { SyncedRecord } from './record';
 // - el que está y la copia es más antigua, la copia pasa a su historial;
 // - el que está y la copia es más reciente, la copia pasa a ser la actual y
 //   lo del teléfono queda en su historial.
+// Las recetas (Referencia › Mis líneas) van aparte: de cada una se queda la
+// más reciente, la del teléfono o la de la copia. Las copias sin recetas
+// (anteriores al 2026-11-21) se leen igual.
 
 export const BACKUP_FORMAT = 'gemba-kit-copia';
 /** 2: lleva el historial de versiones de los proyectos. */
@@ -32,6 +35,7 @@ export interface Backup {
   tables: Record<BackupTable, SyncedRecord[]>;
   history: ProjectVersion[];
   settings: Setting[];
+  recipes: Recipe[];
 }
 
 export async function makeBackup(db: GembaDB, app: string, at = Date.now()): Promise<Backup> {
@@ -39,7 +43,8 @@ export async function makeBackup(db: GembaDB, app: string, at = Date.now()): Pro
   for (const name of BACKUP_TABLES) tables[name] = (await db.table(name).toArray()) as SyncedRecord[];
   const history = await db.projectVersions.toArray();
   const settings = (await db.settings.toArray()).filter((s) => !LOCAL_SETTINGS.some((re) => re.test(s.key)));
-  return { format: BACKUP_FORMAT, version: BACKUP_VERSION, app, createdAt: at, tables, history, settings };
+  const recipes = await db.recipes.toArray();
+  return { format: BACKUP_FORMAT, version: BACKUP_VERSION, app, createdAt: at, tables, history, settings, recipes };
 }
 
 /** «gemba-kit-copia-2026-11-14-1830.json», con la hora del teléfono. */
@@ -95,7 +100,8 @@ export function readBackup(text: string): Backup {
   // Versiones con tablas que no traían: se completan vacías.
   for (const v of history) for (const n of CHILD_TABLES) if (!Array.isArray(v.state.children[n])) v.state.children[n] = [];
   const settings = Array.isArray(b.settings) ? b.settings.filter((s): s is Setting => typeof s?.key === 'string') : [];
-  return { format: BACKUP_FORMAT, version: b.version, app: String(b.app ?? ''), createdAt: b.createdAt, tables, history, settings };
+  const recipes = Array.isArray(b.recipes) ? b.recipes.filter((r): r is Recipe => isRecord(r) && typeof r.name === 'string' && Array.isArray(r.stations)) : [];
+  return { format: BACKUP_FORMAT, version: b.version, app: String(b.app ?? ''), createdAt: b.createdAt, tables, history, settings, recipes };
 }
 
 export interface BackupSummary {
@@ -163,7 +169,7 @@ export async function planRestore(db: GembaDB, b: Backup): Promise<RestorePlanIt
 
 /** Restaura la copia. Todo o nada: si algo falla, el teléfono queda como estaba. */
 export async function restoreBackup(db: GembaDB, b: Backup): Promise<RestorePlanItem[]> {
-  return db.transaction('rw', [...historyTables(db), db.settings], async () => {
+  return db.transaction('rw', [...historyTables(db), db.settings, db.recipes], async () => {
     const plan: RestorePlanItem[] = [];
     for (const p of liveProjects(b)) {
       const copy = stateInCopy(b, p);
@@ -201,6 +207,10 @@ export async function restoreBackup(db: GembaDB, b: Backup): Promise<RestorePlan
     const settings = b.settings.filter((s) => !LOCAL_SETTINGS.some((re) => re.test(s.key)));
     const have = await db.settings.bulkGet(settings.map((s) => s.key));
     await db.settings.bulkAdd(settings.filter((_, i) => !have[i]));
+
+    // Recetas: de cada una, la más reciente.
+    const mine = await db.recipes.bulkGet(b.recipes.map((r) => r.id));
+    await db.recipes.bulkPut(b.recipes.filter((r, i) => !mine[i] || r.updatedAt > mine[i]!.updatedAt));
     return plan;
   });
 }

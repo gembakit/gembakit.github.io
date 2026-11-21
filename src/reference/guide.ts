@@ -157,6 +157,27 @@ export const GUIDE: readonly GuideTopic[] = [
     },
   },
   {
+    id: 'recetas',
+    es: {
+      title: 'Líneas y recetas',
+      body: [
+        'Una receta guarda la configuración de una línea para un producto: sus estaciones, cada una con su unidad, lo que cuenta (cajas de 24 botellas, por ejemplo) y su velocidad estándar. Así no las vuelves a escribir en cada proyecto.',
+        'Se crean desde el takt: escribe las estaciones y pulsa «Guardar como receta». Elige la planta o compañía, la línea y el nombre de la receta (12 oz, 20 oz…). Si ya hay una con ese nombre en esa línea, se reemplaza (con «Deshacer»).',
+        'Se cargan con «Cargar receta», que las enseña por planta y línea. Después de cargarla puedes cambiar lo que quieras: la receta no cambia hasta que la guardes otra vez. Para hacer una receta a partir de otra, cárgala, cambia lo que haga falta y guárdala con otro nombre.',
+        'Todas están en Referencia › Mis líneas, ordenadas por planta y línea. Toca una para ver sus estaciones y para cambiarle el nombre, duplicarla o borrarla (con «Deshacer»). Van en la copia de seguridad.',
+      ],
+    },
+    en: {
+      title: 'Lines and recipes',
+      body: [
+        'A recipe keeps the set-up of a line for one product: its stations, each with its unit, what it counts (cases of 24 bottles, for example) and its standard speed. That way you do not enter them again in every project.',
+        'You create them from the takt tool: enter the stations and tap “Save as recipe”. Choose the plant or company, the line and the recipe name (12 oz, 20 oz…). If there is already one with that name on that line, it is replaced (with “Undo”).',
+        'You load them with “Load recipe”, which shows them by plant and line. After loading one you can change anything: the recipe does not change until you save it again. To make a recipe from another one, load it, change what you need and save it with another name.',
+        'They are all in Reference › My lines, sorted by plant and line. Tap one to see its stations and to rename, duplicate or delete it (with “Undo”). They go into the backup.',
+      ],
+    },
+  },
+  {
     id: 'copia',
     es: {
       title: 'Copia de seguridad',

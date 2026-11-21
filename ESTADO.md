@@ -269,9 +269,25 @@ ficha `docs/fichas/oee-v3.md`, aprobada con sus respuestas. Sustituye a
   de formato de 40 min ya incluía sus 30 de estándar); con la torta ya no
   puede confundir, porque cada minuto está en una sola porción.
 
-**Siguiente:** retirar la pantalla de prueba de Google y, después, las
-**recetas** (`docs/fichas/recetas.md`, aprobada: Planta → Línea → Receta; la
-línea es solo un título y todo va en la receta).
+Colores (2026-11-21, pedido del dueño): cada parada y categoría con su color
+en la torta y en el Pareto (ver la ficha).
+
+### Recetas, paso 1 de 2 (2026-11-21, hecho)
+
+Ficha `docs/fichas/recetas.md`. Tabla `recipes` (base local versión 4) en
+`src/recipes/store.ts`, fuera de los proyectos; va en la copia de seguridad
+(campo `recipes`; de cada receta se queda la más reciente; las copias
+antiguas sin recetas se leen igual). Takt: «Cargar receta» y «Guardar como
+receta» arriba de los datos (`src/recipes/RecipeUI.tsx`); guardar con los
+mismos nombres reemplaza (aviso antes, «Deshacer» después); la medición
+guarda `recipe` (planta, línea, nombre). Referencia › «Mis líneas»: planta →
+línea → receta, con sus estaciones, «Cambiar nombre», «Duplicar» y «Borrar».
+Retirada también la pantalla de prueba de Google (fase 0 cerrada).
+
+**Siguiente (paso 2):** OEE con «Cargar receta» y «Guardar como receta»
+(velocidad de la línea = la estación más lenta, o la escrita; cambios con su
+estándar), máquina que causó cada parada (lista de la receta) y Pareto por
+máquina, con velocidad y calidad como «Toda la línea».
 
 ### Plan hasta terminar la app (propuesto el 2026-11-20, pendiente de aprobar)
 

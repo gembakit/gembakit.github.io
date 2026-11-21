@@ -36,6 +36,9 @@ import { Sheet } from '../../ui/Sheet';
 import { Dotted, Explained } from '../../ui/Explained';
 import { useToast } from '../../ui/Toast';
 import { APP_VERSION } from '../../version';
+import type { Recipe, RecipeStation } from '../../data/db';
+import { recipeLabel, type RecipeContent, type RecipeNames } from '../../recipes/store';
+import { RecipeBar } from '../../recipes/RecipeUI';
 import { paceLabel, smartDecimals, subtractionUnit, taktExplain, taktFormat, type TaktView } from './explain';
 import { taktSheet } from './sheet';
 import { BOTTLING, PACKS } from './examples';
@@ -72,6 +75,8 @@ interface State {
   basis: Basis;
   stations: StRow[];
   oee: string;
+  /** Receta cargada o guardada (planta, línea y nombre). */
+  recipe: RecipeNames | null;
 }
 
 const MAX_STATIONS = 30;
@@ -90,6 +95,7 @@ const EMPTY: State = {
   basis: 'mean',
   stations: [],
   oee: '',
+  recipe: null,
 };
 
 let ids = 1;
@@ -121,6 +127,7 @@ function fromSaved(s: TaktSaved, lang: 'es' | 'en'): State {
       origin: st.origin ?? st.measure,
     })),
     oee: s.oee === null ? '' : txt(Number((s.oee * 100).toPrecision(10))),
+    recipe: s.recipe ?? null,
   };
 }
 
@@ -199,6 +206,7 @@ function toSaved(
       basis: st.basis,
       stations,
       oee: oeePct === null ? null : oeePct / 100,
+      ...(st.recipe ? { recipe: st.recipe } : {}),
     },
     bad: null,
     index,
@@ -273,6 +281,42 @@ export default function TaktTool() {
     toast(t.common.cleared, { action: { label: t.common.undo, onAction: () => setState(previous) } });
   };
 
+  // ── Recetas: las estaciones (sin medidas) se cargan de una receta y se guardan en una ──
+  const loadRecipe = (rec: Recipe) => {
+    const previous = state;
+    const txt = (v: number) => toFieldText(v, lang);
+    setState((s) => ({
+      ...s,
+      unitName: rec.unitName,
+      recipe: { plant: rec.plant, line: rec.line, name: rec.name },
+      stations: rec.stations.map((st) => ({
+        id: nextId(),
+        name: st.name,
+        measure: st.measure,
+        unit: st.unit,
+        item: st.item,
+        per: st.item.trim() ? txt(st.per) : '',
+        theo: { text: st.standard === null ? '' : txt(st.standard) },
+        actual: [{ id: nextId(), text: '' }],
+        origin: st.measure,
+      })),
+    }));
+    setOpen((o) => new Set([...o, 'stations']));
+    toast(t.recipes.loadedToast(recipeLabel(rec)), { action: { label: t.common.undo, onAction: () => setState(previous) } });
+  };
+  const recipeContent = (): RecipeContent | string => {
+    const list: RecipeStation[] = [];
+    for (const s of state.stations) {
+      if (!s.name.trim() && !s.theo.text.trim()) continue;
+      const standard = s.theo.text.trim() === '' ? null : (s.theo.exact ?? parseDecimal(s.theo.text));
+      const per = s.item.trim() ? parseDecimal(s.per) : 1;
+      if ((s.theo.text.trim() !== '' && standard === null) || per === null) return t.recipes.badNumber;
+      list.push({ name: s.name.trim(), measure: s.measure, unit: s.unit, item: s.item.trim(), per, standard });
+    }
+    if (!list.length) return t.recipes.nothing;
+    return { unitName: state.unitName.trim(), stations: list, lineSpeed: null, changeovers: [] };
+  };
+
   const loadExample = (which: 'bottling' | 'packs') => {
     setState(fromSaved(which === 'bottling' ? BOTTLING(t) : PACKS(t), lang));
     setOpen(new Set());
@@ -341,6 +385,7 @@ export default function TaktTool() {
 
   const data = (
     <>
+      <RecipeBar current={state.recipe} onLoad={loadRecipe} build={recipeContent} onSaved={(n) => set({ recipe: { plant: n.plant, line: n.line, name: n.name } })} />
       <div className="flex flex-col border-b border-line">
         <Group title={d.timeTitle} summary={timeBad ? d.groupBad : (subtraction ?? d.groupEmpty.time!)} bad={timeBad} open={open.has('time')} onToggle={() => toggle('time')}>
           <TimeField label={d.shift} value={state.shift} unit={state.shiftUnit} onValue={(v) => set({ shift: v })} onUnit={(u) => set({ shiftUnit: u })} />

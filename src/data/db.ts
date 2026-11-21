@@ -82,6 +82,36 @@ export interface Setting {
   value: unknown;
 }
 
+/** Una estación de una receta: cómo se mide y su velocidad estándar. */
+export interface RecipeStation {
+  name: string;
+  measure: 'time' | 'rate';
+  unit: 's' | 'min' | 'h';
+  /** Lo que cuenta si no es lo que produce la línea («cajas»); vacío: lo mismo. */
+  item: string;
+  /** Unidades de lo que produce la línea en una de las suyas (1 caja = 24 botellas). */
+  per: number;
+  /** Velocidad estándar en su unidad; null si no se escribió. */
+  standard: number | null;
+}
+
+/**
+ * Receta (docs/fichas/recetas.md): la configuración de una línea para un
+ * producto. La planta y la línea son solo títulos para ordenarlas.
+ */
+export interface Recipe extends SyncedRecord {
+  plant: string;
+  line: string;
+  name: string;
+  /** Lo que produce la línea («botellas»). */
+  unitName: string;
+  stations: RecipeStation[];
+  /** Velocidad estándar de la línea para el OEE, escrita a mano; null: la de la estación más lenta. */
+  lineSpeed: { value: number; measure: 'time' | 'rate'; unit: 's' | 'min' | 'h' } | null;
+  /** Cambios con su tiempo estándar (min). */
+  changeovers: { name: string; minutes: number }[];
+}
+
 /** Tablas cuyos registros cuelgan de un proyecto (projectId). */
 export const CHILD_TABLES = ['analyses', 'milestones', 'captures', 'datasets', 'actions'] as const;
 export type ChildTable = (typeof CHILD_TABLES)[number];
@@ -126,6 +156,7 @@ export class GembaDB extends Dexie {
   actions!: EntityTable<Action, 'id'>;
   settings!: EntityTable<Setting, 'key'>;
   projectVersions!: EntityTable<ProjectVersion, 'id'>;
+  recipes!: EntityTable<Recipe, 'id'>;
 
   constructor(name = 'gemba-kit') {
     super(name);
@@ -144,6 +175,10 @@ export class GembaDB extends Dexie {
     // Versión 3: historial de versiones de cada proyecto.
     this.version(3).stores({
       projectVersions: 'id, projectId',
+    });
+    // Versión 4: recetas de las líneas (Referencia › Mis líneas).
+    this.version(4).stores({
+      recipes: 'id, updatedAt, deleted',
     });
   }
 }

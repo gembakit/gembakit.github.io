@@ -1,12 +1,13 @@
 import { useId, useMemo, useState, type ReactNode } from 'react';
-import { BookA, BookOpenText, ChevronDown, Search, type LucideIcon } from 'lucide-react';
+import { BookA, BookOpenText, ChevronDown, Factory, Search, type LucideIcon } from 'lucide-react';
 import { useI18n } from '../../i18n';
 import { BigHeader, Screen } from '../../ui/Layout';
 import { GLOSSARY_CATEGORIES, normalize, searchGlossary, type GlossaryCategory } from '../../reference/glossary';
 import { guideFor } from '../../reference/guide';
+import { MyLines, useRecipeCount } from '../../recipes/RecipeUI';
 
 // Qué bloques dejó abiertos el usuario: se recuerda mientras la app está abierta.
-const remembered = { guide: false, glossary: false };
+const remembered = { guide: false, glossary: false, lines: false };
 
 /** Bloque plegable de la pantalla (Guía de uso, Glosario): cerrado por defecto. */
 function Block({ icon: Icon, title, count, open, onToggle, children }: { icon: LucideIcon; title: string; count: string; open: boolean; onToggle: () => void; children: ReactNode }) {
@@ -104,10 +105,18 @@ export function ReferenceScreen() {
   const [openGlossary, setOpenGlossary] = useState(remembered.glossary);
   const toggleGuide = () => setOpenGuide((v) => (remembered.guide = !v));
   const toggleGlossary = () => setOpenGlossary((v) => (remembered.glossary = !v));
+  const [openLines, setOpenLines] = useState(remembered.lines);
+  const toggleLines = () => setOpenLines((v) => (remembered.lines = !v));
+  const recipeCount = useRecipeCount();
 
   return (
     <Screen>
       <BigHeader title={t.reference.title} />
+
+      <Block icon={Factory} title={t.recipes.title} count={t.recipes.count(recipeCount ?? 0)} open={openLines} onToggle={toggleLines}>
+        <p className="border-b border-line px-4 py-3 text-[14.5px] leading-relaxed text-muted">{t.recipes.intro}</p>
+        <MyLines />
+      </Block>
 
       <Block icon={BookOpenText} title={t.reference.guide} count={t.reference.topics(guide.length)} open={openGuide} onToggle={toggleGuide}>
         {guide.map((g) => (

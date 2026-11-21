@@ -123,6 +123,46 @@ test('Takt: cambiar la unidad de las estaciones convierte sus valores y el resul
   expect(screen.getByRole('textbox', { name: /^(Velocidad estándar \(opcional\)|Standard speed \(optional\)): (Encajonadora|Case packer)$/ })).toHaveProperty('value', expect.stringMatching(/^0[.,]0238095$/));
 });
 
+test('Recetas: guardar las estaciones del takt como receta, verla en Mis líneas y volver a cargarla', async () => {
+  const user = userEvent.setup();
+  window.location.hash = '#/herramientas/takt';
+  render(<App />);
+  await user.click(await screen.findByRole('button', { name: /Cargar ejemplo|Load example/ }));
+  await user.click(await screen.findByRole('button', { name: /^(Embotelladora|Bottling plant)/ }));
+  await user.click(await screen.findByRole('button', { name: /^(Guardar como receta|Save as recipe)$/ }));
+  const dialog = await screen.findByRole('dialog');
+  await user.type(within(dialog).getByRole('combobox', { name: /^(Planta o compañía|Plant or company)$/ }), 'Planta Norte');
+  await user.type(within(dialog).getByRole('combobox', { name: /^(Línea|Line)$/ }), 'Línea 3');
+  await user.type(within(dialog).getByRole('combobox', { name: /^(Receta|Recipe)$/ }), '12 oz');
+  await user.click(within(dialog).getByRole('button', { name: /^(Guardar receta|Save recipe)$/ }));
+  expect(await screen.findByText(/^(Receta guardada|Recipe saved): Planta Norte · Línea 3 · 12 oz$/)).toBeInTheDocument();
+  expect(screen.getByText(/^(Receta|Recipe): Planta Norte · Línea 3 · 12 oz$/)).toBeInTheDocument();
+
+  // Volver a guardarla con el mismo nombre la reemplaza (se avisa antes).
+  await user.click(screen.getByRole('button', { name: /^(Guardar como receta|Save as recipe)$/ }));
+  const again = await screen.findByRole('dialog');
+  expect(within(again).getByText(/(se reemplaza|it will be replaced)/)).toBeInTheDocument();
+  await user.click(within(again).getByRole('button', { name: /^(Reemplazar receta|Replace recipe)$/ }));
+  expect(await screen.findByText(/^(Receta reemplazada|Recipe replaced): Planta Norte · Línea 3 · 12 oz$/)).toBeInTheDocument();
+
+  // Cargarla: las estaciones vuelven, sin las medidas reales.
+  await user.click(screen.getByRole('button', { name: /^(Cargar receta|Load recipe)$/ }));
+  const pick = await screen.findByRole('dialog');
+  await user.click(within(pick).getByRole('button', { name: /^12 oz/ }));
+  expect(await screen.findByText(/^(Receta cargada|Recipe loaded): Planta Norte · Línea 3 · 12 oz$/)).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /^(Encajonadora|Case packer)/ })).toBeInTheDocument();
+
+  // En Referencia › Mis líneas: planta, línea y receta, con sus estaciones.
+  await act(async () => {
+    window.location.hash = '#/referencia';
+  });
+  await user.click(await screen.findByRole('button', { name: /^(Mis líneas|My lines)\s*1 (receta|recipe)/ }));
+  expect(await screen.findByRole('heading', { name: 'Planta Norte' })).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: /^12 oz/ }));
+  expect(screen.getByText(/^(Llenadora · 48\.000\sbotellas\/h|Filler · 48,000\sbottles\/h)$/)).toBeInTheDocument();
+  expect(screen.getByText(/^(Encajonadora · 42\scajas\/min · 1\scaja\s=\s24\sbotellas|Case packer · 42\scases\/min · 1\scase\s=\s24\sbottles)$/)).toBeInTheDocument();
+});
+
 test('DPMO: «Exportar» abre el panel con la hoja de Google y Excel como próximamente', async () => {
   const user = userEvent.setup();
   window.location.hash = '#/herramientas/dpmo';

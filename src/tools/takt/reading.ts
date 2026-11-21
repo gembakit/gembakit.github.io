@@ -42,6 +42,8 @@ export interface TaktSaved {
   stations: TaktStationSaved[];
   /** OEE esperado, de 0 a 1. */
   oee: number | null;
+  /** Receta de la que salieron las estaciones (planta, línea y nombre), si se cargó una. */
+  recipe?: { plant: string; line: string; name: string };
 }
 
 /** Formato de la versión 2 (2026-11-16 a 2026-11-21): una sola unidad para toda la línea y el tipo de línea. */
@@ -81,6 +83,9 @@ const isValues = (st: { theoretical?: unknown; actual?: unknown }) => Array.isAr
 const text = (x: unknown) => (typeof x === 'string' ? x : '');
 
 /** Lee unos datos guardados, de cualquier versión; null si no son del takt. */
+const isNames = (x: unknown): x is { plant: string; line: string; name: string } =>
+  typeof x === 'object' && x !== null && ['plant', 'line', 'name'].every((k) => typeof (x as Record<string, unknown>)[k] === 'string');
+
 export function readTaktSaved(x: unknown): TaktSaved | null {
   if (typeof x !== 'object' || x === null) return null;
   const o = x as Record<string, unknown>;
@@ -104,6 +109,7 @@ export function readTaktSaved(x: unknown): TaktSaved | null {
       unitName: text(s.unitName),
       stations: s.stations.map((st) => ({ ...st, name: text(st.name), item: text(st.item) })),
       oee: isNum(s.oee) ? s.oee : null,
+      recipe: isNames(s.recipe) ? s.recipe : undefined,
     };
   }
   if (o.v === 2) {

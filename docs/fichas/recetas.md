@@ -14,6 +14,26 @@ la torta del OEE). Decisiones del dueño:
   de la receta (en su planta coincidía con la llenadora porque era la más
   lenta), y si se cambia a mano, se queda la escrita.
 - B. Primero la torta del OEE, después las recetas.
+- (2026-11-21, después) Se crean con **«Guardar como receta» desde la
+  herramienta** (el takt y el OEE), no con un editor aparte. Una receta
+  nueva a partir de otra: se carga, se cambia y se guarda con otro nombre.
+  Después de cargarla se puede cambiar todo; la receta no cambia hasta
+  guardarla otra vez.
+- (2026-11-21) **Máquina en cada parada del OEE** y Pareto por máquina, con
+  la lista de máquinas sacada de la receta. Se apunta la máquina que
+  **causó** la parada, no la afectada (en el LU de su planta: en rojo la que
+  se paró por su culpa, en azul las paradas por consecuencia). La velocidad
+  y la calidad no se reparten por máquina: van como «Toda la línea».
+
+Construcción en dos pasos:
+1. (2026-11-21, hecho) Tabla `recipes` (base local v4), copia de seguridad
+   (de cada receta se queda la más reciente), takt con «Cargar receta» y
+   «Guardar como receta», y Referencia › «Mis líneas» (planta → línea →
+   receta; ver estaciones, cambiar nombre, duplicar, borrar con «Deshacer»).
+   La medición del takt guarda de qué receta salió.
+2. OEE: cargar y guardar receta (velocidad de la línea = la estación más
+   lenta, o la escrita; cambios con su estándar), máquina que causó cada
+   parada y Pareto por máquina.
 
 ## Para qué sirve
 
