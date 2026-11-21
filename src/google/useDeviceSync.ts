@@ -2,7 +2,7 @@ import { useEffect, useSyncExternalStore } from 'react';
 import { liveQuery } from 'dexie';
 import { db } from '../data/db';
 import { SYNC_TABLES } from '../data/merge';
-import { currentAccount, currentToken, ensureToken } from './session';
+import { currentAccount, currentToken, ensureToken, subscribeAccount } from './session';
 import { syncDevices, lastDeviceSync } from './deviceSync';
 
 // Cuándo se sincroniza entre aparatos (PLAN.md, 4.4): al abrir, al volver a
@@ -59,7 +59,10 @@ async function lastChange(): Promise<number> {
 }
 
 export function useDeviceSync() {
+  const account = useSyncExternalStore(subscribeAccount, currentAccount);
   useEffect(() => {
+    // Sin cuenta de Google no hay nada que sincronizar ni que vigilar.
+    if (!account) return;
     const run = () => {
       if (document.visibilityState === 'visible' && navigator.onLine) void syncDevicesNow();
     };
@@ -88,5 +91,5 @@ export function useDeviceSync() {
       window.clearTimeout(timer);
       sub.unsubscribe();
     };
-  }, []);
+  }, [account]);
 }
