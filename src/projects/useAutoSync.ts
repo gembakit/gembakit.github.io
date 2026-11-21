@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useI18n } from '../i18n';
 import { currentToken } from '../google/session';
-import { THEMES } from '../ui/theme/themes';
-import { useTheme } from '../ui/theme/ThemeProvider';
+import { EXPORT_PALETTE } from '../google/exportStyle';
 import { useLive } from './live';
 import { getSyncState, projectsDue, syncNow } from './sheetSync';
 
@@ -18,7 +17,6 @@ const DELAY_MS = 4000;
  */
 export function useAutoSync() {
   const { t, lang } = useI18n();
-  const { theme } = useTheme();
   const due = useLive(() => projectsDue(), []);
   const [online, setOnline] = useState(navigator.onLine);
 
@@ -42,9 +40,9 @@ export function useAutoSync() {
       for (const id of key.split(',')) {
         const state = getSyncState(id).k;
         if (state === 'conflict' || state === 'missing' || state === 'error' || state === 'syncing') continue;
-        syncNow(id, token.accessToken, { t, lang, palette: THEMES[theme].light }).catch(() => undefined);
+        syncNow(id, token.accessToken, { t, lang, palette: EXPORT_PALETTE }).catch(() => undefined);
       }
     }, DELAY_MS);
     return () => clearTimeout(timer);
-  }, [key, online, t, lang, theme]);
+  }, [key, online, t, lang]);
 }

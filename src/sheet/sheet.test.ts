@@ -2,7 +2,8 @@ import { describe, expect, test } from 'vitest';
 import { evaluateGrid, FormulaError } from './evaluate';
 import { layoutSheet, SheetDefError, type Grid } from './layout';
 import type { SheetDef } from './types';
-import { buildSpreadsheet, decimalsFor, patternFor } from '../google/sheetsOutput';
+import { buildSpreadsheet, color, decimalsFor, patternFor } from '../google/sheetsOutput';
+import { EXPORT_PALETTE } from '../google/exportStyle';
 import { exportToGoogleSheet } from '../google/exportSheet';
 import { THEMES } from '../ui/theme/themes';
 
@@ -139,6 +140,15 @@ describe('salida a Google Sheets', () => {
   const d = def([{ key: 'doble', label: 'Doble', formula: '{a}*2', format: 'integer', main: true }]);
   const grid: Grid = layoutSheet(d);
   const body = buildSpreadsheet(d, grid, THEMES.lino.light);
+
+  test('lo exportado usa la paleta estándar (azul marino, datos en amarillo claro), no la del tema', () => {
+    const exp = buildSpreadsheet(d, grid, EXPORT_PALETTE);
+    const rows = exp.sheets[0]!.data[0]!.rowData;
+    const title = grid.rows.findIndex((r) => r.kind === 'title');
+    expect((rows[title]!.values[1] as { userEnteredFormat: { backgroundColor: unknown } }).userEnteredFormat.backgroundColor).toEqual(color('#1F4E79'));
+    const input = Number(grid.address.a!.slice(1)) - 1;
+    expect((rows[input]!.values[2] as { userEnteredFormat: { backgroundColor: unknown } }).userEnteredFormat.backgroundColor).toEqual(color('#FFF2CC'));
+  });
 
   test('se crea en región en_US, con las fórmulas con «=» y una fila por fila de la cuadrícula', () => {
     expect(body.properties.locale).toBe('en_US');

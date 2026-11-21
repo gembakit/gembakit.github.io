@@ -9,8 +9,7 @@ import { sheetLocale } from '../google/sheetsOutput';
 import { looseFolder } from '../google/driveFolders';
 import { folderMemory } from '../google/folderMemory';
 import type { SheetDef } from '../sheet/types';
-import { THEMES } from './theme/themes';
-import { useTheme } from './theme/ThemeProvider';
+import { EXPORT_PALETTE } from '../google/exportStyle';
 import { Button } from './Button';
 import { Sheet } from './Sheet';
 
@@ -20,7 +19,6 @@ type Phase = { k: 'idle' } | { k: 'creating' } | { k: 'done'; url: string } | { 
 export function ExportPanel({ open, onClose, build }: { open: boolean; onClose: () => void; build: () => SheetDef | null }) {
   const { t, lang } = useI18n();
   const e = t.exporting;
-  const { theme } = useTheme();
   const [gis, setGis] = useState<'loading' | 'ready' | 'failed'>(gisReady() ? 'ready' : 'loading');
   const [online, setOnline] = useState(navigator.onLine);
   const [phase, setPhase] = useState<Phase>({ k: 'idle' });
@@ -59,7 +57,7 @@ export function ExportPanel({ open, onClose, build }: { open: boolean; onClose: 
       .then(async (tk) => {
         // Sin proyecto, el archivo va a Gemba Kit / Sueltas (no a la raíz del Drive).
         const folder = await looseFolder(tk.accessToken, { root: t.data.folderRoot, loose: t.data.folderLoose }, folderMemory);
-        return exportToGoogleSheet(tk.accessToken, def, THEMES[theme].light, sheetLocale(lang), fetch, folder);
+        return exportToGoogleSheet(tk.accessToken, def, EXPORT_PALETTE, sheetLocale(lang), fetch, folder);
       })
       .then((ref) => setPhase({ k: 'done', url: ref.url }))
       .catch((err: unknown) => {

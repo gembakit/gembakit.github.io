@@ -272,6 +272,34 @@ ficha `docs/fichas/oee-v3.md`, aprobada con sus respuestas. Sustituye a
 Colores (2026-11-21, pedido del dueño): cada parada y categoría con su color
 en la torta y en el Pareto (ver la ficha).
 
+### Encargo: terminar la app (desde el 2026-11-21)
+
+El dueño pidió terminar la app entera de forma autónoma (todas las
+herramientas que faltan y el rediseño de los exportables, con colores
+estándar y profesionales que no dependen del tema), con un resumen final de
+lo hecho, lo que tiene que probar y los cambios. Punto de control antes de
+empezar: etiqueta `punto-de-control-2026-11-21`. Un commit publicado por
+paso; las fichas se redactan y se construyen sin esperar aprobación; las
+preguntas de producto se apuntan aquí para el final.
+
+Orden de trabajo y estado:
+1. [x] Exportables: paleta estándar (`src/google/exportStyle.ts`: azul
+   marino de oficina, datos editables en amarillo claro, resultados en azul
+   muy claro) para la exportación y la hoja del proyecto. Ya no usan el tema.
+2. [ ] Recetas paso 2 (OEE, máquina por parada, Pareto por máquina).
+3. [ ] Motor de gráficos común (SVG, tocables).
+4. [ ] Fase 2: descriptiva con histograma, Pareto, gráfico de corrida.
+5. [ ] Fase 3: capacidad (Cp, Cpk, Pp, Ppk), cartas I-MR y X-barra R.
+6. [ ] Fase 5: 5 porqués, espina de pescado, acciones, A3, Kaizen, plan de
+   control.
+7. [ ] Fase 4: captura en planta (cronómetro, conteo, desperdicios con
+   fotos, auditoría 5S), botón Capturar; sincronización entre aparatos.
+8. [ ] Fase 6: proyecto completo (fases y lo que falta, asistente, informe
+   PDF, contexto para IA).
+9. [ ] Formato de ordenador; Referencia con fórmulas y árboles de decisión.
+
+Preguntas de producto para el final: (ninguna todavía).
+
 ### Recetas, paso 1 de 2 (2026-11-21, hecho)
 
 Ficha `docs/fichas/recetas.md`. Tabla `recipes` (base local versión 4) en

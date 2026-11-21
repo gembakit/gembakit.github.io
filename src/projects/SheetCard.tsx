@@ -5,8 +5,7 @@ import { gisReady, GoogleAuthError, loadGis } from '../google/gis';
 import { GoogleApiError } from '../google/api';
 import { ensureToken, forgetToken } from '../google/session';
 import { folderUrl } from '../google/driveFolders';
-import { THEMES } from '../ui/theme/themes';
-import { useTheme } from '../ui/theme/ThemeProvider';
+import { EXPORT_PALETTE } from '../google/exportStyle';
 import { Button } from '../ui/Button';
 import { Card, Label } from '../ui/Layout';
 import { Sheet } from '../ui/Sheet';
@@ -17,7 +16,6 @@ import { sheetStatus, syncNow, useSyncState } from './sheetSync';
 export function SheetCard({ projectId }: { projectId: string }) {
   const { t, lang } = useI18n();
   const g = t.gsheet;
-  const { theme } = useTheme();
   const status = useLive(() => sheetStatus(projectId), [projectId]);
   const run = useSyncState(projectId);
   const [online, setOnline] = useState(navigator.onLine);
@@ -55,7 +53,7 @@ export function SheetCard({ projectId }: { projectId: string }) {
     const token = ensureToken();
     setConflictOpen(false);
     token
-      .then((tk) => syncNow(projectId, tk.accessToken, { t, lang, palette: THEMES[theme].light }, opts))
+      .then((tk) => syncNow(projectId, tk.accessToken, { t, lang, palette: EXPORT_PALETTE }, opts))
       .then((r) => r?.k === 'conflict' && setConflictOpen(true))
       .catch((err: unknown) => {
         if (err instanceof GoogleApiError && err.status === 401) forgetToken();
