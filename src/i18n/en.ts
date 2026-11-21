@@ -1,11 +1,13 @@
 import type { Messages } from './types';
 import { corridaEn, dataColumnEn, descriptivaEn, paretoEn } from './tools/phase2';
 import { capacidadEn, cartasEn } from './tools/phase3';
+import { projectPlusEn } from './tools/phase6';
 import { auditoria5sEn, captureEn, conteoEn, cronometroEn, desperdiciosEn } from './tools/phase4';
 import { a3En, accionesEn, espinaEn, kaizenEn, planControlEn, porquesEn } from './tools/phase5';
 
 export const en: Messages = {
   dataColumn: dataColumnEn,
+  projectPlus: projectPlusEn,
   headlines: { mean: 'Mean', vital: 'Vital few', median: 'Median', cpk: 'Cpk', ppk: 'Ppk', signals: 'Signals', cycle: 'Average cycle', total: 'Total', waste: 'Wastes', score5s: '5S' },
   app: {
     name: 'Gemba Kit',

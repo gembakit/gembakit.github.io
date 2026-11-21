@@ -65,7 +65,10 @@ export const GUIDE: readonly GuideTopic[] = [
         'Con un resultado en pantalla, pulsa «Guardar en un proyecto». El último proyecto usado ya viene elegido, con su fase actual. Pon el nombre, la fecha y hora y el contexto (todo opcional; la app te ofrece los valores que ya usaste, para escribirlos siempre igual) y una nota.',
         'Cada vez que mides de nuevo es una medición nueva. Si cambias los datos de una medición ya guardada, se guarda como versión 2, 3…; las anteriores quedan en su historial.',
         '«Congelar» deja una medición fija, por ejemplo la línea base de la fase Medir: sus datos ya no cambian hasta que la descongeles.',
-        'En el proyecto, el recorrido de fases enseña cuáles están completadas (✓), cuál es la actual y cuáles faltan. Toca una para hacerla la actual: las anteriores quedan completadas y las mediciones nuevas se guardan en ella. Debajo, las mediciones agrupadas por fase. Borrar un proyecto o una medición se puede deshacer al momento.',
+        'El proyecto tiene cuatro pestañas arriba: Fases, Hoja (su hoja de Google), Acciones e Informe.',
+        'En Fases, el recorrido de fases enseña cuáles están completadas (✓), cuál es la actual y cuáles faltan. Toca una para hacerla la actual: las anteriores quedan completadas y las mediciones nuevas se guardan en ella. Debajo, «Para cerrar la fase» dice lo que falta (con ✓ lo hecho) y las herramientas que se suelen usar en esa fase: toca una y lo que guardes irá a este proyecto.',
+        '«¿Qué necesitas hacer?» es el asistente: elige lo que quieres conseguir («Ver qué problema o causa pesa más», «Saber si el proceso es estable»…) y te enseña las herramientas para eso. Más abajo, las mediciones agrupadas por fase. Borrar un proyecto o una medición se puede deshacer al momento.',
+        'En Informe, «Crear PDF del proyecto» junta el objetivo, la fase, cada medición con su resultado y su conclusión, las acciones y los hitos. «Copiar contexto para IA» copia ese mismo resumen en texto, para pegarlo en Claude, Gemini u otra IA y preguntarle; la app no envía nada a ninguna IA.',
         'Con dos mediciones o más aparece «Filtrar y ordenar»: por herramienta, fase y cualquier dato de contexto (Equipo, Puesto…), combinables, y por fecha o por resultado. Por resultado solo cuando queda una sola herramienta, porque no tiene sentido ordenar juntos un RTY y un DPMO. El filtro se mantiene al entrar en una medición y volver.',
         'En «Hitos» apunta lo que hiciste y cuándo, por ejemplo «implantación 5S en la llenadora», con una nota. Más adelante se verán marcados en los gráficos de Evolución, para comparar el antes y el después.',
         'El lápiz de arriba edita el proyecto: nombre, objetivo, tipo y campos de contexto. En una medición guardada, el lápiz corrige su nombre, fase, fecha, contexto y nota sin crear una versión nueva, también si está congelada.',
@@ -81,7 +84,10 @@ export const GUIDE: readonly GuideTopic[] = [
         'With a result on screen, tap “Save to a project”. The last project used is already selected, with its current phase. Enter the name, date and time and the context (all optional; the app offers the values you already used, so they are always written the same way) and a note.',
         'Every time you measure again it is a new measurement. If you change the data of a saved measurement, it is saved as version 2, 3…; the earlier ones stay in its history.',
         '“Freeze” fixes a measurement, for example the Measure-phase baseline: its data no longer change until you unfreeze it.',
-        'In the project, the phase track shows which phases are completed (✓), which is current and which are left. Tap one to make it current: the earlier ones show as completed and new measurements are saved to it. Below, the measurements grouped by phase. Deleting a project or a measurement can be undone straight away.',
+        'The project has four tabs at the top: Phases, Sheet (its Google sheet), Actions and Report.',
+        'In Phases, the phase track shows which phases are completed (✓), which is current and which are left. Tap one to make it current: the earlier ones show as completed and new measurements are saved to it. Below, “To close the phase” says what is missing (with ✓ for what is done) and the tools usually used in that phase: tap one and what you save will go to this project.',
+        '“What do you need to do?” is the assistant: choose what you want to achieve (“See which problem or cause weighs most”, “Know whether the process is stable”…) and it shows you the tools for it. Further down, the measurements grouped by phase. Deleting a project or a measurement can be undone straight away.',
+        'In Report, “Create project PDF” brings together the goal, the phase, each measurement with its result and conclusion, the actions and the milestones. “Copy context for AI” copies the same summary as text, to paste into Claude, Gemini or another AI and ask it; the app sends nothing to any AI.',
         'With two or more measurements, “Filter and sort” appears: by tool, phase and any context detail (Crew, Station…), combined, and by date or by result. By result only when a single tool is left, because sorting an RTY and a DPMO together makes no sense. The filter is kept when you open a measurement and come back.',
         'Under “Milestones”, note what you did and when, for example “5S rollout on the filler”, with a note. Later they will be marked on the Evolution charts, to compare before and after.',
         'The pencil at the top edits the project: name, goal, type and context fields. In a saved measurement, the pencil corrects its name, phase, date, context and note without creating a new version, even when it is frozen.',
@@ -136,7 +142,7 @@ export const GUIDE: readonly GuideTopic[] = [
     es: {
       title: 'Hoja de Google del proyecto',
       body: [
-        'En el proyecto, tarjeta «Hoja de Google», pulsa «Crear la hoja en mi Drive». Se crea la carpeta Gemba Kit › Proyectos › (nombre del proyecto) y dentro un único archivo con el nombre del proyecto.',
+        'En el proyecto, pestaña «Hoja», pulsa «Crear la hoja en mi Drive». Se crea la carpeta Gemba Kit › Proyectos › (nombre del proyecto) y dentro un único archivo con el nombre del proyecto.',
         'La pestaña «Resumen» tiene los datos del proyecto, todas las mediciones (fecha, herramienta, fase, resultado, una columna por cada dato de contexto para poder filtrar, nota y versión) y los hitos. Cada medición tiene además su pestaña, con el diseño de su herramienta, las fórmulas vivas y una sección «Medición» con su fecha, contexto, nota y versión.',
         'Después la app la mantiene al día: los cambios se envían solos mientras la conexión con Google esté activa (hasta una hora después de aceptar en la ventana de Google). Si no, la tarjeta dice cuántos cambios hay por enviar: pulsa «Sincronizar». En la lista de proyectos verás «Hoja al día» o los cambios pendientes. Sin red, se guarda igual y se envía después.',
         'Las pestañas de la app avisan al editarlas en Sheets. Si alguien las cambia, la app no las pisa sin preguntar y te dice quién modificó el archivo por última vez: «Guardar sus cambios» los copia en una pestaña tuya («… · editada») y actualiza la original; «Descartar sus cambios» la deja como en la app (lo cambiado sigue en el historial de versiones de Sheets).',
@@ -147,7 +153,7 @@ export const GUIDE: readonly GuideTopic[] = [
     en: {
       title: 'Project Google Sheet',
       body: [
-        'In the project, “Google Sheet” card, tap “Create the sheet in my Drive”. The folder Gemba Kit › Projects › (project name) is created, with a single file named after the project inside.',
+        'In the project, “Sheet” tab, tap “Create the sheet in my Drive”. The folder Gemba Kit › Projects › (project name) is created, with a single file named after the project inside.',
         'The “Summary” tab has the project details, all the measurements (date, tool, phase, result, one column per context detail so you can filter, note and version) and the milestones. Each measurement also has its own tab, with its tool’s layout, live formulas and a “Measurement” section with its date, context, note and version.',
         'After that the app keeps it up to date: changes are sent on their own while the Google connection is active (up to an hour after accepting in the Google window). Otherwise, the card says how many changes are waiting: tap “Sync”. In the project list you will see “Sheet up to date” or the pending changes. Offline, everything is saved anyway and sent later.',
         'The app’s tabs warn when you edit them in Sheets. If someone changes them, the app does not overwrite them without asking and tells you who last changed the file: “Keep their changes” copies them into a tab of yours (“… · edited”) and updates the original; “Discard their changes” puts it back as in the app (what was changed is still in Sheets’ version history).',
@@ -184,7 +190,7 @@ export const GUIDE: readonly GuideTopic[] = [
       body: [
         'En Herramientas, «Buscar la causa» tiene los 5 porqués y la espina de pescado; «Actuar y documentar», el informe A3, el evento Kaizen, el plan de control y la lista de acciones. Son documentos: se rellenan por apartados, con «Cargar ejemplo» para ver uno hecho.',
         'Cada documento se guarda en un proyecto como una medición más y se exporta a la hoja de Google o a PDF desde «Exportar».',
-        'Las acciones viven en cada proyecto, en la sección «Acciones»: qué, quién, para cuándo y su estado. Las vencidas salen en rojo, con icono y texto, en el proyecto y en la lista de proyectos.',
+        'Las acciones viven en cada proyecto, en la pestaña «Acciones»: qué, quién, para cuándo y su estado. Las vencidas salen en rojo, con icono y texto, en el proyecto y en la lista de proyectos.',
       ],
     },
     en: {
@@ -192,7 +198,7 @@ export const GUIDE: readonly GuideTopic[] = [
       body: [
         'Under Tools, “Find the cause” has the 5 whys and the fishbone; “Act and document”, the A3 report, the Kaizen event, the control plan and the action list. They are documents: you fill them in section by section, with “Load example” to see a finished one.',
         'Each document is saved to a project like any other measurement and exported to a Google Sheet or a PDF from “Export”.',
-        'Actions live in each project, in the “Actions” section: what, who, by when and their status. Overdue ones appear in red, with an icon and text, in the project and in the project list.',
+        'Actions live in each project, in the “Actions” tab: what, who, by when and their status. Overdue ones appear in red, with an icon and text, in the project and in the project list.',
       ],
     },
   },
@@ -351,7 +357,7 @@ export const GUIDE: readonly GuideTopic[] = [
       title: 'Dónde están tus datos',
       body: [
         'En tu teléfono. La app no tiene servidor y no envía nada a nadie.',
-        'Conectar tu cuenta de Google es opcional y solo usa tu propio Drive: la app solo ve los archivos que ella misma crea, todos dentro de la carpeta Gemba Kit. Sirve para exportar hojas sueltas, para la hoja de Google de cada proyecto y para guardar copias de seguridad; más adelante, también para tener lo mismo en el móvil y en el ordenador.',
+        'Conectar tu cuenta de Google es opcional y solo usa tu propio Drive: la app solo ve los archivos que ella misma crea, todos dentro de la carpeta Gemba Kit. Sirve para exportar hojas sueltas, para la hoja de Google de cada proyecto para guardar copias de seguridad y para tener lo mismo en el móvil y en el ordenador.',
         'Si desinstalas la app o borras los datos de Chrome, lo guardado en el teléfono se pierde. Por eso conviene hacer copias de seguridad (ver «Copia de seguridad»): la hoja de Google del proyecto es un reflejo para consultar, no sirve para recuperar.',
       ],
     },
@@ -359,7 +365,7 @@ export const GUIDE: readonly GuideTopic[] = [
       title: 'Where your data lives',
       body: [
         'On your phone. The app has no server and sends nothing to anyone.',
-        'Connecting your Google account is optional and only uses your own Drive: the app only sees the files it creates itself, all inside the Gemba Kit folder. It is used to export loose sheets, for each project’s Google sheet and to save backups; later, also to have the same data on your phone and your computer.',
+        'Connecting your Google account is optional and only uses your own Drive: the app only sees the files it creates itself, all inside the Gemba Kit folder. It is used to export loose sheets, for each project’s Google sheet to save backups and to have the same data on your phone and your computer.',
         'If you uninstall the app or clear Chrome’s data, what is saved on the phone is lost. That is why backups are worth making (see “Backup”): the project’s Google sheet is a mirror to look at, not a way to recover.',
       ],
     },

@@ -37,7 +37,7 @@ export default function AccionesTool() {
           const s = stats?.[p.id];
           return (
             <li key={p.id}>
-              <button type="button" onClick={() => navigate(`/proyectos/${p.id}`)} className="press raised grid min-h-16 w-full grid-cols-[minmax(0,1fr)_20px] items-center gap-3 rounded-[18px] p-3.5 text-left">
+              <button type="button" onClick={() => navigate(`/proyectos/${p.id}/acciones`)} className="press raised grid min-h-16 w-full grid-cols-[minmax(0,1fr)_20px] items-center gap-3 rounded-[18px] p-3.5 text-left">
                 <span className="flex min-w-0 flex-col gap-0.5">
                   <span className="text-[16px] font-semibold wrap-anywhere">{p.name}</span>
                   <span className="text-[13.5px] text-muted">{x.counts(s?.open ?? 0, s?.done ?? 0)}</span>

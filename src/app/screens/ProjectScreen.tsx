@@ -12,13 +12,14 @@ import { FilterSheet } from '../../projects/FilterSheet';
 import { MilestoneSheet } from '../../projects/MilestoneSheet';
 import { SheetCard } from '../../projects/SheetCard';
 import { ActionsSection } from '../../projects/Actions';
+import { AssistantPanel, PhasePanel, ProjectTabs, ReportPanel, type ProjectTab } from '../../projects/ProjectPanels';
 import { activeFilters, applyFilter, isDefault, NO_FILTER, recallFilter, rememberFilter, type MeasurementFilter } from '../../projects/filter';
 import { formatDateTime, formatHeadline, useLive } from '../../projects/live';
 import { deleteProject, getProject, latest, listMeasurements, listMilestones, restoreProject, updateProject } from '../../projects/store';
 import { navigate } from '../router';
 
 /** Pantalla de un proyecto: fase actual, objetivo, mediciones (con filtros) e hitos. */
-export function ProjectScreen({ id }: { id: string }) {
+export function ProjectScreen({ id, tab: initialTab = 'fases' }: { id: string; tab?: ProjectTab }) {
   const { t } = useI18n();
   const p = t.projects;
   const toast = useToast();
@@ -28,6 +29,7 @@ export function ProjectScreen({ id }: { id: string }) {
   const [filter, setFilterState] = useState<MeasurementFilter>(() => recallFilter(id));
   const [filtering, setFiltering] = useState(false);
   const [milestone, setMilestone] = useState<Milestone | 'new' | null>(null);
+  const [tab, setTab] = useState<ProjectTab>(initialTab);
   const closeFilter = useCallback(() => setFiltering(false), []);
   const closeMilestone = useCallback(() => setMilestone(null), []);
   const setFilter = (f: MeasurementFilter) => {
@@ -82,7 +84,9 @@ export function ProjectScreen({ id }: { id: string }) {
         }
       />
 
-      {(phases.length > 0 || project.goal) && (
+      <ProjectTabs value={tab} onChange={setTab} />
+
+      {tab === 'fases' && (phases.length > 0 || project.goal) && (
         <Card>
           {project.goal && (
             <div className="flex flex-col gap-1">
@@ -100,6 +104,10 @@ export function ProjectScreen({ id }: { id: string }) {
         </Card>
       )}
 
+      {tab === 'fases' && <PhasePanel project={project} />}
+      {tab === 'fases' && <AssistantPanel projectId={project.id} />}
+
+      {tab === 'fases' && (
       <section className="flex flex-col gap-3">
         <div className="flex min-h-12 items-center justify-between gap-3">
           <Label>{p.measurements}</Label>
@@ -147,9 +155,11 @@ export function ProjectScreen({ id }: { id: string }) {
           {p.goTools}
         </Button>
       </section>
+      )}
 
-      <ActionsSection projectId={project.id} />
+      {tab === 'acciones' && <ActionsSection projectId={project.id} />}
 
+      {tab === 'fases' && (
       <section className="flex flex-col gap-3">
         <Label>{p.milestones.title}</Label>
         {milestones && milestones.length === 0 && (
@@ -168,12 +178,16 @@ export function ProjectScreen({ id }: { id: string }) {
           {p.milestones.add}
         </Button>
       </section>
+      )}
 
-      <SheetCard projectId={project.id} />
+      {tab === 'hoja' && <SheetCard projectId={project.id} />}
+      {tab === 'informe' && <ReportPanel projectId={project.id} />}
 
-      <Button variant="ghost" icon={Trash2} className="mt-4 self-start" onClick={() => void remove()}>
-        {p.deleteProject}
-      </Button>
+      {tab === 'fases' && (
+        <Button variant="ghost" icon={Trash2} className="mt-4 self-start" onClick={() => void remove()}>
+          {p.deleteProject}
+        </Button>
+      )}
 
       <FilterSheet open={filtering} onClose={closeFilter} project={project} list={all} filter={filter} onChange={setFilter} />
       <MilestoneSheet open={milestone !== null} onClose={closeMilestone} projectId={project.id} milestone={milestone === 'new' ? null : milestone} />

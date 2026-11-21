@@ -2,11 +2,13 @@
 // las mismas claves (TypeScript y una prueba lo comprueban).
 import { corridaEs, dataColumnEs, descriptivaEs, paretoEs } from './tools/phase2';
 import { capacidadEs, cartasEs } from './tools/phase3';
+import { projectPlusEs } from './tools/phase6';
 import { auditoria5sEs, captureEs, conteoEs, cronometroEs, desperdiciosEs } from './tools/phase4';
 import { a3Es, accionesEs, espinaEs, kaizenEs, planControlEs, porquesEs } from './tools/phase5';
 
 export const es = {
   dataColumn: dataColumnEs,
+  projectPlus: projectPlusEs,
   /** Nombre del resultado principal guardado de las herramientas nuevas. */
   headlines: { mean: 'Media', vital: 'Pocos vitales', median: 'Mediana', cpk: 'Cpk', ppk: 'Ppk', signals: 'Señales', cycle: 'Ciclo medio', total: 'Total', waste: 'Desperdicios', score5s: '5S' } as Record<string, string>,
   app: {

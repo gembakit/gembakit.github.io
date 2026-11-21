@@ -16,6 +16,7 @@ import { welcomeDone } from '../google/account';
 import { currentAccount } from '../google/session';
 import { ProjectFormScreen } from './screens/ProjectFormScreen';
 import { ProjectScreen } from './screens/ProjectScreen';
+import { PROJECT_TABS, type ProjectTab } from '../projects/ProjectPanels';
 import { ProjectHistoryScreen } from './screens/ProjectHistoryScreen';
 import { SavedProvider, useLive } from '../projects/live';
 import { useAutoSync } from '../projects/useAutoSync';
@@ -92,6 +93,7 @@ export function AppShell({ persisted }: { persisted: boolean | null }) {
   else if (sub && kind === 'editar') screen = <ProjectFormScreen key={sub} id={sub} />;
   else if (sub && kind === 'historial') screen = <ProjectHistoryScreen key={sub} id={sub} />;
   else if (sub && kind === 'm' && third) screen = <MeasurementRoute key={third} projectId={sub} id={third} />;
+  else if (sub && kind && (PROJECT_TABS as readonly string[]).includes(kind)) screen = <ProjectScreen key={`${sub}-${kind}`} id={sub} tab={kind as ProjectTab} />;
   else if (sub) screen = <ProjectScreen key={sub} id={sub} />;
   else screen = <ProjectsScreen />;
   const navSection = section;

@@ -328,8 +328,13 @@ Orden de trabajo y estado:
    red, tras cada cambio y cada 90 s, solo con permiso vigente). En Ajustes
    › Cuenta de Google, «Tus aparatos» con «Sincronizar ahora». Las fotos
    viajan dentro de las mediciones (no como archivos aparte).
-8. [ ] Fase 6: proyecto completo (fases y lo que falta, asistente, informe
-   PDF, contexto para IA).
+8. [x] Fase 6: proyecto completo (`docs/fichas/fase-6.md`). El proyecto
+   tiene pestañas Fases, Hoja, Acciones e Informe (`ProjectTabs`, enlace
+   `#/proyectos/<id>/<pestaña>`). En Fases, «Para cerrar la fase» y las
+   herramientas habituales de la fase (`src/projects/phaseGuide.ts`; abrir
+   una deja el proyecto elegido) y el asistente «¿Qué necesitas hacer?». En
+   Informe, «Crear PDF del proyecto» y «Copiar contexto para IA»
+   (`src/projects/report.ts`, conclusiones sacadas de cada herramienta).
 9. [ ] Formato de ordenador; Referencia con fórmulas y árboles de decisión.
 
 Preguntas de producto para el final:
@@ -341,6 +346,11 @@ Preguntas de producto para el final:
 - Cartas: tabla de constantes A2, D3, D4 (NIST) y d2 (ASTM), pendiente de
   que el dueño la valide (lo pedía ESTADO.md). Pruebas marcadas por
   defecto: 1, 2, 3, 5 y 6; ¿prefiere otras?
+- Plantillas de proyecto propias (CLAUDE.md, Navegación): no hechas. ¿Qué
+  debería poder cambiar el usuario: solo los nombres de las fases, o también
+  las herramientas y lo que hay que cumplir en cada una?
+- «Para cerrar la fase» es una guía, no un candado: se puede cambiar de fase
+  aunque falte algo. ¿Le parece bien?
 
 ### Recetas, paso 1 de 2 (2026-11-21, hecho)
 
