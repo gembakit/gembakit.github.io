@@ -1,5 +1,5 @@
 import type { Messages } from '../../i18n';
-import { stationStats, takt, TIME_UNITS, type Basis, type LineKind, type Measure, type TaktInput, type TaktResult, type TimeUnit } from '../../calc/takt';
+import { stationStats, takt, TIME_UNITS, type Basis, type Measure, type Pace, type TaktInput, type TaktResult, type TimeUnit } from '../../calc/takt';
 import type { CalcWarning } from '../../calc/types';
 import type { ReadingLine, SheetDef } from '../../sheet/types';
 import { taktFormat, type TaktView } from './explain';
@@ -8,9 +8,24 @@ import { taktSheet } from './sheet';
 // Datos guardados del takt y su «Cómo leerlo» sin pantalla: la usan la
 // herramienta y la hoja del proyecto, para que digan siempre lo mismo.
 
-/** Datos del takt guardados en un proyecto (versión 2, docs/fichas/takt-v2.md). */
+/** Una estación guardada: su unidad, lo que cuenta y sus valores en esa unidad. */
+export interface TaktStationSaved {
+  name: string;
+  measure: Measure;
+  unit: TimeUnit;
+  /** Lo que cuenta si no es la unidad de la demanda («paquetes»); vacío: lo mismo que la demanda. */
+  item: string;
+  /** Unidades de la demanda en una de las suyas (1 paquete = 12 botellas); cuenta solo si `item` no está vacío. */
+  per: number;
+  theoretical: number | null;
+  actual: number[];
+  /** Forma en que se tomaron las medidas, si no es `measure` (se cambió la unidad después): la media se saca en esa. */
+  origin?: Measure;
+}
+
+/** Datos del takt guardados en un proyecto (versión 3, 2026-11-21: cada estación con su unidad). */
 export interface TaktSaved {
-  v: 2;
+  v: 3;
   shift: number;
   shiftUnit: TimeUnit;
   deductions: { name: string; value: number; unit: TimeUnit }[];
@@ -18,13 +33,32 @@ export interface TaktSaved {
   demand: number;
   /** Vacío: «piezas». */
   unitName: string;
+  /** Unidad de las estaciones nuevas (la de arriba: al cambiarla, se convierten todas). */
+  stationUnit: Pace;
+  /** Cómo se ven los resultados. */
+  result: Pace;
+  balance: boolean;
+  basis: Basis;
+  stations: TaktStationSaved[];
+  /** OEE esperado, de 0 a 1. */
+  oee: number | null;
+}
+
+/** Formato de la versión 2 (2026-11-16 a 2026-11-21): una sola unidad para toda la línea y el tipo de línea. */
+interface TaktSavedV2 {
+  v: 2;
+  shift: number;
+  shiftUnit: TimeUnit;
+  deductions: { name: string; value: number; unit: TimeUnit }[];
+  shifts: number;
+  demand: number;
+  unitName: string;
   measure: Measure;
   measureUnit: TimeUnit;
   resultUnit: TimeUnit;
-  kind: LineKind;
+  kind: 'assembly' | 'machines';
   basis: Basis;
   stations: { name: string; theoretical: number | null; actual: number[] }[];
-  /** OEE esperado, de 0 a 1. */
   oee: number | null;
 }
 
@@ -39,50 +73,97 @@ interface TaktSavedV1 {
 
 const isUnit = (u: unknown): u is TimeUnit => TIME_UNITS.includes(u as TimeUnit);
 const isNum = (x: unknown): x is number => typeof x === 'number' && Number.isFinite(x);
+const isMeasure = (m: unknown): m is Measure => m === 'time' || m === 'rate';
+const isPace = (p: unknown): p is Pace => typeof p === 'object' && p !== null && isMeasure((p as Pace).measure) && isUnit((p as Pace).unit);
+const isBasis = (b: unknown): b is Basis => b === 'mean' || b === 'repeatable' || b === 'theoretical';
+const isDeductions = (x: unknown) => Array.isArray(x) && x.every((d) => isNum(d?.value) && isUnit(d?.unit));
+const isValues = (st: { theoretical?: unknown; actual?: unknown }) => Array.isArray(st.actual) && st.actual.every(isNum) && (st.theoretical === null || isNum(st.theoretical));
+const text = (x: unknown) => (typeof x === 'string' ? x : '');
 
 /** Lee unos datos guardados, de cualquier versión; null si no son del takt. */
 export function readTaktSaved(x: unknown): TaktSaved | null {
   if (typeof x !== 'object' || x === null) return null;
   const o = x as Record<string, unknown>;
-  if (o.v === 2) {
+  if (o.v === 3) {
     const s = o as unknown as TaktSaved;
     const ok =
       isNum(s.shift) &&
       isUnit(s.shiftUnit) &&
-      Array.isArray(s.deductions) &&
-      s.deductions.every((d) => isNum(d.value) && isUnit(d.unit)) &&
+      isDeductions(s.deductions) &&
       isNum(s.shifts) &&
       isNum(s.demand) &&
-      (s.measure === 'time' || s.measure === 'rate') &&
+      isPace(s.stationUnit) &&
+      isPace(s.result) &&
+      typeof s.balance === 'boolean' &&
+      isBasis(s.basis) &&
+      Array.isArray(s.stations) &&
+      s.stations.every((st) => isMeasure(st.measure) && isUnit(st.unit) && isNum(st.per) && isValues(st) && (st.origin === undefined || isMeasure(st.origin)));
+    if (!ok) return null;
+    return {
+      ...s,
+      unitName: text(s.unitName),
+      stations: s.stations.map((st) => ({ ...st, name: text(st.name), item: text(st.item) })),
+      oee: isNum(s.oee) ? s.oee : null,
+    };
+  }
+  if (o.v === 2) {
+    const s = o as unknown as TaktSavedV2;
+    const ok =
+      isNum(s.shift) &&
+      isUnit(s.shiftUnit) &&
+      isDeductions(s.deductions) &&
+      isNum(s.shifts) &&
+      isNum(s.demand) &&
+      isMeasure(s.measure) &&
       isUnit(s.measureUnit) &&
       isUnit(s.resultUnit) &&
       (s.kind === 'assembly' || s.kind === 'machines') &&
-      (s.basis === 'mean' || s.basis === 'repeatable' || s.basis === 'theoretical') &&
+      isBasis(s.basis) &&
       Array.isArray(s.stations) &&
-      s.stations.every((st) => Array.isArray(st.actual) && st.actual.every(isNum) && (st.theoretical === null || isNum(st.theoretical)));
-    return ok ? { ...s, unitName: typeof s.unitName === 'string' ? s.unitName : '', oee: isNum(s.oee) ? s.oee : null } : null;
+      s.stations.every(isValues);
+    if (!ok) return null;
+    // Toda la línea tenía una sola unidad; «Montaje con puestos» era el que calculaba el balanceo.
+    return {
+      v: 3,
+      shift: s.shift,
+      shiftUnit: s.shiftUnit,
+      deductions: s.deductions,
+      shifts: s.shifts,
+      demand: s.demand,
+      unitName: text(s.unitName),
+      stationUnit: { measure: s.measure, unit: s.measureUnit },
+      result: { measure: s.measure, unit: s.resultUnit },
+      balance: s.kind === 'assembly',
+      basis: s.basis,
+      stations: s.stations.map((st) => ({ name: text(st.name), measure: s.measure, unit: s.measureUnit, item: '', per: 1, theoretical: st.theoretical, actual: st.actual })),
+      oee: isNum(s.oee) ? s.oee : null,
+    };
   }
   const v1 = o as unknown as TaktSavedV1;
   if (isNum(v1.available) && isUnit(v1.availableUnit) && isNum(v1.demand) && isUnit(v1.unit) && Array.isArray(v1.stations)) {
     return {
-      v: 2,
+      v: 3,
       shift: v1.available,
       shiftUnit: v1.availableUnit,
       deductions: [],
       shifts: 1,
       demand: v1.demand,
       unitName: '',
-      measure: 'time',
-      measureUnit: v1.unit,
-      resultUnit: v1.unit,
-      kind: 'assembly',
+      stationUnit: { measure: 'time', unit: v1.unit },
+      result: { measure: 'time', unit: v1.unit },
+      balance: true,
       basis: 'mean',
-      stations: v1.stations.map((st) => ({ name: st.name ?? '', theoretical: null, actual: isNum(st.cycle) ? [st.cycle] : [] })),
+      stations: v1.stations.map((st) => ({ name: text(st.name), measure: 'time', unit: v1.unit, item: '', per: 1, theoretical: null, actual: isNum(st.cycle) ? [st.cycle] : [] })),
       oee: null,
     };
   }
   return null;
 }
+
+/** Lo que cuenta una estación: su propia cosa o, si no tiene, la unidad de la demanda. */
+export const stationItem = (st: { item: string }, unitName: string) => st.item.trim() || unitName;
+/** Equivalencia que cuenta: con su propia cosa, la escrita; si no, 1. */
+export const stationPer = (st: { item: string; per: number }) => (st.item.trim() ? st.per : 1);
 
 export const toTaktInput = (s: TaktSaved): TaktInput => ({
   shift: s.shift,
@@ -90,28 +171,31 @@ export const toTaktInput = (s: TaktSaved): TaktInput => ({
   deductions: s.deductions.map((d) => ({ value: d.value, unit: d.unit })),
   shifts: s.shifts,
   demand: s.demand,
-  measure: s.measure,
-  measureUnit: s.measureUnit,
-  kind: s.kind,
+  balance: s.balance,
   basis: s.basis,
-  stations: s.stations.map((st) => ({ theoretical: st.theoretical, actual: st.actual })),
+  stations: s.stations.map((st) => ({ measure: st.measure, unit: st.unit, per: stationPer(st), theoretical: st.theoretical, actual: st.actual, origin: st.origin })),
   oee: s.oee,
 });
 
 export const taktView = (s: TaktSaved, t: Messages): TaktView => ({
-  measure: s.measure,
-  measureUnit: s.measureUnit,
-  resultUnit: s.resultUnit,
+  result: s.result,
   unitName: s.unitName.trim() || t.tools.takt.defaultUnit,
-  kind: s.kind,
+  balance: s.balance,
 });
 
-/** Nombres de las estaciones (sin nombre: «Puesto n» o «Máquina n»). */
-export const stationNames = (s: TaktSaved, t: Messages) => s.stations.map((st, i) => st.name.trim() || t.tools.takt.stationName(i + 1, s.kind));
+/** Nombres de las estaciones (sin nombre: «Estación n»). */
+export const stationNames = (s: TaktSaved, t: Messages) => s.stations.map((st, i) => st.name.trim() || t.tools.takt.stationName(i + 1));
 export const deductionNames = (s: TaktSaved, t: Messages) => s.deductions.map((d, i) => d.name.trim() || t.tools.takt.deductionName(i + 1));
 
-/** «Repetible»: menor en tiempos, mayor en velocidades. */
-export const basisName = (basis: Basis, measure: Measure, t: Messages) => (basis === 'repeatable' ? t.tools.takt.stat.repeatable[measure]! : t.tools.takt.bases[basis]!);
+/** La forma de medir de todas las estaciones, o null si hay de las dos. */
+export function stationsMeasure(s: TaktSaved): Measure | null {
+  const m = new Set(s.stations.map((st) => st.measure));
+  return m.size === 0 ? s.stationUnit.measure : m.size === 1 ? [...m][0]! : null;
+}
+
+/** «Repetible»: menor en tiempos, mayor en velocidades; si las estaciones se miden de las dos formas, sin decir cuál. */
+export const basisName = (basis: Basis, measure: Measure | null, t: Messages) =>
+  basis === 'repeatable' ? (measure ? t.tools.takt.stat.repeatable[measure]! : t.tools.takt.bases.repeatable!) : t.tools.takt.bases[basis]!;
 
 export function taktWarnings(list: CalcWarning[], s: TaktSaved, t: Messages, lang: 'es' | 'en'): string[] {
   const d = t.tools.takt;
@@ -127,15 +211,18 @@ export function taktWarnings(list: CalcWarning[], s: TaktSaved, t: Messages, lan
           return w.deduction(deductionNames(s, t)[x.step]!);
         case 'no-time':
           return w.noTime;
+        case 'per-not-positive':
+          return w.per(names[x.step]!, d.singular(s.stations[x.step]!.item.trim()), f.unitName);
         case 'step-not-positive':
           return w.station(names[x.step]!);
         case 'station-empty':
           return w.stationEmpty(names[x.step]!);
         case 'over-takt':
-          return w.overTakt[s.kind]!;
+          return w.overTakt;
         case 'unstable': {
-          const st = stationStats(s.stations[x.step]!.actual, s.measure)!;
-          return w.unstable(names[x.step]!, f.entered(st.min), f.entered(st.max), s.kind);
+          const station = s.stations[x.step]!;
+          const st = stationStats(station.actual, station.measure, station.origin)!;
+          return w.unstable(names[x.step]!, f.station(st.min, station), f.station(st.max, station), s.balance);
         }
         case 'basis-fallback': {
           const r = takt(toTaktInput(s)).result;
@@ -161,7 +248,8 @@ export function taktConclusion(r: TaktResult, s: TaktSaved, t: Messages, lang: '
   const f = taktFormat(lang, t, view);
   const names = stationNames(s, t);
   const demand = f.units(s.demand);
-  const parts = [view.measure === 'time' ? d.conclusionTime(f.main(r.takt), f.alt(r.takt), demand) : d.conclusionRate(f.main(r.takt), f.alt(r.takt), demand)];
+  const isTime = view.result.measure === 'time';
+  const parts = [isTime ? d.conclusionTime(f.every(r.takt), f.alt(r.takt), demand) : d.conclusionRate(f.main(r.takt), f.every(r.takt), demand)];
   const line = r.line;
   if (line) {
     const st = r.stations[line.bottleneck]!;
@@ -178,18 +266,13 @@ export function taktConclusion(r: TaktResult, s: TaktSaved, t: Messages, lang: '
   if (o) {
     const oee = f.pct(o.oee);
     const expected = f.units(o.expected);
-    // Ritmo esperado en la forma de la línea: «36.000 botellas/h».
+    // Ritmo esperado en velocidad: «36.000 botellas/h».
     const effective = o.theoreticalCycle / o.oee;
-    const rate = view.measure === 'rate' ? f.main(effective) : f.alt(effective);
+    const rate = isTime ? f.alt(effective) : f.main(effective);
     if (o.minOee > 1) parts.push(d.oeeImpossible(names[o.reference]!, f.units(r.available / o.theoreticalCycle)));
     else parts.push(o.meets ? d.oeeOk(oee, expected, rate, demand, f.pct(o.minOee)) : d.oeeShort(oee, expected, rate, demand, f.pct(o.minOee)));
-    // Ritmo objetivo: a qué tiene que poder ir la línea, según su teórico, con esas pérdidas.
-    const ref = names[o.reference]!;
-    parts.push(
-      view.measure === 'rate'
-        ? d.oeeTargetRate(f.main(o.targetCycle), ref, f.main(o.theoreticalCycle))
-        : d.oeeTargetTime(f.main(o.targetCycle), ref, f.main(o.theoreticalCycle)),
-    );
+    // Capacidad instalada requerida: la velocidad estándar que tiene que tener la línea para cumplir con esas pérdidas.
+    parts.push(d.oeeTarget(f.main(o.targetCycle), names[o.reference]!, f.main(o.theoreticalCycle)));
     if (s.stations.some((st) => st.actual.length > 0)) parts.push(d.oeeNote);
   }
   return parts.join(' ');

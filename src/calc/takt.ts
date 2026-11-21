@@ -1,14 +1,18 @@
 import type { CalcOutput, CalcWarning } from './types';
 
-// Takt y cuello de botella, versión 2 (docs/fichas/takt-v2.md):
+// Takt y cuello de botella, versión 2 (docs/fichas/takt-v2.md), con los
+// cambios del 2026-11-21 (cada estación con su unidad):
 // - tiempo disponible = (turno − descuentos planificados) × turnos;
-// - la línea se mide en tiempo por unidad (ciclo) o en unidades por tiempo
-//   (velocidad); por dentro todo se pasa a segundos por unidad;
-// - cada estación o máquina tiene su teórico (de placa) y medidas reales;
-// - el balanceo solo en montaje con puestos (en máquinas en serie el trabajo
-//   no se puede repartir);
-// - con el OEE habitual: producción esperada, OEE mínimo para cumplir y ciclo
-//   objetivo (takt × OEE: lo que tiene que poder hacer la línea con sus pérdidas).
+// - cada estación se mide en tiempo por unidad (ciclo) o en unidades por
+//   tiempo (velocidad), en su unidad, y puede contar otra cosa que la demanda
+//   (paquetes de 12 botellas); por dentro todo se pasa a segundos por unidad
+//   de la demanda;
+// - cada estación tiene su velocidad estándar (la de diseño) y medidas reales;
+// - el balanceo, solo si se pide (si el trabajo se puede repartir entre
+//   estaciones);
+// - con el OEE habitual: producción esperada, OEE mínimo para cumplir y la
+//   capacidad instalada requerida (takt × OEE en ciclo; ritmo ÷ OEE en
+//   velocidad).
 
 export type TimeUnit = 's' | 'min' | 'h';
 export const TIME_UNITS: TimeUnit[] = ['s', 'min', 'h'];
@@ -17,10 +21,8 @@ export const SECONDS: Record<TimeUnit, number> = { s: 1, min: 60, h: 3600 };
 /** Pasa un tiempo de una unidad a otra. */
 export const convert = (v: number, from: TimeUnit, to: TimeUnit) => (v * SECONDS[from]) / SECONDS[to];
 
-/** Cómo se mide la línea: tiempo por unidad (ciclo) o unidades por tiempo (velocidad). */
+/** Cómo se mide: tiempo por unidad (ciclo) o unidades por tiempo (velocidad). */
 export type Measure = 'time' | 'rate';
-/** Montaje con puestos (el trabajo se puede repartir) o máquinas en serie. */
-export type LineKind = 'assembly' | 'machines';
 /** Con qué valor de cada estación se calcula. */
 export type Basis = 'mean' | 'repeatable' | 'theoretical';
 
@@ -29,16 +31,50 @@ export const toCycle = (v: number, measure: Measure, unit: TimeUnit) => (measure
 /** De segundos por unidad a la forma y unidad pedidas. */
 export const fromCycle = (sec: number, measure: Measure, unit: TimeUnit) => (measure === 'time' ? sec / SECONDS[unit] : SECONDS[unit] / sec);
 
+/** Una unidad completa de ritmo: «min por unidad» o «unidades por hora». */
+export interface Pace {
+  measure: Measure;
+  unit: TimeUnit;
+}
+export const PACES: Pace[] = [
+  { measure: 'time', unit: 's' },
+  { measure: 'time', unit: 'min' },
+  { measure: 'time', unit: 'h' },
+  { measure: 'rate', unit: 's' },
+  { measure: 'rate', unit: 'min' },
+  { measure: 'rate', unit: 'h' },
+];
+/** Clave de texto de una unidad («time-s», «rate-h»), para los desplegables. */
+export const paceKey = (p: Pace) => `${p.measure}-${p.unit}`;
+export const paceOf = (key: string): Pace => PACES.find((p) => paceKey(p) === key) ?? PACES[0]!;
+
+/** El mismo ritmo en otra unidad: 10 unidades/h son 6 min/unidad (nunca 10 h/unidad). */
+export const convertPace = (v: number, from: Pace, to: Pace) => fromCycle(toCycle(v, from.measure, from.unit), to.measure, to.unit);
+
 export interface Deduction {
   value: number;
   unit: TimeUnit;
 }
 
 export interface StationInput {
-  /** De diseño o de placa, en la medida y unidad de la línea; null si no se sabe. */
+  /** Cómo se mide esta estación y en qué unidad de tiempo. */
+  measure: Measure;
+  unit: TimeUnit;
+  /**
+   * Cuántas unidades de la demanda hay en una unidad de esta estación: 12 si
+   * cuenta paquetes de 12 botellas; 1 si cuenta lo mismo que la demanda.
+   */
+  per: number;
+  /** Velocidad estándar (la de diseño), en la medida y unidad de la estación; null si no se sabe. */
   theoretical: number | null;
-  /** Medidas tomadas en planta. */
+  /** Medidas tomadas en planta, en la medida y unidad de la estación. */
   actual: number[];
+  /**
+   * Forma en que se tomaron las medidas (por defecto, `measure`). La media se
+   * saca siempre en esa forma: la media de cuatro velocidades no es la de sus
+   * cuatro tiempos, y cambiar de unidad no debe mover el resultado.
+   */
+  origin?: Measure;
 }
 
 export interface TaktInput {
@@ -49,10 +85,8 @@ export interface TaktInput {
   /** Turnos en el periodo de la demanda. */
   shifts: number;
   demand: number;
-  measure: Measure;
-  /** Unidad de los teóricos y de las medidas: s/min/h por unidad, o unidades por s/min/h. */
-  measureUnit: TimeUnit;
-  kind: LineKind;
+  /** Calcular el balanceo (si el trabajo se puede repartir entre estaciones). */
+  balance: boolean;
   basis: Basis;
   stations: StationInput[];
   /** OEE esperado de la línea (0 a 1), opcional. */
@@ -79,11 +113,11 @@ export interface StationResult {
   stats: StationStats | null;
   /** De dónde sale el valor con el que se calcula. */
   source: Basis;
-  /** El valor usado, en la medida y unidad de la línea. */
+  /** El valor usado, en la medida y unidad de la estación. */
   value: number;
-  /** El valor usado, en segundos por unidad. */
+  /** El valor usado, en segundos por unidad de la demanda. */
   cycle: number;
-  /** Teórico en segundos por unidad. */
+  /** Estándar en segundos por unidad de la demanda. */
   theoreticalCycle: number | null;
   /** Media real frente al teórico, como fracción de su velocidad (0,93 = va al 93 %). */
   ofTheoretical: number | null;
@@ -106,7 +140,7 @@ export interface LineResult {
   capacity: number;
   /** Estaciones más lentas que el takt. */
   over: number[];
-  /** Solo en montaje con puestos. */
+  /** Solo si se pide. */
   balance: Balance | null;
 }
 
@@ -120,8 +154,8 @@ export interface OeeResult {
   /** OEE que hace falta para cumplir la demanda: ciclo teórico ÷ takt. */
   minOee: number;
   /**
-   * Ciclo objetivo: takt × OEE, en segundos por unidad. Lo que tiene que poder hacer cada máquina
-   * según su teórico para cumplir con las pérdidas habituales (en velocidad: ritmo ÷ OEE).
+   * Capacidad instalada requerida: takt × OEE, en segundos por unidad (en velocidad: ritmo ÷ OEE).
+   * La velocidad estándar que tiene que tener la línea para que, con su OEE, salga la demanda.
    */
   targetCycle: number;
   meets: boolean;
@@ -145,19 +179,29 @@ export const ceil = (x: number) => Math.ceil(x - 1e-9);
 /** Variación (máx − mín sobre la media) a partir de la cual se avisa de que la estación es inestable. */
 export const UNSTABLE = 0.1;
 
-export function stationStats(values: number[], measure: Measure): StationStats | null {
+/**
+ * Estadística de las medidas de una estación, en su medida. Si se tomaron en
+ * la otra forma (`origin`), la media y la variación se sacan en esa y se
+ * devuelven pasadas: el tiempo por unidad es 1 ÷ la velocidad en la misma
+ * unidad de tiempo, así que basta con invertir.
+ */
+export function stationStats(values: number[], measure: Measure, origin: Measure = measure): StationStats | null {
   if (values.length === 0) return null;
   const n = values.length;
-  const mean = values.reduce((a, b) => a + b, 0) / n;
+  const flip = origin !== measure;
+  const asTaken = flip ? values.map((v) => 1 / v) : values;
+  const meanTaken = asTaken.reduce((a, b) => a + b, 0) / n;
+  const mean = flip ? 1 / meanTaken : meanTaken;
   const min = Math.min(...values);
   const max = Math.max(...values);
   // Lo mejor primero: en tiempos, lo menor; en velocidades, lo mayor.
   const best = [...values].sort((a, b) => (measure === 'time' ? a - b : b - a));
-  return { n, mean, min, max, repeatable: n >= 2 ? best[1]! : null, spread: n >= 2 ? (max - min) / mean : null };
+  const spread = n >= 2 ? (Math.max(...asTaken) - Math.min(...asTaken)) / meanTaken : null;
+  return { n, mean, min, max, repeatable: n >= 2 ? best[1]! : null, spread };
 }
 
 function stationResult(s: StationInput, input: TaktInput): StationResult | null {
-  const stats = stationStats(s.actual, input.measure);
+  const stats = stationStats(s.actual, s.measure, s.origin);
   const pick = (): { source: Basis; value: number } | null => {
     if (input.basis === 'theoretical' && s.theoretical !== null) return { source: 'theoretical', value: s.theoretical };
     if (input.basis === 'repeatable' && stats?.repeatable != null) return { source: 'repeatable', value: stats.repeatable };
@@ -167,13 +211,15 @@ function stationResult(s: StationInput, input: TaktInput): StationResult | null 
   };
   const used = pick();
   if (!used) return null;
-  const theoreticalCycle = s.theoretical !== null ? toCycle(s.theoretical, input.measure, input.measureUnit) : null;
-  const meanCycle = stats ? toCycle(stats.mean, input.measure, input.measureUnit) : null;
+  // A segundos por unidad de la demanda: un paquete de 12 cada 6 s es una botella cada 0,5 s.
+  const cycleOf = (v: number) => toCycle(v, s.measure, s.unit) / s.per;
+  const theoreticalCycle = s.theoretical !== null ? cycleOf(s.theoretical) : null;
+  const meanCycle = stats ? cycleOf(stats.mean) : null;
   return {
     stats,
     source: used.source,
     value: used.value,
-    cycle: toCycle(used.value, input.measure, input.measureUnit),
+    cycle: cycleOf(used.value),
     theoreticalCycle,
     ofTheoretical: theoreticalCycle !== null && meanCycle !== null ? theoreticalCycle / meanCycle : null,
   };
@@ -188,7 +234,8 @@ export function takt(input: TaktInput): CalcOutput<TaktResult> {
     if (!(d.value > 0)) warnings.push({ code: 'deduction-not-positive', step });
   });
   input.stations.forEach((s, step) => {
-    if ((s.theoretical !== null && !(s.theoretical > 0)) || s.actual.some((v) => !(v > 0))) warnings.push({ code: 'step-not-positive', step });
+    if (!(s.per > 0)) warnings.push({ code: 'per-not-positive', step });
+    else if ((s.theoretical !== null && !(s.theoretical > 0)) || s.actual.some((v) => !(v > 0))) warnings.push({ code: 'step-not-positive', step });
     else if (s.theoretical === null && s.actual.length === 0) warnings.push({ code: 'station-empty', step });
   });
   if (warnings.length) return { result: null, steps: [], warnings };
@@ -215,7 +262,7 @@ export function takt(input: TaktInput): CalcOutput<TaktResult> {
       bottleneckCycle: max,
       capacity: available / max,
       over: cycles.flatMap((c, i) => (c > t * (1 + 1e-12) ? [i] : [])),
-      balance: input.kind === 'assembly' ? { work, minStationsRaw: work / t, minStations: ceil(work / t), efficiency, idle: 1 - efficiency } : null,
+      balance: input.balance ? { work, minStationsRaw: work / t, minStations: ceil(work / t), efficiency, idle: 1 - efficiency } : null,
     };
     if (line.over.length) warnings.push({ code: 'over-takt' });
     stations.forEach((s, step) => {

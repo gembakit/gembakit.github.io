@@ -1,10 +1,13 @@
-import { useId, type ReactNode } from 'react';
-import { ChevronDown, type LucideIcon } from 'lucide-react';
+import { useCallback, useId, useState, type ReactNode } from 'react';
+import { ChevronDown, Info, type LucideIcon } from 'lucide-react';
 import { useI18n } from '../i18n';
-import { TIME_UNITS, type TimeUnit } from '../calc/takt';
-import { parseDecimal } from '../ui/number';
+import { convertPace, PACES, paceKey, paceOf, TIME_UNITS, type Pace, type TimeUnit } from '../calc/takt';
+import { parseDecimal, toFieldText } from '../ui/number';
 import { NumberField } from '../ui/NumberField';
 import { Dotted, Explained, type Derivation } from '../ui/Explained';
+import { IconButton } from '../ui/Button';
+import { Sheet } from '../ui/Sheet';
+import { paceLabel } from './takt/explain';
 
 // Piezas de formulario y de resultado comunes a las calculadoras con listas
 // (takt, OEE): bloques plegables con resumen, selectores, casillas compactas.
@@ -220,5 +223,134 @@ export function NameInput({ value, placeholder, label, onChange }: { value: stri
       onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
       className="field-sizing-content min-h-12 w-0 min-w-0 flex-1 resize-none rounded-[12px] border-[1.5px] border-line bg-surface px-3 py-2.5 text-[16px] leading-snug font-semibold outline-none placeholder:font-normal placeholder:text-muted focus:border-accent"
     />
+  );
+}
+
+/** Un número escrito que se puede convertir sin perder precisión: `exact` es el valor de verdad mientras no se toque el texto. */
+export interface NumText {
+  text: string;
+  exact?: number;
+}
+
+/** El valor de un número escrito: el exacto si viene de una conversión y no se ha tocado; si no, lo escrito. */
+export const numValue = (n: NumText) => (n.exact !== undefined ? n.exact : parseDecimal(n.text));
+
+/** Un valor convertido, escrito con seis cifras significativas («0,0818182») y guardado exacto. */
+export const exactText = (v: number, lang: 'es' | 'en'): NumText => ({ text: toFieldText(Number(v.toPrecision(6)), lang), exact: v });
+
+/** Pasa un número escrito a otra unidad (10 unidades/h → 6 min/unidad). Lo vacío o mal escrito se queda como está. */
+export function convertText(n: NumText, from: Pace, to: Pace, lang: 'es' | 'en'): NumText {
+  const v = numValue(n);
+  if (v === null || !(v > 0) || (from.measure === to.measure && from.unit === to.unit)) return n;
+  return exactText(convertPace(v, from, to), lang);
+}
+
+/** Desplegable con la unidad completa: s/botella, min/botella, h/botella, botellas/s, botellas/min, botellas/h. */
+export function PaceSelect({ value, item, label, onChange, className = '' }: { value: Pace; item: string; label: string; onChange: (p: Pace) => void; className?: string }) {
+  const { t } = useI18n();
+  return (
+    <select
+      aria-label={label}
+      value={paceKey(value)}
+      onChange={(e) => onChange(paceOf(e.target.value))}
+      className={`h-12 min-w-0 rounded-[15px] border-[1.5px] border-line bg-surface px-3 text-[16px] font-semibold text-text outline-none focus:border-accent ${className}`}
+    >
+      {PACES.map((p) => (
+        <option key={paceKey(p)} value={paceKey(p)}>
+          {paceLabel(t, p, item)}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+/** Un desplegable de unidad completa con su título encima. */
+export function PaceChoice({ label, value, item, onChange }: { label: string; value: Pace; item: string; onChange: (p: Pace) => void }) {
+  const id = useId();
+  return (
+    <div className="flex flex-col gap-1.5">
+      <span id={id} className="text-[13px] font-semibold text-muted">
+        {label}
+      </span>
+      <PaceSelect value={value} item={item} label={label} onChange={onChange} className="w-full" />
+    </div>
+  );
+}
+
+/** Una velocidad o un ciclo: el número en una casilla estrecha y, al lado, su unidad completa. */
+export function PaceField({
+  label,
+  unitLabel,
+  value,
+  pace,
+  item,
+  onValue,
+  onPace,
+}: {
+  label: string;
+  unitLabel: string;
+  value: string;
+  pace: Pace;
+  item: string;
+  onValue: (v: string) => void;
+  onPace: (p: Pace) => void;
+}) {
+  const id = useId();
+  const invalid = value.trim() !== '' && parseDecimal(value) === null;
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={id} className="text-[13px] font-semibold text-muted">
+        {label}
+      </label>
+      <div className="flex flex-wrap gap-2">
+        <input
+          id={id}
+          type="text"
+          inputMode="decimal"
+          autoComplete="off"
+          value={value}
+          aria-invalid={invalid}
+          onChange={(e) => onValue(e.target.value)}
+          className={`h-12 w-24 min-w-0 shrink-0 rounded-[15px] border-[1.5px] bg-surface px-3 font-display text-[18px] font-bold tabular-nums shadow-[inset_0_1px_2px_rgb(0_0_0/0.08)] outline-none ${invalid ? 'border-bad' : 'border-line focus:border-accent'}`}
+        />
+        <PaceSelect value={pace} item={item} label={unitLabel} onChange={onPace} className="min-w-[8rem] flex-1" />
+      </div>
+    </div>
+  );
+}
+
+/** Casilla de marcar con su texto, una aclaración debajo y, si hace falta, un botón al lado. */
+export function Check({ label, hint, checked, onChange, aside }: { label: string; hint?: string; checked: boolean; onChange: (on: boolean) => void; aside?: ReactNode }) {
+  return (
+    <div className="flex items-start gap-2">
+      <label className="grid min-h-11 min-w-0 flex-1 cursor-pointer grid-cols-[22px_minmax(0,1fr)] items-start gap-3 rounded-[12px] py-2">
+        <input type="checkbox" className="mt-0.5 size-[18px] accent-accent" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+        <span className="flex min-w-0 flex-col">
+          <span className="text-[15px] leading-snug font-semibold wrap-break-word">{label}</span>
+          {hint && <span className="text-[13px] text-muted tabular-nums">{hint}</span>}
+        </span>
+      </label>
+      {aside}
+    </div>
+  );
+}
+
+/** Botón «i» que abre una explicación. */
+export function InfoButton({ title, paragraphs }: { title: string; paragraphs: string[] }) {
+  const [open, setOpen] = useState(false);
+  const close = useCallback(() => setOpen(false), []);
+  return (
+    <>
+      <IconButton icon={Info} label={title} onClick={() => setOpen(true)} />
+      <Sheet open={open} onClose={close} title={title}>
+        <div className="flex flex-col gap-3">
+          {paragraphs.map((p) => (
+            <p key={p} className="text-[16px] leading-relaxed">
+              {p}
+            </p>
+          ))}
+        </div>
+      </Sheet>
+    </>
   );
 }

@@ -1,24 +1,45 @@
-import { useCallback, useId, useState, type ReactNode } from 'react';
+import { useCallback, useState, type ReactNode } from 'react';
 import { CircleAlert, Eraser, TriangleAlert, Factory, FileUp, Package, Plus, Trash2 } from 'lucide-react';
 import type { ImportedRow, ImportField } from '../../import/mapping';
 import { ImportDialog } from '../../ui/ImportDialog';
 import { useI18n } from '../../i18n';
-import { SECONDS, stationStats, takt, TIME_UNITS, toCycle, type Basis, type LineKind, type Measure, type TimeUnit } from '../../calc/takt';
+import { SECONDS, stationStats, takt, toCycle, type Basis, type Pace, type TimeUnit } from '../../calc/takt';
 import { parseDecimal, toFieldText } from '../../ui/number';
 import { useSavedInput } from '../../projects/live';
 import type { SavePayload } from '../../projects/SaveSheet';
 import { NumberField } from '../../ui/NumberField';
 import { ToolTemplate } from '../../ui/ToolTemplate';
-import { BigValue, ExampleOption, Fold, Group, Hint, isBad, MeasureBox, NameInput, Segmented, Stat, StatLine, SubTitle, Tag, UnitSelect, TimeField } from '../form';
+import {
+  BigValue,
+  Check,
+  convertText,
+  ExampleOption,
+  Fold,
+  Group,
+  Hint,
+  InfoButton,
+  isBad,
+  MeasureBox,
+  NameInput,
+  PaceChoice,
+  Segmented,
+  Stat,
+  StatLine,
+  SubTitle,
+  Tag,
+  UnitSelect,
+  TimeField,
+  type NumText,
+} from '../form';
 import { Button, IconButton } from '../../ui/Button';
 import { Sheet } from '../../ui/Sheet';
 import { Dotted, Explained } from '../../ui/Explained';
 import { useToast } from '../../ui/Toast';
 import { APP_VERSION } from '../../version';
-import { smartDecimals, subtractionUnit, taktExplain, taktFormat } from './explain';
+import { paceLabel, smartDecimals, subtractionUnit, taktExplain, taktFormat, type TaktView } from './explain';
 import { taktSheet } from './sheet';
 import { BOTTLING, PACKS } from './examples';
-import { deductionNames, readTaktSaved, stationNames, taktConclusion, taktReadingLines, taktView, taktWarnings, toTaktInput, type TaktSaved } from './reading';
+import { deductionNames, readTaktSaved, stationNames, stationsMeasure, taktConclusion, taktReadingLines, taktView, taktWarnings, toTaktInput, type TaktSaved } from './reading';
 
 interface DedRow {
   id: number;
@@ -26,11 +47,17 @@ interface DedRow {
   value: string;
   unit: TimeUnit;
 }
-interface StRow {
+interface StRow extends Pace {
   id: number;
   name: string;
-  theo: string;
-  actual: { id: number; v: string }[];
+  /** Lo que cuenta, si no es la unidad de la demanda («cajas»). */
+  item: string;
+  /** Unidades de la demanda en una de las suyas. */
+  per: string;
+  theo: NumText;
+  actual: (NumText & { id: number })[];
+  /** Forma en que se tomaron las medidas: la media se saca en esa aunque se cambie la unidad. */
+  origin: Pace['measure'];
 }
 interface State {
   shift: string;
@@ -39,10 +66,9 @@ interface State {
   shifts: string;
   demand: string;
   unitName: string;
-  measure: Measure;
-  measureUnit: TimeUnit;
-  resultUnit: TimeUnit;
-  kind: LineKind;
+  stationUnit: Pace;
+  result: Pace;
+  balance: boolean;
   basis: Basis;
   stations: StRow[];
   oee: string;
@@ -58,10 +84,9 @@ const EMPTY: State = {
   shifts: '',
   demand: '',
   unitName: '',
-  measure: 'time',
-  measureUnit: 's',
-  resultUnit: 'min',
-  kind: 'assembly',
+  stationUnit: { measure: 'time', unit: 's' },
+  result: { measure: 'time', unit: 'min' },
+  balance: false,
   basis: 'mean',
   stations: [],
   oee: '',
@@ -80,18 +105,33 @@ function fromSaved(s: TaktSaved, lang: 'es' | 'en'): State {
     shifts: s.shifts === 1 ? '' : txt(s.shifts),
     demand: txt(s.demand),
     unitName: s.unitName,
-    measure: s.measure,
-    measureUnit: s.measureUnit,
-    resultUnit: s.resultUnit,
-    kind: s.kind,
+    stationUnit: s.stationUnit,
+    result: s.result,
+    balance: s.balance,
     basis: s.basis,
     stations: s.stations.map((st) => ({
       id: nextId(),
       name: st.name,
-      theo: st.theoretical === null ? '' : txt(st.theoretical),
-      actual: st.actual.map((v) => ({ id: nextId(), v: txt(v) })),
+      measure: st.measure,
+      unit: st.unit,
+      item: st.item,
+      per: st.item.trim() ? txt(st.per) : '',
+      theo: { text: st.theoretical === null ? '' : txt(st.theoretical) },
+      actual: st.actual.map((v) => ({ id: nextId(), text: txt(v) })),
+      origin: st.origin ?? st.measure,
     })),
     oee: s.oee === null ? '' : txt(Number((s.oee * 100).toPrecision(10))),
+  };
+}
+
+/** Pasa los valores de una estación a otra unidad: cambia cómo se escriben, no lo que valen. */
+function convertRow(row: StRow, to: Pace, lang: 'es' | 'en'): StRow {
+  return {
+    ...row,
+    measure: to.measure,
+    unit: to.unit,
+    theo: convertText(row.theo, row, to, lang),
+    actual: row.actual.map((a) => ({ ...a, ...convertText(a, row, to, lang) })),
   };
 }
 
@@ -107,6 +147,8 @@ function toSaved(
     if (v === null) bad ??= where;
     return v;
   };
+  // Un número que puede venir de una conversión: el valor exacto mientras no se toque el texto.
+  const exact = (n: NumText, where: string) => (n.text.trim() !== '' && n.exact !== undefined ? n.exact : num(n.text, where));
   const deductions: TaktSaved['deductions'] = [];
   st.deductions.forEach((d, i) => {
     const v = num(d.value, names.deduction(i));
@@ -118,11 +160,22 @@ function toSaved(
   const index: (number | null)[] = [];
   st.stations.forEach((s, i) => {
     const where = names.station(i);
-    const theoretical = num(s.theo, where);
-    const actual = s.actual.map((a) => num(a.v, where)).filter((v): v is number => v !== null);
+    const theoretical = exact(s.theo, where);
+    const actual = s.actual.map((a) => exact(a, where)).filter((v): v is number => v !== null);
+    // Sin equivalencia escrita cuenta 0: el cálculo avisa de que falta.
+    const per = s.item.trim() ? (num(s.per, where) ?? 0) : 1;
     if (s.name.trim() || theoretical !== null || actual.length) {
       index.push(stations.length);
-      stations.push({ name: s.name.trim(), theoretical, actual });
+      stations.push({
+        name: s.name.trim(),
+        measure: s.measure,
+        unit: s.unit,
+        item: s.item.trim(),
+        per,
+        theoretical,
+        actual,
+        ...(actual.length && s.origin !== s.measure ? { origin: s.origin } : {}),
+      });
     } else index.push(null);
   });
   // El OEE mal escrito no bloquea el cálculo: su casilla está en el resultado y tiene que seguir a la vista para corregirlo.
@@ -133,17 +186,16 @@ function toSaved(
   if (bad || shift === null || demand === null) return { saved: null, bad, index };
   return {
     saved: {
-      v: 2,
+      v: 3,
       shift,
       shiftUnit: st.shiftUnit,
       deductions,
       shifts,
       demand,
       unitName: st.unitName.trim(),
-      measure: st.measure,
-      measureUnit: st.measureUnit,
-      resultUnit: st.resultUnit,
-      kind: st.kind,
+      stationUnit: st.stationUnit,
+      result: st.result,
+      balance: st.balance,
       basis: st.basis,
       stations,
       oee: oeePct === null ? null : oeePct / 100,
@@ -174,22 +226,24 @@ export default function TaktTool() {
     });
   const [examplesOpen, setExamplesOpen] = useState(false);
   const closeExamples = useCallback(() => setExamplesOpen(false), []);
-  const kindId = useId();
   const set = (patch: Partial<State>) => setState((s) => ({ ...s, ...patch }));
   const dedName = (i: number) => state.deductions[i]!.name.trim() || d.deductionName(i + 1);
-  const stName = (i: number) => state.stations[i]!.name.trim() || d.stationName(i + 1, state.kind);
+  const stName = (i: number) => state.stations[i]!.name.trim() || d.stationName(i + 1);
 
   const { saved, bad, index } = toSaved(state, { deduction: dedName, station: stName });
   const out = saved ? takt(toTaktInput(saved)) : null;
   const r = out?.result ?? null;
-  const view = saved ? taktView(saved, t) : { measure: state.measure, measureUnit: state.measureUnit, resultUnit: state.resultUnit, unitName: state.unitName.trim() || d.defaultUnit, kind: state.kind };
+  const unitName = state.unitName.trim() || d.defaultUnit;
+  const view: TaktView = saved ? taktView(saved, t) : { result: state.result, unitName, balance: state.balance };
   const f = taktFormat(lang, t, view);
   const warnings = saved && out ? taktWarnings(out.warnings, saved, t, lang) : [];
   const names = saved ? stationNames(saved, t) : [];
   const line = r?.line ?? null;
-  const enteredUnit = state.measure === 'time' ? d.units[state.measureUnit]! : d.perUnit(d.units[state.measureUnit]!);
   const anyText =
-    state.shift.trim() !== '' || state.demand.trim() !== '' || state.deductions.length > 0 || state.stations.some((s) => s.name.trim() || s.theo.trim() || s.actual.some((a) => a.v.trim()));
+    state.shift.trim() !== '' ||
+    state.demand.trim() !== '' ||
+    state.deductions.length > 0 ||
+    state.stations.some((s) => s.name.trim() || s.theo.text.trim() || s.actual.some((a) => a.text.trim()));
 
   // ── Descuentos ──
   const updateDed = (id: number, patch: Partial<DedRow>) => setState((s) => ({ ...s, deductions: s.deductions.map((x) => (x.id === id ? { ...x, ...patch } : x)) }));
@@ -202,16 +256,19 @@ export default function TaktTool() {
 
   // ── Estaciones ──
   const updateSt = (id: number, change: (x: StRow) => StRow) => setState((s) => ({ ...s, stations: s.stations.map((x) => (x.id === id ? change(x) : x)) }));
+  const newStation = (s: State, name = ''): StRow => ({ id: nextId(), name, ...s.stationUnit, item: '', per: '', theo: { text: '' }, actual: [], origin: s.stationUnit.measure });
   const addSt = () => {
     const id = nextId();
-    setState((s) => ({ ...s, stations: [...s.stations, { id, name: '', theo: '', actual: [{ id: nextId(), v: '' }] }] }));
+    setState((s) => ({ ...s, stations: [...s.stations, { ...newStation(s), id, actual: [{ id: nextId(), text: '' }] }] }));
     setOpen((o) => new Set([...o, `st${id}`]));
   };
-  const addMeasure = (id: number) => updateSt(id, (x) => ({ ...x, actual: [...x.actual, { id: nextId(), v: '' }] }));
+  const addMeasure = (id: number) => updateSt(id, (x) => ({ ...x, actual: [...x.actual, { id: nextId(), text: '' }] }));
+  // La unidad de arriba pasa todas las estaciones a esa unidad, convirtiendo sus valores.
+  const setStationUnit = (p: Pace) => setState((s) => ({ ...s, stationUnit: p, stations: s.stations.map((x) => convertRow(x, p, lang)) }));
 
   const clear = () => {
     const previous = state;
-    setState({ ...EMPTY, shiftUnit: state.shiftUnit, measure: state.measure, measureUnit: state.measureUnit, resultUnit: state.resultUnit, kind: state.kind });
+    setState({ ...EMPTY, shiftUnit: state.shiftUnit, stationUnit: state.stationUnit, result: state.result, balance: state.balance });
     setOpen(new Set(['time', 'demand']));
     toast(t.common.cleared, { action: { label: t.common.undo, onAction: () => setState(previous) } });
   };
@@ -226,7 +283,7 @@ export default function TaktTool() {
   const importFields: ImportField[] = [
     { key: 'name', label: d.sheet.stationHead, type: 'text', required: false, hints: ['estacion', 'station', 'puesto', 'maquina', 'machine', 'operacion', 'operation', 'paso', 'step', 'nombre', 'name'] },
     { key: 'actual', label: d.actual, type: 'number', required: true, hints: ['medida', 'real', 'actual', 'ciclo', 'cycle', 'tiempo', 'time', 'velocidad', 'speed', 'tc', 'ct'] },
-    { key: 'theoretical', label: d.theoretical, type: 'number', required: false, hints: ['teorico', 'theoretical', 'placa', 'nameplate', 'diseno', 'design', 'estandar', 'standard'] },
+    { key: 'theoretical', label: d.theoretical, type: 'number', required: false, hints: ['estandar', 'standard', 'teorico', 'theoretical', 'placa', 'nameplate', 'diseno', 'design'] },
   ];
   const [importOpen, setImportOpen] = useState(false);
   const closeImport = useCallback(() => setImportOpen(false), []);
@@ -239,12 +296,12 @@ export default function TaktTool() {
       let row = name ? groups.get(name.toLowerCase()) : undefined;
       if (!row) {
         if (list.length >= MAX_STATIONS) continue;
-        row = { id: nextId(), name, theo: '', actual: [] };
+        row = newStation(state, name);
         list.push(row);
         if (name) groups.set(name.toLowerCase(), row);
       }
-      if (typeof x.actual === 'number' && row.actual.length < MAX_MEASURES) row.actual.push({ id: nextId(), v: toFieldText(x.actual, lang) });
-      if (typeof x.theoretical === 'number' && !row.theo) row.theo = toFieldText(x.theoretical, lang);
+      if (typeof x.actual === 'number' && row.actual.length < MAX_MEASURES) row.actual.push({ id: nextId(), text: toFieldText(x.actual, lang) });
+      if (typeof x.theoretical === 'number' && !row.theo.text) row.theo = { text: toFieldText(x.theoretical, lang) };
     }
     setState((s) => ({ ...s, stations: list }));
     setOpen((o) => new Set([...o, 'stations']));
@@ -270,19 +327,18 @@ export default function TaktTool() {
     const ul = d.units[u];
     let text = parts.length > 1 ? `${parts.join(' − ')} = ${f.num(left)} ${ul}` : `${f.num(left)} ${ul}`;
     if (shifts !== 1) text += ` × ${f.num(shifts)} = ${f.num(left * shifts)} ${ul}`;
-    if (u !== state.resultUnit && left > 0) text += ` (${f.time(left * shifts * SECONDS[u], state.resultUnit)})`;
+    if (u !== state.result.unit && left > 0) text += ` (${f.time(left * shifts * SECONDS[u], state.result.unit)})`;
     return text;
   })();
 
   // ── Resúmenes de los bloques plegados ──
   const timeBad = isBad(state.shift) || isBad(state.shifts) || state.deductions.some((x) => isBad(x.value));
   const demandValue = parseDecimal(state.demand);
-  const stationBad = (row: StRow) => isBad(row.theo) || row.actual.some((a) => isBad(a.v));
+  const stationBad = (row: StRow) => isBad(row.theo.text) || isBad(row.per) || row.actual.some((a) => isBad(a.text));
   const stationsBad = state.stations.some(stationBad);
-  const stationsSummary =
-    state.stations.length === 0 ? d.groupEmpty.stations! : [d.stationsCount(state.stations.length, state.kind), ...(line ? [d.bottleneckIs(names[line.bottleneck]!)] : [])].join(' · ');
+  const stationsSummary = state.stations.length === 0 ? d.groupEmpty.stations! : [d.stationsCount(state.stations.length), ...(line ? [d.bottleneckIs(names[line.bottleneck]!)] : [])].join(' · ');
+  const repeatableLabel = saved ? (stationsMeasure(saved) ? d.stat.repeatable[stationsMeasure(saved)!]! : d.bases.repeatable!) : d.bases.repeatable!;
 
-  const repeatableLabel = d.stat.repeatable[state.measure]!;
   const data = (
     <>
       <div className="flex flex-col border-b border-line">
@@ -356,93 +412,103 @@ export default function TaktTool() {
 
         <Group
           title={d.groups.line!}
-          summary={d.lineSummary(d.measures[state.measure]!, enteredUnit, d.units[state.resultUnit]!, d.kindsShort[state.kind]!)}
+          summary={d.lineSummary(paceLabel(t, state.stationUnit, unitName), paceLabel(t, state.result, unitName), state.balance)}
           bad={false}
           open={open.has('line')}
           onToggle={() => toggle('line')}
         >
-          <Segmented
-            label={d.measureLabel}
-            value={state.measure}
-            options={(['time', 'rate'] as const).map((m) => ({ value: m, label: d.measures[m]! }))}
-            onChange={(m) => set(state.stations.length === 0 ? { measure: m, measureUnit: m === 'time' ? 's' : 'h', resultUnit: m === 'time' ? 'min' : 'h' } : { measure: m })}
-          />
-          <Hint>{d.measureHints[state.measure]}</Hint>
-          <Segmented
-            label={d.measureUnitLabel}
-            value={state.measureUnit}
-            options={TIME_UNITS.map((u) => ({ value: u, label: state.measure === 'time' ? d.units[u]! : d.perUnit(d.units[u]!), aria: state.measure === 'time' ? d.unitNames[u] : d.perUnitName(u) }))}
-            onChange={(u) => set({ measureUnit: u })}
-          />
-          <Segmented
-            label={d.resultUnitLabel}
-            value={state.resultUnit}
-            options={TIME_UNITS.map((u) => ({ value: u, label: d.units[u]!, aria: d.unitNames[u] }))}
-            onChange={(u) => set({ resultUnit: u })}
-          />
-          <div role="radiogroup" aria-labelledby={`${kindId}l`} className="flex flex-col gap-2">
-            <span id={`${kindId}l`} className="text-[13px] font-semibold text-muted">
-              {d.kindLabel}
-            </span>
-            {(['assembly', 'machines'] as const).map((k) => (
-              <label key={k} className="grid cursor-pointer grid-cols-[22px_minmax(0,1fr)] items-start gap-3 rounded-[14px] bg-surface-2 p-3 has-checked:outline-2 has-checked:outline-accent">
-                <input type="radio" name={kindId} className="mt-1 size-[18px] accent-accent" checked={state.kind === k} onChange={() => set({ kind: k })} />
-                <span className="flex min-w-0 flex-col gap-0.5">
-                  <span className="text-[15px] font-semibold">{d.kinds[k]}</span>
-                  <span className="text-[13px] leading-relaxed text-muted">{d.kindHints[k]}</span>
-                </span>
-              </label>
-            ))}
+          <div className="flex flex-col gap-1.5">
+            <PaceChoice label={d.stationUnitLabel} value={state.stationUnit} item={unitName} onChange={setStationUnit} />
+            <Hint>{d.stationUnitHint}</Hint>
           </div>
+          <div className="flex flex-col gap-1.5">
+            <PaceChoice label={d.resultUnitLabel} value={state.result} item={unitName} onChange={(p) => set({ result: p })} />
+            <Hint>{d.resultUnitHint}</Hint>
+          </div>
+          <Check
+            label={d.balanceCheck}
+            hint={d.balanceCheckHint}
+            checked={state.balance}
+            onChange={(on) => set({ balance: on })}
+            aside={<InfoButton title={d.balanceInfo} paragraphs={d.balanceInfoText} />}
+          />
         </Group>
 
-        <Group
-          title={d.stations[state.kind]!}
-          summary={stationsBad ? d.groupBad : stationsSummary}
-          bad={stationsBad}
-          open={open.has('stations')}
-          onToggle={() => toggle('stations')}
-        >
+        <Group title={d.stations} summary={stationsBad ? d.groupBad : stationsSummary} bad={stationsBad} open={open.has('stations')} onToggle={() => toggle('stations')}>
           <Hint>{d.stationsHint}</Hint>
           {state.stations.length > 0 && (
             <ol className="flex flex-col gap-2">
               {state.stations.map((row, i) => {
                 const name = stName(i);
-                const values = row.actual.map((a) => parseDecimal(a.v)).filter((v): v is number => v !== null && v > 0);
-                const stats = stationStats(values, state.measure);
-                const theo = parseDecimal(row.theo);
-                const ofTheo = stats && theo !== null && theo > 0 ? toCycle(theo, state.measure, state.measureUnit) / toCycle(stats.mean, state.measure, state.measureUnit) : null;
+                const item = row.item.trim();
+                const own = paceLabel(t, row, item || unitName);
+                const shown = (x: number) => f.station(x, row);
+                const values = row.actual.map((a) => (a.text.trim() !== '' && a.exact !== undefined ? a.exact : parseDecimal(a.text))).filter((v): v is number => v !== null && v > 0);
+                const stats = stationStats(values, row.measure, row.origin);
+                const theo = row.theo.text.trim() !== '' && row.theo.exact !== undefined ? row.theo.exact : parseDecimal(row.theo.text);
+                const ofTheo = stats && theo !== null && theo > 0 ? toCycle(theo, row.measure, row.unit) / toCycle(stats.mean, row.measure, row.unit) : null;
+                const per = parseDecimal(row.per);
                 const k = index[i];
                 const worst = line !== null && k !== null && k === line.bottleneck;
                 const rowBad = stationBad(row);
                 const summary = rowBad
                   ? d.groupBad
                   : [
-                      ...(stats ? [d.measuresCount(stats.n), stats.n > 1 ? d.meanIs(f.entered(stats.mean)) : f.entered(stats.mean)] : []),
-                      ...(theo !== null && theo > 0 ? [d.theoIs(f.entered(theo))] : []),
+                      ...(stats ? [d.measuresCount(stats.n), stats.n > 1 ? d.meanIs(shown(stats.mean)) : shown(stats.mean)] : []),
+                      ...(theo !== null && theo > 0 ? [d.theoIs(shown(theo))] : []),
+                      ...(item && per !== null && per > 0 ? [d.perText(d.singular(item), f.num(per), unitName)] : []),
                     ].join(' · ') || d.noData;
                 return (
                   <Fold key={row.id} name={name} tag={worst ? <Tag>{d.bottleneckTag}</Tag> : undefined} summary={summary} bad={rowBad} open={open.has(`st${row.id}`)} onToggle={() => toggle(`st${row.id}`)}>
                     <div className="flex flex-col gap-1.5">
                       <span className="text-[13px] font-semibold text-muted">{d.nameField}</span>
                       <div className="flex items-start gap-2">
-                        <NameInput value={row.name} placeholder={d.stationName(i + 1, state.kind)} label={d.nameLabel(d.stationName(i + 1, state.kind))} onChange={(v) => updateSt(row.id, (x) => ({ ...x, name: v }))} />
+                        <NameInput value={row.name} placeholder={d.stationName(i + 1)} label={d.nameLabel(d.stationName(i + 1))} onChange={(v) => updateSt(row.id, (x) => ({ ...x, name: v }))} />
                         <IconButton icon={Trash2} label={d.removeStation(name)} onClick={() => removeWithUndo(name, (s) => ({ ...s, stations: s.stations.filter((x) => x.id !== row.id) }))} />
                       </div>
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <NumberField compact label={d.theoretical} unit={enteredUnit} value={row.theo} invalidText={d.invalidNumber} onChange={(v) => updateSt(row.id, (x) => ({ ...x, theo: v }))} />
+                      <label className="flex flex-col gap-1.5">
+                        <span className="text-[13px] font-semibold text-muted">{d.itemLabel}</span>
+                        <input
+                          type="text"
+                          value={row.item}
+                          placeholder={unitName}
+                          aria-label={d.itemOf(name)}
+                          autoComplete="off"
+                          maxLength={30}
+                          onChange={(e) => updateSt(row.id, (x) => ({ ...x, item: e.target.value }))}
+                          className="h-12 rounded-[15px] border-[1.5px] border-line bg-surface px-4 text-[16px] outline-none placeholder:text-muted focus:border-accent"
+                        />
+                      </label>
+                      {item && (
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-[15px] font-semibold">
+                          <span>{d.perOne(d.singular(item))}</span>
+                          <MeasureBox className="w-20" label={d.perOf(d.singular(item), unitName)} value={row.per} onChange={(v) => updateSt(row.id, (x) => ({ ...x, per: v }))} />
+                          <span>{unitName}</span>
+                        </div>
+                      )}
+                      <Hint>{d.itemHint(unitName)}</Hint>
+                    </div>
+                    <PaceChoice label={d.stationUnit} value={row} item={item || unitName} onChange={(p) => updateSt(row.id, (x) => convertRow(x, p, lang))} />
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-[13px] font-semibold text-muted">{d.theoretical}</span>
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
+                        <MeasureBox className="w-36" label={`${d.theoretical}: ${name}`} value={row.theo.text} onChange={(v) => updateSt(row.id, (x) => ({ ...x, theo: { text: v } }))} />
+                        <span className="text-[15px] font-semibold text-muted">{own}</span>
+                      </div>
                       <Hint>{d.theoreticalHint}</Hint>
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <span className="text-[13px] font-semibold text-muted">{d.measuresIn(enteredUnit)}</span>
+                      <span className="text-[13px] font-semibold text-muted">{d.measuresIn(own)}</span>
                       <div className="grid grid-cols-2 gap-2">
                         {row.actual.map((a, j) => (
                           <MeasureBox
                             key={a.id}
                             label={d.measureN(name, j + 1)}
-                            value={a.v}
-                            onChange={(v) => updateSt(row.id, (x) => ({ ...x, actual: x.actual.map((m) => (m.id === a.id ? { ...m, v } : m)) }))}
+                            value={a.text}
+                            // Una medida escrita a mano en esta forma: desde ahora la media se saca en esta forma.
+                            onChange={(v) => updateSt(row.id, (x) => ({ ...x, origin: x.measure, actual: x.actual.map((m) => (m.id === a.id ? { id: m.id, text: v } : m)) }))}
                           />
                         ))}
                       </div>
@@ -456,14 +522,14 @@ export default function TaktTool() {
                     {stats && stats.n >= 2 && (
                       <div className="flex flex-col gap-2 rounded-[12px] bg-surface p-3">
                         <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[14px]">
-                          <StatLine label={d.stat.mean} value={f.entered(stats.mean)} />
-                          <StatLine label={repeatableLabel} value={f.entered(stats.repeatable!)} />
-                          <StatLine label={d.stat.min} value={f.entered(stats.min)} />
-                          <StatLine label={d.stat.max} value={f.entered(stats.max)} />
+                          <StatLine label={d.stat.mean} value={shown(stats.mean)} />
+                          <StatLine label={d.stat.repeatable[row.measure]!} value={shown(stats.repeatable!)} />
+                          <StatLine label={d.stat.min} value={shown(stats.min)} />
+                          <StatLine label={d.stat.max} value={shown(stats.max)} />
                           <StatLine label={d.stat.spread} value={f.pct(stats.spread!)} />
                           {ofTheo !== null && <StatLine label={d.stat.ofTheoretical} value={f.pct(ofTheo)} />}
                         </dl>
-                        <p className="text-[12.5px] leading-relaxed text-muted">{d.stat.repeatableHint[state.measure]}</p>
+                        <p className="text-[12.5px] leading-relaxed text-muted">{d.stat.repeatableHint[row.measure]}</p>
                       </div>
                     )}
                   </Fold>
@@ -474,7 +540,7 @@ export default function TaktTool() {
           <div className="grid gap-2 sm:grid-cols-2">
             {state.stations.length < MAX_STATIONS && (
               <Button icon={Plus} onClick={addSt}>
-                {d.addStation[state.kind]}
+                {d.addStation}
               </Button>
             )}
             <Button icon={FileUp} onClick={() => setImportOpen(true)}>
@@ -518,7 +584,7 @@ export default function TaktTool() {
     const ex = taktExplain(toTaktInput(saved), names, deductionNames(saved, t), r, view, t, lang);
     // Avisos del OEE junto a su casilla (también salen en «Cómo leerlo»).
     const oeeProblems = out!.warnings.flatMap((w) => (w.code === 'oee-range' ? [d.warn.oeeRange] : w.code === 'oee-no-theoretical' ? [d.warn.oeeNoTheoretical] : []));
-    const isTime = saved.measure === 'time';
+    const isTime = saved.result.measure === 'time';
     // Barras: en tiempos, el ciclo (más largo = más lento); en velocidades, la velocidad (más corta = más lenta).
     const shownValue = (cycle: number) => (isTime ? cycle : 1 / cycle);
     const all = [r.takt, ...r.stations.flatMap((s) => [s.cycle, ...(s.theoreticalCycle !== null ? [s.theoreticalCycle] : [])])].map(shownValue);
@@ -531,13 +597,13 @@ export default function TaktTool() {
             <Dotted>{isTime ? d.taktTitle : d.rateTitle}</Dotted>
           </span>
           <BigValue text={f.main(r.takt)} />
-          <span className="text-[15px] font-semibold text-muted tabular-nums">{d.equals(isTime ? f.alt(r.takt) : d.oneEvery(f.alt(r.takt)))}</span>
+          <span className="text-[15px] font-semibold text-muted tabular-nums">{d.equals(isTime ? f.alt(r.takt) : d.oneEvery(f.every(r.takt)))}</span>
         </Explained>
         <Stat label={d.availableStat} value={f.time(r.available)} calc={ex.available} />
 
         {line && (
           <div className="flex flex-col gap-3 border-t border-line pt-4">
-            <SubTitle>{d.stations[saved.kind]}</SubTitle>
+            <SubTitle>{d.stations}</SubTitle>
             <Segmented
               label={d.basisLabel}
               value={state.basis}
@@ -561,7 +627,7 @@ export default function TaktTool() {
               )}
             </div>
             <div className="flex flex-col gap-2.5">
-              <span className="text-[13px] font-semibold text-muted">{d.byStation[saved.measure]}</span>
+              <span className="text-[13px] font-semibold text-muted">{d.byStation[saved.result.measure]}</span>
               <ul className="flex flex-col gap-3">
                 {r.stations.map((st, i) => {
                   const over = line.over.includes(i);
@@ -645,12 +711,12 @@ export default function TaktTool() {
 
   const save = (): SavePayload | null => {
     if (!r || !saved) return null;
-    const ru = saved.resultUnit;
-    const sec = { s: 1, min: 60, h: 3600 }[ru];
-    const value = saved.measure === 'time' ? r.takt / sec : sec / r.takt;
+    const ru = saved.result;
+    const sec = SECONDS[ru.unit];
+    const value = ru.measure === 'time' ? r.takt / sec : sec / r.takt;
     return {
       input: saved,
-      headline: { key: 'takt', value, kind: 'number', decimals: smartDecimals(value), unit: saved.measure === 'time' ? d.units[ru] : d.rateOf(view.unitName, d.units[ru]!) },
+      headline: { key: 'takt', value, kind: 'number', decimals: smartDecimals(value), unit: paceLabel(t, ru, view.unitName) },
     };
   };
 

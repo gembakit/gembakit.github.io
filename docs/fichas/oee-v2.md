@@ -245,3 +245,13 @@ D. **Pareto** por categoría o por parada, con el acumulado escrito en cada
 E. **Velocidad ideal o ciclo ideal**, con el mismo selector que el takt.
    ¿De acuerdo?
 F. **Ejemplos**: el de Vorne y el de la embotelladora. ¿De acuerdo?
+
+## Cambios del 2026-11-21 (comentarios del dueño)
+
+- «Ciclo ideal» pasa a «velocidad estándar» (capacidad instalada), con su
+  unidad completa en un desplegable; cambiar la unidad convierte el número.
+- Calidad: las rechazadas (desechadas o retrabajadas) van dentro de las
+  producidas; buenas = producidas − rechazadas (como en Vorne). Los tres
+  factores se enseñan con dos decimales.
+- Pareto: cada fila enseña sus minutos y su parte (de las paradas, o de todo
+  lo perdido si se incluyen las pérdidas de velocidad y calidad).

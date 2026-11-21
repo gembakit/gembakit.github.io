@@ -45,12 +45,12 @@ const APP_TERMS: readonly GlossaryEntry[] = [
     es: {
       term: 'OEE',
       name: 'Eficiencia general de los equipos (Overall Equipment Effectiveness)',
-      def: 'Disponibilidad × rendimiento × calidad: la parte del tiempo planificado que se convierte en piezas buenas a la velocidad ideal.',
+      def: 'Disponibilidad × rendimiento × calidad: la parte del tiempo planificado que se convierte en piezas buenas a la velocidad estándar.',
     },
     en: {
       term: 'OEE',
       name: 'Overall Equipment Effectiveness',
-      def: 'Availability × performance × quality: the share of planned time that becomes good parts at ideal speed.',
+      def: 'Availability × performance × quality: the share of planned time that becomes good parts at standard speed.',
     },
   },
   {
@@ -391,12 +391,12 @@ const APP_TERMS: readonly GlossaryEntry[] = [
     es: {
       term: 'Rendimiento (OEE)',
       name: 'Segundo factor del OEE',
-      def: '(Tiempo de ciclo ideal × piezas producidas) ÷ tiempo en marcha. Lo que resta son las microparadas y trabajar por debajo de la velocidad ideal.',
+      def: '(Ciclo estándar × piezas producidas) ÷ tiempo en marcha. Lo que resta son las microparadas y trabajar por debajo de la velocidad estándar.',
     },
     en: {
       term: 'Performance (OEE)',
       name: 'Second OEE factor',
-      def: '(Ideal cycle time × parts produced) ÷ run time. What it loses are minor stops and running below ideal speed.',
+      def: '(Standard cycle × parts produced) ÷ run time. What it loses are minor stops and running below standard speed.',
     },
   },
   {
@@ -405,26 +405,26 @@ const APP_TERMS: readonly GlossaryEntry[] = [
     es: {
       term: 'Calidad',
       name: 'Tercer factor del OEE',
-      def: 'Piezas buenas ÷ piezas producidas. Lo que resta son los rechazos y los retrabajos.',
+      def: 'Piezas buenas ÷ piezas producidas. Las rechazadas (desechadas o retrabajadas) van dentro de las producidas: buenas = producidas − rechazadas.',
     },
     en: {
       term: 'Quality',
       name: 'Third OEE factor',
-      def: 'Good parts ÷ parts produced. What it loses are rejects and rework.',
+      def: 'Good parts ÷ parts produced. Rejected parts (scrapped or reworked) are included in the parts produced: good = produced − rejected.',
     },
   },
   {
     id: 'ciclo-ideal',
     category: 'indicador',
     es: {
-      term: 'Tiempo de ciclo ideal',
-      name: 'La mejor velocidad posible',
-      def: 'El menor tiempo por pieza que el equipo consigue en condiciones óptimas. Si se usa el tiempo habitual en su lugar, el OEE sale inflado.',
+      term: 'Velocidad estándar',
+      name: 'Capacidad instalada',
+      def: 'La velocidad de diseño del equipo: lo más que puede hacer en condiciones óptimas (también se llama velocidad o ciclo ideal). Se puede dar como tiempo por pieza o como piezas por tiempo. Si se usa la velocidad habitual en su lugar, el OEE sale inflado.',
     },
     en: {
-      term: 'Ideal cycle time',
-      name: 'The best possible speed',
-      def: 'The shortest time per part the equipment achieves under optimal conditions. Using the usual time instead inflates OEE.',
+      term: 'Standard speed',
+      name: 'Installed capacity',
+      def: 'The design speed of the equipment: the most it can do under optimal conditions (also called ideal speed or ideal cycle time). It can be given as time per part or as parts per time. Using the usual speed instead inflates OEE.',
     },
   },
 

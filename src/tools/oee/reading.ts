@@ -13,7 +13,7 @@ import { oeeSheet } from './sheet';
 export function oeeWarnings(list: CalcWarning[], s: OeeSaved, t: Messages): string[] {
   const d = t.tools.oee;
   const w = d.warn;
-  const field = (f: string) => (f === 'idealCycle' ? d.ideal[s.measure]! : f === 'shift' ? d.shift : f === 'total' ? d.total : f === 'rejects' ? d.rejects : f);
+  const field = (f: string) => (f === 'idealCycle' ? d.ideal : f === 'shift' ? d.shift : f === 'total' ? d.total : f === 'rejects' ? d.rejects : f);
   return list
     .map((x) => {
       switch (x.code) {

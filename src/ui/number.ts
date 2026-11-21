@@ -61,9 +61,10 @@ export function toFieldText(v: number, lang: 'es' | 'en'): string {
 }
 
 /** Formato de número para mostrar según el idioma (coma en español, punto en inglés). */
-export function formatNumber(n: number, lang: 'es' | 'en', maxDecimals = 2): string {
+export function formatNumber(n: number, lang: 'es' | 'en', maxDecimals = 2, minDecimals = 0): string {
   return new Intl.NumberFormat(lang === 'es' ? 'es-ES' : 'en-US', {
     maximumFractionDigits: maxDecimals,
+    minimumFractionDigits: Math.min(minDecimals, maxDecimals),
     useGrouping: true,
   }).format(n);
 }

@@ -18,16 +18,17 @@ function check(s: TaktSaved) {
   const grid = layoutSheet(def);
   const values = evaluateGrid(grid);
   const v = (k: string) => values[grid.address[k]!] as number;
-  const tu = SECONDS[s.resultUnit];
+  const tu = SECONDS[s.result.unit];
+  const isTime = s.result.measure === 'time';
   expect(v('available')).toBeCloseTo(r.available / tu, 9);
-  if (s.measure === 'time') expect(v('takt')).toBeCloseTo(r.takt / tu, 9);
-  else expect(v('rate')).toBeCloseTo(fromCycle(r.takt, 'rate', s.resultUnit), 6);
+  if (isTime) expect(v('takt')).toBeCloseTo(r.takt / tu, 9);
+  else expect(v('rate')).toBeCloseTo(fromCycle(r.takt, 'rate', s.result.unit), 6);
   const line = r.line;
   if (line) {
     const name = def.table!.rows[line.bottleneck]!.label;
     expect(values[grid.address['bottleneckStation']!]).toBe(name);
     expect(v('capacity')).toBeCloseTo(line.capacity, 6);
-    if (line.balance && s.measure === 'time') {
+    if (line.balance && isTime) {
       expect(v('minStations')).toBe(line.balance.minStations);
       expect(v('efficiency')).toBeCloseTo(line.balance.efficiency, 9);
       expect(v('idle')).toBeCloseTo(line.balance.idle, 9);
@@ -36,8 +37,8 @@ function check(s: TaktSaved) {
   if (r.oee) {
     expect(v('expected')).toBeCloseTo(r.oee.expected, 6);
     expect(v('minOee')).toBeCloseTo(r.oee.minOee, 9);
-    if (s.measure === 'time') expect(v('target')).toBeCloseTo(r.oee.targetCycle / tu, 9);
-    else expect(v('target')).toBeCloseTo(fromCycle(r.oee.targetCycle, 'rate', s.resultUnit), 6);
+    if (isTime) expect(v('target')).toBeCloseTo(r.oee.targetCycle / tu, 9);
+    else expect(v('target')).toBeCloseTo(fromCycle(r.oee.targetCycle, 'rate', s.result.unit), 6);
   }
   return def;
 }
@@ -57,12 +58,24 @@ describe('hoja de takt: fórmulas = cálculo', () => {
     expect(def.inputs[0]).toMatchObject({ value: 25200, note: 's (= 420 min)' });
   });
 
-  test('embotelladora: velocidades, descuentos, turnos y OEE', () => {
+  test('embotelladora: velocidades, descuentos, turnos y OEE; la encajonadora, en cajas/min, pasada a botellas/h', () => {
     const def = check(BOTTLING(t));
     expect(def.inputs.map((i) => i.key)).toEqual(['shift', 'd0', 'd1', 'shifts', 'demand', 'oee', 'theo']);
     expect(def.table!.columns.map((c) => c.key)).toEqual(['theo', 'real', 'rate']);
     expect(def.table!.highlightMin).toBe('rate');
-    expect(def.notes.some((n) => n.startsWith('Medidas de Llenadora (/h): 44.000 · 45.500'))).toBe(true);
+    // Unidades distintas: la tabla va ya en botellas/h; 42 cajas/min de 24 botellas = 60.480 botellas/h.
+    expect(def.table!.columns.at(-1)!.formula).toBe('IF({.real}>0,{.real},{.theo})');
+    expect(def.table!.rows[3]!.values.theo).toBeCloseTo(60_480, 6);
+    expect(def.notes).toContain('Encajonadora: escrita en cajas/min (1 caja = 24 botellas); en esta hoja, pasada a botellas/h.');
+    expect(def.notes.some((n) => n.startsWith('Medidas de Llenadora (botellas/h): 44.000 · 45.500'))).toBe(true);
+    expect(def.notes.some((n) => n.startsWith('Medidas de Encajonadora (cajas/min): 36 · 36,5'))).toBe(true);
+  });
+
+  test('estaciones en velocidad y resultados en tiempo: la columna pasa de botellas/h a s/botella', () => {
+    const s: TaktSaved = { ...BOTTLING(t), result: { measure: 'time', unit: 's' }, stations: BOTTLING(t).stations.slice(0, 3) };
+    const def = check(s);
+    expect(def.table!.columns.at(-1)!.formula).toBe('IF({.real}>0,3600/{.real},3600/{.theo})');
+    expect(def.table!.highlightMax).toBe('cycle');
   });
 
   test('montaje de packs: medidas en segundos, resultados en minutos, con balanceo', () => {
@@ -80,27 +93,35 @@ describe('hoja de takt: fórmulas = cálculo', () => {
 });
 
 describe('mediciones guardadas', () => {
-  test('una medición de la versión 1 se lee como versión 2 sin perder nada', () => {
+  test('una medición de la versión 1 se lee como versión 3 sin perder nada', () => {
     const s = readTaktSaved({ available: 480, availableUnit: 'min', demand: 240, unit: 'min', stations: [{ name: 'Llenadora', cycle: 1.8 }, { name: '', cycle: 2.3 }] })!;
-    expect(s).toMatchObject({ v: 2, shift: 480, shiftUnit: 'min', deductions: [], shifts: 1, measure: 'time', measureUnit: 'min', resultUnit: 'min', kind: 'assembly' });
+    expect(s).toMatchObject({ v: 3, shift: 480, shiftUnit: 'min', deductions: [], shifts: 1, result: { measure: 'time', unit: 'min' }, balance: true });
     expect(s.stations).toEqual([
-      { name: 'Llenadora', theoretical: null, actual: [1.8] },
-      { name: '', theoretical: null, actual: [2.3] },
+      { name: 'Llenadora', measure: 'time', unit: 'min', item: '', per: 1, theoretical: null, actual: [1.8] },
+      { name: '', measure: 'time', unit: 'min', item: '', per: 1, theoretical: null, actual: [2.3] },
     ]);
     const def = taktSavedSheet(s, t, 'es', { version: '0', date: 'x' })!;
     expect(def.reading[0]!.text).toContain('Hay que sacar una unidad cada 2 min');
-    expect(def.reading[0]!.text).toContain('Puesto 2 va a 2,3 min, más despacio que el takt');
-    expect(def.table!.rows.map((r) => r.label)).toEqual(['Llenadora', 'Puesto 2']);
+    expect(def.reading[0]!.text).toContain('Estación 2 va a 2,3 min/pieza, más despacio que el takt');
+    expect(def.table!.rows.map((r) => r.label)).toEqual(['Llenadora', 'Estación 2']);
     expect(taktSavedSheet({ nada: 1 }, t, 'es', { version: '0', date: 'x' })).toBeNull();
+  });
+
+  test('una medición de la versión 2 se lee como versión 3: una sola unidad y «máquinas en serie» sin balanceo', () => {
+    const v2 = { ...BOTTLING(t), v: 2, measure: 'rate', measureUnit: 'h', resultUnit: 'h', kind: 'machines', stations: [{ name: 'Llenadora', theoretical: 48_000, actual: [44_500] }] };
+    const s = readTaktSaved(v2)!;
+    expect(s).toMatchObject({ v: 3, stationUnit: { measure: 'rate', unit: 'h' }, result: { measure: 'rate', unit: 'h' }, balance: false });
+    expect(s.stations[0]).toEqual({ name: 'Llenadora', measure: 'rate', unit: 'h', item: '', per: 1, theoretical: 48_000, actual: [44_500] });
+    expect(readTaktSaved({ ...v2, kind: 'assembly' })!.balance).toBe(true);
   });
 
   test('la embotelladora dice que con el 75 % no llega y qué OEE necesita', () => {
     const def = taktSavedSheet(BOTTLING(t), t, 'es', { version: '0', date: 'x' })!;
     const text = def.reading[0]!.text;
     expect(text).toContain('Hay que sacar 40.000 botellas/h (una cada 0,09 s) para cumplir la demanda de 900.000 botellas.');
-    expect(text).toContain('La más lenta es Llenadora (44.500 botellas/h, el 92,7 % de su teórico)');
+    expect(text).toContain('La más lenta es Llenadora (44.500 botellas/h, el 92,7 % de su estándar)');
     expect(text).toContain('Con un OEE del 75 %, la línea sacaría 810.000 botellas (36.000 botellas/h), por debajo de la demanda de 900.000 botellas: necesita al menos un 83,3 %.');
-    expect(text).toContain('Para cumplir con ese OEE, cada máquina tendría que poder ir a 53.333 botellas/h como mínimo según su placa; Llenadora, la más lenta, va a 48.000 botellas/h.');
-    expect(def.reading.some((l) => l.tone === 'warning' && l.text.startsWith('Etiquetadora varía mucho entre medidas (de 48.500 /h a 54.000 /h)'))).toBe(true);
+    expect(text).toContain('Para cumplir con ese OEE, la línea tendría que tener una velocidad estándar (capacidad instalada) de 53.333 botellas/h; Llenadora, la más lenta, tiene 48.000 botellas/h.');
+    expect(def.reading.some((l) => l.tone === 'warning' && l.text.startsWith('Etiquetadora varía mucho entre medidas (de 48.500 botellas/h a 54.000 botellas/h)'))).toBe(true);
   });
 });

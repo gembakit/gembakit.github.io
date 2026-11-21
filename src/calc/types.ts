@@ -27,6 +27,8 @@ export type CalcWarning =
   | { code: 'fpy-out-of-range'; step: number }
   /** Una fila de una lista (estación, año…) debe ser mayor que cero y no lo es. */
   | { code: 'step-not-positive'; step: number }
+  /** Takt: la equivalencia de una estación que cuenta otra cosa (1 caja = 24 botellas) no es mayor que cero. */
+  | { code: 'per-not-positive'; step: number }
   /** Takt: alguna estación tarda más que el takt (la línea no llega a la demanda). */
   | { code: 'over-takt' }
   /** Takt: un descuento del turno no es mayor que cero. */

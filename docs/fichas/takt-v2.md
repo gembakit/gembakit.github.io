@@ -189,3 +189,15 @@ D. **Tipo de línea** (montaje / máquinas en serie), y el mínimo de estaciones
 E. **OEE esperado** opcional, aplicado a la velocidad teórica, con el «OEE
    mínimo necesario». ¿Lo quieres?
 F. **Dos ejemplos** (embotelladora y montaje). ¿De acuerdo?
+
+## Cambios del 2026-11-21 (comentarios del dueño)
+
+- Cada estación tiene su propia unidad completa (s/botella … botellas/h) y
+  puede contar otra cosa que la demanda con su equivalencia (1 caja =
+  24 botellas): ciclo en s por unidad de la demanda = ciclo de la estación ÷
+  equivalencia. Cambiar la unidad convierte los valores; la media se saca
+  siempre en la forma en que se tomaron las medidas.
+- «Tipo de línea» se sustituye por la casilla «Calcular el balanceo».
+- «Teórico» pasa a «velocidad estándar»; «Ritmo objetivo con tu OEE» pasa a
+  «Capacidad instalada requerida (afectada por el OEE)»: takt × OEE (o
+  ritmo ÷ OEE). Fórmulas sin cambios.

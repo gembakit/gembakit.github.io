@@ -215,33 +215,46 @@ Todas en el Android, después de pulsar **Actualizar**:
 8. Si el almacenamiento vuelve a quedarse pegado: Ajustes → Diagnóstico →
    copiar y pegarlo en el chat.
 
-### Comentarios del dueño sobre takt v2 y OEE v2 (2026-11-21, por aplicar)
+### Takt y OEE: unidades completas y nombres claros (2026-11-21, hecho)
 
-Probó las dos en su Android. Pide:
-- **Unidades completas en un desplegable** (s/unidad, min/unidad, h/unidad,
-  unidad/s, unidad/min, unidad/h, con el nombre de la unidad: «s/botella»),
-  en lugar de «Cómo mides la línea» + «Unidad» (s, min, h). Campo del valor
-  más estrecho, con la unidad completa al lado. En takt y en OEE.
-- **Cambiar la forma de medir no puede estropear los datos:** hoy, con datos
-  escritos, cambiar «Tiempo por unidad / Unidades por tiempo» (o la unidad)
-  reinterpreta los números (10 unid/h pasa a 10 h/unid). Debe convertirlos
-  (10 unid/h → 6 min/unid) y solo cambiar cómo se presentan. Pidió además
-  el selector en cada máquina, unido al de arriba (por decidir: uno solo
-  arriba basta si cada fila enseña la unidad completa).
-- «Ritmo objetivo con tu OEE» confunde: es la velocidad estándar (capacidad
-  instalada) que necesita la línea para que, con su OEE, salga la demanda.
-  Si no es término estándar de la industria, renombrarlo.
-- «Tipo de línea»: solo cambia el balanceo y las palabras (puesto/máquina);
-  si no influye, quitarlo (por decidir cómo).
-- OEE: «Ciclo ideal» → «Velocidad estándar»; «de placa» no se entiende
-  (usar capacidad instalada o velocidad estándar).
-- Explicaciones de calidad: aclarar que las rechazadas (desechadas o
-  retrabajadas) van incluidas en las producidas y que buenas = producidas −
-  rechazadas. En «Donde», cómo sale el tiempo en marcha (planificado −
-  paradas).
-- Pareto del OEE: quitar «acumulado …» y «no cuenta en la otra vista» de
-  cada fila; basta con los minutos y su porcentaje (de lo perdido).
-- Calidad sale «97,8 %» y los otros factores con dos decimales: igualar.
+Comentarios del dueño tras probar takt v2 y OEE v2 en su Android, aplicados
+con sus decisiones del mismo día:
+- **Unidades completas en desplegables** (s/botella, min/botella, h/botella,
+  botellas/s, botellas/min, botellas/h, con el nombre de la unidad pasado a
+  singular cuando hace falta: `singular` en los archivos de idioma). Se
+  quitan «Cómo mides la línea» y los botones s/min/h.
+- **Cambiar la unidad convierte, no reinterpreta:** 10 botellas/h pasan a
+  6 min/botella y el resultado no se mueve. El valor convertido se guarda
+  exacto mientras no se toque el texto (`NumText` en `src/tools/form.tsx`).
+  Cada estación recuerda en qué forma se tomaron sus medidas (`origin`) y
+  promedia siempre en esa (la media de cuatro velocidades no es la de sus
+  cuatro tiempos: sin esto la capacidad se movía de 1.001.250 a 1.001.027).
+- **Takt, cada estación con su unidad** (decisión B del dueño: la llenadora
+  en botellas/h y la empaquetadora en paquetes/min). «Unidad de las
+  estaciones» arriba convierte todas; dentro de cada estación, su unidad y
+  «Qué cuenta esta estación» con su equivalencia («1 caja = 24 botellas»).
+  El ejemplo de la embotelladora lo enseña (encajonadora en cajas/min). En
+  la hoja de Google, si las unidades difieren, los valores van ya pasados a
+  la unidad de los resultados y una nota por estación dice cómo se
+  escribieron. Formato guardado versión 3; las versiones 1 y 2 se leen sin
+  perder nada (v2 «máquinas en serie» → sin balanceo).
+- **«Tipo de línea» quitado:** casilla «Calcular el balanceo» con un botón
+  «i» que explica qué es y qué calcula (decisión C). Filas: «Estación n».
+- **Nombres:** «Ritmo objetivo con tu OEE» → «Capacidad instalada requerida
+  (afectada por el OEE)» (decisión A); «teórico», «de placa» y «ciclo ideal»
+  → «velocidad estándar» en takt, OEE y glosario.
+- **OEE:** calidad explicada (rechazadas = desechadas o retrabajadas, dentro
+  de las producidas; buenas = producidas − rechazadas), «Donde» dice de
+  dónde salen el tiempo planificado y el de marcha (480 − 60; 420 − 47), los
+  tres factores con dos decimales (97,80 %), Pareto con solo «44,4 % de las
+  paradas» (o «de todo lo perdido» con la casilla de pérdidas).
+
+**Siguiente, pedido por el dueño (decisión B):** «Líneas» guardadas con sus
+**recetas** (p. ej. «Línea 3» con recetas «12 oz» y «20 oz», cada una con las
+estaciones, sus unidades, equivalencias y velocidades estándar), para no
+volver a escribirlas en cada proyecto. Antes de construir: dónde viven
+(propuesta: Referencia o Ajustes, y un botón «Cargar receta» en el takt y en
+el OEE) y si se sincronizan con Drive (sí, con la copia de seguridad).
 
 ### Plan hasta terminar la app (propuesto el 2026-11-20, pendiente de aprobar)
 

@@ -65,7 +65,7 @@ describe('mediciones guardadas', () => {
 
   test('la lectura dice la pérdida que más resta, la categoría, el exceso, la otra vista y el factor más lejos', () => {
     expect(plain(oeeSavedSheet(V1, t, 'es', { version: '0', date: 'x' })!.reading[0]!.text)).toBe(
-      'De cada hora planificada, 44,9 minutos se convierten en producción buena a velocidad ideal. Lo que más resta es la velocidad: 51,8 min del turno. Frente a la referencia de 90 × 95 × 99, el factor más lejos es el rendimiento (86,1 % frente a 95 %).',
+      'De cada hora planificada, 44,9 minutos se convierten en producción buena a velocidad estándar. Lo que más resta es la velocidad: 51,8 min del turno. Frente a la referencia de 90 × 95 × 99, el factor más lejos es el rendimiento (86,1 % frente a 95 %).',
     );
     const text = plain(oeeSavedSheet(BOTTLING(t), t, 'es', { version: '0', date: 'x' })!.reading[0]!.text);
     expect(text).toContain('De cada hora planificada, 42,4 minutos');

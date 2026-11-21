@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { fromCycle, stationStats, takt, toCycle, type TaktInput } from './takt';
+import { convertPace, fromCycle, stationStats, takt, toCycle, type StationInput, type TaktInput, type TimeUnit } from './takt';
 
 // Casos publicados de la ficha 3 (docs/fichas/fase-1.md) y ejemplos de la
 // versión 2 (docs/fichas/takt-v2.md).
@@ -10,14 +10,18 @@ const base: TaktInput = {
   deductions: [],
   shifts: 1,
   demand: 240,
-  measure: 'time',
-  measureUnit: 'min',
-  kind: 'assembly',
+  balance: true,
   basis: 'mean',
   stations: [],
   oee: null,
 };
-const one = (...cycles: number[]) => cycles.map((c) => ({ theoretical: null, actual: [c] }));
+/** Estación medida en tiempo por unidad (min, si no se dice otra cosa). */
+const st = (theoretical: number | null, actual: number[], unit: TimeUnit = 'min'): StationInput => ({ measure: 'time', unit, per: 1, theoretical, actual });
+const one = (...cycles: number[]) => cycles.map((c) => st(null, [c]));
+/** Estación con medidas en min por unidad. */
+const st_ = (actual: number[]): StationInput => st(null, actual);
+/** Estación medida en unidades por hora. */
+const perHour = (theoretical: number | null, actual: number[], per = 1): StationInput => ({ measure: 'rate', unit: 'h', per, theoretical, actual });
 
 describe('takt: casos publicados', () => {
   test('Lean Lexicon (LEI): 480 min/día y 240 piezas/día → takt 2 min', () => {
@@ -31,7 +35,7 @@ describe('takt: casos publicados', () => {
   });
 
   test('CSJM Kanpur (Chase, Jacobs y Aquilano, «MS 800»): 500 coches en 420 min, 195 s de trabajo, 5 estaciones', () => {
-    const out = takt({ ...base, shift: 420, demand: 500, measureUnit: 's', stations: one(50, 45, 40, 30, 30) });
+    const out = takt({ ...base, shift: 420, demand: 500, stations: [50, 45, 40, 30, 30].map((c) => st(null, [c], 's')) });
     const r = out.result!;
     expect(r.takt).toBeCloseTo(50.4, 10);
     const b = r.line!.balance!;
@@ -90,14 +94,12 @@ describe('takt versión 2', () => {
       ],
       shifts: 3,
       demand: 900_000,
-      measure: 'rate',
-      measureUnit: 'h',
-      kind: 'machines',
+      balance: false,
       stations: [
-        { theoretical: 60_000, actual: [55_000, 56_500, 55_800, 56_200] },
-        { theoretical: 48_000, actual: [44_000, 45_500, 43_800, 44_700] },
-        { theoretical: 54_000, actual: [48_500, 53_800, 51_200, 54_000] },
-        { theoretical: 60_000, actual: [52_000, 51_500, 53_000, 52_400] },
+        perHour(60_000, [55_000, 56_500, 55_800, 56_200]),
+        perHour(48_000, [44_000, 45_500, 43_800, 44_700]),
+        perHour(54_000, [48_500, 53_800, 51_200, 54_000]),
+        perHour(60_000, [52_000, 51_500, 53_000, 52_400]),
       ],
       oee: 0.75,
     });
@@ -107,7 +109,7 @@ describe('takt versión 2', () => {
     expect(fromCycle(line.bottleneckCycle, 'rate', 'h')).toBeCloseTo(44_500, 6);
     expect(line.capacity).toBeCloseTo(81_000 * (44_500 / 3600), 6);
     expect(line.over).toEqual([]);
-    // Máquinas: sin balanceo.
+    // Sin pedir el balanceo, no sale.
     expect(line.balance).toBeNull();
     expect(r.stations[1]!.ofTheoretical).toBeCloseTo(44_500 / 48_000, 12);
     const o = r.oee!;
@@ -115,22 +117,22 @@ describe('takt versión 2', () => {
     expect(o.expected).toBeCloseTo(810_000, 6);
     expect(o.minOee).toBeCloseTo(40_000 / 48_000, 12);
     expect(o.meets).toBe(false);
-    // Ritmo objetivo con el 75 %: 40.000 ÷ 0,75 = 53.333 botellas/h; la llenadora (48.000 de placa) no llega.
+    // Capacidad instalada requerida con el 75 %: 40.000 ÷ 0,75 = 53.333 botellas/h; la llenadora (48.000 estándar) no llega.
     expect(fromCycle(o.targetCycle, 'rate', 'h')).toBeCloseTo(40_000 / 0.75, 6);
     // La etiquetadora varía un 10,6 %: se avisa.
     expect(out.warnings).toEqual([{ code: 'unstable', step: 2 }]);
   });
 
   test('con qué valor se calcula: media, menor repetible o teórico', () => {
-    const stations = [{ theoretical: 100, actual: [120, 110, 130] }];
-    const at = (basis: TaktInput['basis']) => takt({ ...base, measureUnit: 's', basis, stations }).result!.stations[0]!;
+    const stations = [st(100, [120, 110, 130], 's')];
+    const at = (basis: TaktInput['basis']) => takt({ ...base, basis, stations }).result!.stations[0]!;
     expect(at('mean')).toMatchObject({ source: 'mean', value: 120, cycle: 120 });
     expect(at('repeatable')).toMatchObject({ source: 'repeatable', value: 120 });
     expect(at('theoretical')).toMatchObject({ source: 'theoretical', value: 100 });
   });
 
   test('si falta el valor pedido se usa otro y se avisa', () => {
-    const out = takt({ ...base, measureUnit: 's', basis: 'repeatable', stations: [{ theoretical: 90, actual: [] }, { theoretical: null, actual: [100] }] });
+    const out = takt({ ...base, basis: 'repeatable', stations: [st(90, [], 's'), st(null, [100], 's')] });
     expect(out.result!.stations.map((s) => s.source)).toEqual(['theoretical', 'mean']);
     expect(out.warnings).toEqual([
       { code: 'basis-fallback', step: 0 },
@@ -150,7 +152,7 @@ describe('takt versión 2', () => {
 
   test('OEE: sin teórico no se puede comparar; con algunos, se avisa', () => {
     expect(takt({ ...base, oee: 0.8, stations: one(1.8) }).warnings).toEqual([{ code: 'oee-no-theoretical' }]);
-    const out = takt({ ...base, oee: 0.8, stations: [{ theoretical: 1.5, actual: [1.8] }, { theoretical: null, actual: [1.7] }] });
+    const out = takt({ ...base, oee: 0.8, stations: [st(1.5, [1.8]), st(null, [1.7])] });
     expect(out.result!.oee!.reference).toBe(0);
     expect(out.warnings).toEqual([{ code: 'oee-partial' }]);
   });
@@ -159,12 +161,63 @@ describe('takt versión 2', () => {
     expect(takt({ ...base, demand: 0 }).warnings).toEqual([{ code: 'not-positive', field: 'demand' }]);
     expect(takt({ ...base, deductions: [{ value: 0, unit: 'min' }] }).warnings).toEqual([{ code: 'deduction-not-positive', step: 0 }]);
     expect(takt({ ...base, deductions: [{ value: 8, unit: 'h' }] }).warnings).toEqual([{ code: 'no-time' }]);
-    expect(takt({ ...base, stations: [{ theoretical: null, actual: [] }] }).warnings).toEqual([{ code: 'station-empty', step: 0 }]);
-    expect(takt({ ...base, stations: [{ theoretical: 0, actual: [1] }] }).warnings).toEqual([{ code: 'step-not-positive', step: 0 }]);
+    expect(takt({ ...base, stations: [st(null, [])] }).warnings).toEqual([{ code: 'station-empty', step: 0 }]);
+    expect(takt({ ...base, stations: [st(0, [1])] }).warnings).toEqual([{ code: 'step-not-positive', step: 0 }]);
+    expect(takt({ ...base, stations: [{ ...st(1, [1]), per: 0 }] }).warnings).toEqual([{ code: 'per-not-positive', step: 0 }]);
     // Un OEE fuera de rango se avisa, pero el resto del cálculo sigue (si no, no habría dónde corregirlo).
-    const wrong = takt({ ...base, oee: 1.2, stations: [{ theoretical: 1.5, actual: [1.8] }] });
+    const wrong = takt({ ...base, oee: 1.2, stations: [st(1.5, [1.8])] });
     expect(wrong.warnings).toEqual([{ code: 'oee-range' }]);
     expect(wrong.result!.line).not.toBeNull();
     expect(wrong.result!.oee).toBeNull();
+  });
+});
+
+describe('takt: cada estación con su unidad (2026-11-21)', () => {
+  test('cambiar de unidad convierte el valor: 10 unidades/h son 6 min/unidad, y de vuelta', () => {
+    expect(convertPace(10, { measure: 'rate', unit: 'h' }, { measure: 'time', unit: 'min' })).toBeCloseTo(6, 12);
+    expect(convertPace(6, { measure: 'time', unit: 'min' }, { measure: 'rate', unit: 'h' })).toBeCloseTo(10, 12);
+    expect(convertPace(48_000, { measure: 'rate', unit: 'h' }, { measure: 'rate', unit: 'min' })).toBeCloseTo(800, 12);
+    expect(convertPace(90, { measure: 'time', unit: 's' }, { measure: 'time', unit: 'min' })).toBeCloseTo(1.5, 12);
+  });
+
+  test('las medidas tomadas en velocidad se promedian en velocidad aunque se vean en tiempo', () => {
+    const rates = [44_000, 45_500, 43_800, 44_700];
+    const toMin = { measure: 'time' as const, unit: 'min' as const };
+    const asTimes = rates.map((v) => convertPace(v, { measure: 'rate', unit: 'h' }, toMin));
+    const st = stationStats(asTimes, 'time', 'rate')!;
+    // La media de las velocidades (44.500/h), no la de los tiempos (que daría 44.496/h).
+    expect(convertPace(st.mean, toMin, { measure: 'rate', unit: 'h' })).toBeCloseTo(44_500, 6);
+    expect(st.spread).toBeCloseTo(1700 / 44_500, 12);
+    // El menor repetible en tiempos es el mayor repetible en velocidades (44.700/h).
+    expect(convertPace(st.repeatable!, toMin, { measure: 'rate', unit: 'h' })).toBeCloseTo(44_700, 6);
+    const inRate = takt({ ...base, stations: [perHour(null, rates)] }).result!;
+    const inTime = takt({ ...base, stations: [{ ...st_(asTimes), origin: 'rate' }] }).result!;
+    expect(inTime.stations[0]!.cycle).toBeCloseTo(inRate.stations[0]!.cycle, 12);
+  });
+
+  test('el resultado no cambia si una estación se escribe en otra unidad', () => {
+    const inHour = takt({ ...base, stations: [perHour(null, [30]), st(null, [1.8])] }).result!;
+    const inMin = takt({ ...base, stations: [st(null, [convertPace(30, { measure: 'rate', unit: 'h' }, { measure: 'time', unit: 'min' })]), st(null, [1.8])] }).result!;
+    expect(inMin.stations[0]!.cycle).toBeCloseTo(inHour.stations[0]!.cycle, 12);
+    expect(inMin.line!.capacity).toBeCloseTo(inHour.line!.capacity, 9);
+  });
+
+  test('una encajonadora que cuenta paquetes de 12 botellas: 4.000 paquetes/h son 48.000 botellas/h', () => {
+    const filler = perHour(null, [44_500]);
+    const caser = { measure: 'rate' as const, unit: 'min' as const, per: 12, theoretical: null, actual: [4000 / 60] };
+    const r = takt({ ...base, shift: 8, shiftUnit: 'h', demand: 300_000, balance: false, stations: [filler, caser] }).result!;
+    expect(fromCycle(r.stations[1]!.cycle, 'rate', 'h')).toBeCloseTo(48_000, 6);
+    // La más lenta sigue siendo la llenadora: comparadas en botellas, no en paquetes.
+    expect(r.line!.bottleneck).toBe(0);
+  });
+
+  test('sin balanceo pedido no sale; pedido, sale igual con estaciones medidas en velocidad', () => {
+    const stations = [perHour(null, [30]), perHour(null, [40])];
+    expect(takt({ ...base, balance: false, stations }).result!.line!.balance).toBeNull();
+    // 30 /h = 2 min y 40 /h = 1,5 min: suma 3,5 min con takt de 2 min → 1,75 → 2 estaciones, eficiencia 87,5 %.
+    const b = takt({ ...base, balance: true, stations }).result!.line!.balance!;
+    expect(b.work).toBeCloseTo(210, 9);
+    expect(b.minStations).toBe(2);
+    expect(b.efficiency).toBeCloseTo(0.875, 12);
   });
 });

@@ -4,7 +4,7 @@ import type { Messages } from '../../i18n';
 import type { Derivation } from '../../ui/Explained';
 import { frac, minus, times } from '../../ui/expr';
 import { formatNumber } from '../../ui/number';
-import { smartNumber } from '../takt/explain';
+import { paceLabel, smartNumber } from '../takt/explain';
 import { viewLabel, type OeeSaved } from './model';
 
 /** Cómo se mide la línea: decide cómo se escribe el ciclo o la velocidad ideal. */
@@ -12,25 +12,30 @@ export interface OeeLook {
   measure: Measure;
   measureUnit: TimeUnit;
   unitName: string;
+  /** Unidad completa de la velocidad estándar: «s/pieza», «botellas/h». */
+  paceUnit: string;
 }
 
-export const oeeLook = (s: OeeSaved, t: Messages): OeeLook => ({ measure: s.measure, measureUnit: s.measureUnit, unitName: s.unitName.trim() || t.tools.oee.defaultUnit });
+export function oeeLook(s: Pick<OeeSaved, 'measure' | 'measureUnit' | 'unitName'>, t: Messages): OeeLook {
+  const unitName = s.unitName.trim() || t.tools.oee.defaultUnit;
+  return { measure: s.measure, measureUnit: s.measureUnit, unitName, paceUnit: paceLabel(t, { measure: s.measure, unit: s.measureUnit }, unitName) };
+}
 
 /** Cómo se muestra cada valor en pantalla: la ventana de «de dónde sale» usa exactamente lo mismo. */
-export function oeeFormat(lang: 'es' | 'en', look: OeeLook = { measure: 'time', measureUnit: 's', unitName: '' }) {
+export function oeeFormat(lang: 'es' | 'en', look: OeeLook) {
   const num = (x: number, d = 2) => formatNumber(x, lang, d);
   const u = look.measureUnit;
   return {
     num,
     // Espacio que no se parte: el «%» no se queda solo en la línea siguiente.
-    pct: (x: number) => `${num(x * 100, 2)}\u00a0%`,
+    // Siempre con dos decimales: 97,80 %, como 88,81 %.
+    pct: (x: number) => `${formatNumber(x * 100, lang, 2, 2)}\u00a0%`,
     min: (x: number) => `${num(x, 1)} min`,
     /** Parte de un total, con un decimal: «74,8 %». */
     share: (x: number) => `${num(x * 100, 1)}\u00a0%`,
     count: (x: number) => num(x, 0),
     /** Ciclo ideal (s por unidad) en la forma en que se mide la línea: «1 s» o «48.000 botellas/h». */
-    ideal: (cycleSec: number) =>
-      look.measure === 'time' ? `${smartNumber(fromCycle(cycleSec, 'time', u), lang)} ${u}` : `${smartNumber(fromCycle(cycleSec, 'rate', u), lang)} ${look.unitName}/${u}`,
+    ideal: (cycleSec: number) => `${smartNumber(fromCycle(cycleSec, look.measure, u), lang)} ${look.paceUnit}`,
     /** Minutos pasados a la unidad de la medida (para que cuadren con el ciclo o la velocidad). */
     inUnit: (minutes: number) => `${smartNumber((minutes * 60) / SECONDS[u], lang)} ${u}`,
   };
@@ -59,13 +64,21 @@ export function oeeExplain(
   const R = f.count(s.rejects);
   const good = f.count(r.good);
   const sym = isTime ? x.idealSym : x.idealRateSym;
-  const wTp = { sym: x.plannedSym, label: x.plannedLabel, value: Tp };
-  const wTm = { sym: x.runSym, label: x.runLabel, value: Tm };
+  // De dónde salen el tiempo planificado y el de marcha, en su línea de «Donde»: 480 − 60 min; 420 − 47 min.
+  const toMin = (v: number, unit: TimeUnit) => (v * SECONDS[unit]) / 60;
+  const plannedParts = s.planned.map((p) => f.num(toMin(p.value, p.unit), 1));
+  const wTp = {
+    sym: x.plannedSym,
+    label: plannedParts.length ? x.plannedFrom(f.num(toMin(s.shift, s.shiftUnit), 1), `${plannedParts.join(' − ')} min`) : x.plannedLabel,
+    value: Tp,
+  };
+  const wTm = { sym: x.runSym, label: x.runFrom(Tp, f.min(r.minutes.downtime)), value: Tm };
   // En la unidad de la medida, para que cuadre con el ciclo o la velocidad; los minutos van en la etiqueta.
   const wTmU = { ...wTm, label: x.inUnit(x.runLabel, Tm), value: TmU };
-  const wIdeal = { sym, label: d.ideal[s.measure]!, value: ideal };
-  const wN = { sym: x.totalSym, label: d.total, value: N };
-  const wR = { sym: x.rejectsSym, label: d.rejects, value: R };
+  const wIdeal = { sym, label: d.ideal, value: ideal };
+  const wN = { sym: x.totalSym, label: x.totalLabel, value: N };
+  const wR = { sym: x.rejectsSym, label: x.rejectsLabel, value: R };
+  const wGood = { sym: x.goodSym, label: x.goodLabel, value: good };
   const rounded = [t.explain.rounded];
   const label = viewLabel(s, r.standardByCategory, t);
   const v = label ? oeeView(r, s.views) : null;
@@ -91,7 +104,7 @@ export function oeeExplain(
       meaning: x.qualMeaning,
       lhs: d.quality,
       steps: [frac(minus(x.totalSym, x.rejectsSym), x.totalSym), frac(minus(N, R), N), frac(good, N), f.pct(r.quality)],
-      where: [wN, wR],
+      where: [wN, wR, wGood],
       notes: rounded,
     },
     oee: {
@@ -112,7 +125,7 @@ export function oeeExplain(
       steps: isTime
         ? [times(sym, minus(x.totalSym, x.rejectsSym)), times(ideal, good), f.min(r.minutes.useful)]
         : [frac(minus(x.totalSym, x.rejectsSym), sym), frac(good, ideal), f.min(r.minutes.useful)],
-      where: [wIdeal, wN, wR],
+      where: [wIdeal, wN, wR, wGood],
       notes: rounded,
     },
     speed: {

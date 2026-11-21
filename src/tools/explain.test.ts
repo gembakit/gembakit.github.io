@@ -82,18 +82,18 @@ describe('Takt: de dónde sale cada valor', () => {
 
   test('takt = T ÷ D, con el tiempo convertido a la unidad del takt (MS 800)', () => {
     const ex = explainOf(v1(420, 'min', 500, 's', [50, 45, 40, 30, 30]));
-    expect(txt(ex.takt)).toEqual(['T ÷ D', '25.200 s ÷ 500', '50,4 s']);
+    expect(txt(ex.takt)).toEqual(['T ÷ D', '25.200 s ÷ 500', '50,4 s/pieza']);
     expect(txt(ex.available)).toEqual(['Turno', '420', '420 min', '25.200 s']);
     expect(ex.available!.where[0]!.value).toBe('420 min');
-    expect(txt(ex.minStations)).toEqual(['ΣTC ÷ Takt', '195 s ÷ 50,4 s', '3,87', '4']);
-    expect(txt(ex.efficiency)).toEqual(['ΣTC ÷ (n × Takt)', '195 s ÷ (5 × 50,4 s)', '77,4 %']);
+    expect(txt(ex.minStations)).toEqual(['ΣTC ÷ Takt', '195 s/pieza ÷ 50,4 s/pieza', '3,87', '4']);
+    expect(txt(ex.efficiency)).toEqual(['ΣTC ÷ (n × Takt)', '195 s/pieza ÷ (5 × 50,4 s/pieza)', '77,4 %']);
     expect(txt(ex.idle)).toEqual(['1 − Eficiencia', '100 % − 77,4 %', '22,6 %']);
-    expect(txt(ex.capacity)).toEqual(['T ÷ TC máx', '25.200 s ÷ 50 s', '504 piezas']);
+    expect(txt(ex.capacity)).toEqual(['T ÷ TC máx', '25.200 s ÷ 50 s/pieza', '504 piezas']);
   });
 
   test('sin estaciones solo hay tiempo disponible y takt', () => {
     const ex = explainOf(v1(480, 'min', 240, 'min', []));
-    expect(txt(ex.takt)).toEqual(['T ÷ D', '480 min ÷ 240', '2 min']);
+    expect(txt(ex.takt)).toEqual(['T ÷ D', '480 min ÷ 240', '2 min/pieza']);
     expect(ex.capacity).toBeNull();
   });
 
@@ -103,15 +103,15 @@ describe('Takt: de dónde sale cada valor', () => {
     expect(txt(ex.takt)).toEqual(['D ÷ T', '900.000 ÷ 22,5 h', '40.000 botellas/h']);
     expect(txt(ex.capacity)).toEqual(['T × V mín', '22,5 h × 44.500 botellas/h', '1.001.250 botellas']);
     expect(ex.minStations).toBeNull();
-    expect(txt(ex.expected)).toEqual(['T × V teórica × OEE', '22,5 h × 48.000 botellas/h × 75 %', '810.000 botellas']);
-    expect(txt(ex.minOee)).toEqual(['Ritmo ÷ V teórica', '40.000 botellas/h ÷ 48.000 botellas/h', '83,3 %']);
+    expect(txt(ex.expected)).toEqual(['T × V estándar × OEE', '22,5 h × 48.000 botellas/h × 75 %', '810.000 botellas']);
+    expect(txt(ex.minOee)).toEqual(['Ritmo ÷ V estándar', '40.000 botellas/h ÷ 48.000 botellas/h', '83,3 %']);
   });
 
   test('montaje de packs: medidas en segundos, resultados en minutos', () => {
     const ex = explainOf(PACKS(es));
     expect(txt(ex.available)).toEqual(['Turno − d₁ − d₂ − d₃', '480 − 10 − 10 − 30', '430 min']);
-    expect(txt(ex.takt)).toEqual(['T ÷ D', '430 min ÷ 215', '2 min']);
-    expect(txt(ex.minStations)).toEqual(['ΣTC ÷ Takt', '5,52 min ÷ 2 min', '2,76', '3']);
+    expect(txt(ex.takt)).toEqual(['T ÷ D', '430 min ÷ 215', '2 min/pack']);
+    expect(txt(ex.minStations)).toEqual(['ΣTC ÷ Takt', '5,52 min/pack ÷ 2 min/pack', '2,76', '3']);
   });
 });
 
@@ -123,21 +123,25 @@ describe('OEE: de dónde sale cada valor', () => {
   test('Vorne: los tres factores y el OEE', () => {
     const ex = explainOee(VORNE_OEE(es));
     expect(txt(ex.availability)).toEqual(['Tm ÷ Tp', '373 min ÷ 420 min', '88,81 %']);
-    expect(txt(ex.performance)).toEqual(['(TCi × N) ÷ Tm', '(1 s × 19.271) ÷ 22.380 s', '86,11 %']);
-    expect(txt(ex.quality)).toEqual(['(N − R) ÷ N', '(19.271 − 423) ÷ 19.271', '18.848 ÷ 19.271', '97,8 %']);
-    expect(txt(ex.oee)).toEqual(['Disp × Rend × Cal', '88,81 % × 86,11 % × 97,8 %', '74,79 %']);
+    expect(txt(ex.performance)).toEqual(['(TCe × N) ÷ Tm', '(1 s/pieza × 19.271) ÷ 22.380 s', '86,11 %']);
+    expect(txt(ex.quality)).toEqual(['(N − R) ÷ N', '(19.271 − 423) ÷ 19.271', '18.848 ÷ 19.271', '97,80 %']);
+    expect(txt(ex.oee)).toEqual(['Disp × Rend × Cal', '88,81 % × 86,11 % × 97,80 %', '74,79 %']);
+    // De dónde sale el tiempo en marcha (pregunta del dueño, 2026-11-21): 420 − 47.
+    expect(ex.availability.where[0]!.label).toBe('Tiempo en marcha: planificado − paradas no planificadas = 420 min − 47 min');
+    expect(ex.availability.where[1]!.label).toBe('Tiempo planificado: turno − paradas planificadas = 480 − 60 min');
+    expect(ex.quality.where.map((w) => w.value)).toEqual(['19.271', '423', '18.848']);
     expect(ex.view).toBeNull();
   });
   test('Vorne: las pérdidas en minutos', () => {
     const ex = explainOee(VORNE_OEE(es));
-    expect(txt(ex.speed)).toEqual(['Tm − (TCi × N)', '373 min − (1 s × 19.271)', '51,8 min']);
-    expect(txt(ex.qualityLoss)).toEqual(['TCi × R', '1 s × 423', '7,1 min']);
-    expect(txt(ex.useful)).toEqual(['TCi × (N − R)', '1 s × 18.848', '314,1 min']);
+    expect(txt(ex.speed)).toEqual(['Tm − (TCe × N)', '373 min − (1 s/pieza × 19.271)', '51,8 min']);
+    expect(txt(ex.qualityLoss)).toEqual(['TCe × R', '1 s/pieza × 423', '7,1 min']);
+    expect(txt(ex.useful)).toEqual(['TCe × (N − R)', '1 s/pieza × 18.848', '314,1 min']);
   });
   test('embotelladora: velocidad en botellas/h y la otra vista', () => {
     const ex = explainOee(BOTTLING_OEE(es));
-    expect(txt(ex.performance)).toEqual(['N ÷ (Vi × Tm)', '270.000 ÷ (48.000 botellas/h × 6,25 h)', '90 %']);
-    expect(txt(ex.useful)).toEqual(['(N − R) ÷ Vi', '266.000 ÷ 48.000 botellas/h', '332,5 min']);
+    expect(txt(ex.performance)).toEqual(['N ÷ (Ve × Tm)', '270.000 ÷ (48.000 botellas/h × 6,25 h)', '90,00 %']);
+    expect(txt(ex.useful)).toEqual(['(N − R) ÷ Ve', '266.000 ÷ 48.000 botellas/h', '332,5 min']);
     expect(txt(ex.view!)).toEqual(['Tu ÷ (Tp − Q)', '332,5 min ÷ (470 min − 30 min)', '75,57 %']);
   });
 });

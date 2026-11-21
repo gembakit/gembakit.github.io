@@ -2,7 +2,7 @@ import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 
 import { CircleAlert, Eraser, Factory, Gauge, Plus, Trash2 } from 'lucide-react';
 import { useI18n, type Messages } from '../../i18n';
 import { furthestFactor, oee, oeeView, pareto, WORLD_CLASS } from '../../calc/oee';
-import { TIME_UNITS, type Measure, type TimeUnit } from '../../calc/takt';
+import type { Measure, TimeUnit } from '../../calc/takt';
 import { formatNumber, parseDecimal, toFieldText } from '../../ui/number';
 import { useSavedInput } from '../../projects/live';
 import { lastUsed, latest, listMeasurements } from '../../projects/store';
@@ -14,7 +14,7 @@ import { Sheet } from '../../ui/Sheet';
 import { Dotted, Explained, type Derivation } from '../../ui/Explained';
 import { useToast } from '../../ui/Toast';
 import { APP_VERSION } from '../../version';
-import { ExampleOption, Fold, Group, Hint, isBad, MeasureBox, NameInput, Segmented, Stat, SubTitle, Tag, TimeField, UnitSelect } from '../form';
+import { Check, convertText, ExampleOption, Fold, Group, Hint, isBad, MeasureBox, NameInput, PaceField, Segmented, Stat, SubTitle, Tag, TimeField, UnitSelect } from '../form';
 import { oeeExplain, oeeFormat, oeeLook } from './explain';
 import { oeeSheet } from './sheet';
 import { oeeConclusion, oeeReadingLines, oeeWarnings } from './reading';
@@ -47,6 +47,8 @@ interface State {
   measure: Measure;
   measureUnit: TimeUnit;
   ideal: string;
+  /** Valor exacto de la velocidad estándar tras cambiar de unidad (mientras no se toque el texto). */
+  idealExact?: number;
   total: string;
   rejects: string;
   unitName: string;
@@ -131,7 +133,7 @@ function toSaved(st: State, t: Messages): { saved: OeeSaved | null; bad: string 
     else if (x.name.trim() || x.standard.trim()) bad ??= where;
   });
   const shift = num(st.shift, d.shift);
-  const ideal = num(st.ideal, d.ideal[st.measure]!);
+  const ideal = st.idealExact ?? num(st.ideal, d.ideal);
   const total = num(st.total, d.total);
   const rejects = num(st.rejects, d.rejects) ?? 0;
   if (bad || shift === null || ideal === null || total === null) return { saved: null, bad };
@@ -214,7 +216,7 @@ export default function OeeTool() {
   const input = saved ? toOeeInput(saved) : null;
   const out = input ? oee(input) : null;
   const r = out?.result ?? null;
-  const look = saved ? oeeLook(saved, t) : { measure: state.measure, measureUnit: state.measureUnit, unitName: state.unitName.trim() || d.defaultUnit };
+  const look = oeeLook(saved ?? state, t);
   const f = oeeFormat(lang, look);
   const warnings = saved && out ? oeeWarnings(out.warnings, saved, t) : [];
   const anyText = state.shift.trim() !== '' || state.ideal.trim() !== '' || state.total.trim() !== '' || state.planned.length > 0 || state.stops.length > 0;
@@ -279,7 +281,6 @@ export default function OeeTool() {
   const stopsMinutes = state.stops.reduce((a, x) => a + (parseDecimal(x.minutes) ?? 0), 0);
   const idealParsed = parseDecimal(state.ideal);
   const totalParsed = parseDecimal(state.total);
-  const enteredUnit = state.measure === 'time' ? state.measureUnit : `/${state.measureUnit}`;
   const usedCats = new Set(state.stops.map((x) => x.cat));
 
   const data = (
@@ -421,24 +422,30 @@ export default function OeeTool() {
           open={open.has('production')}
           onToggle={() => toggle('production')}
         >
-          <Segmented
-            label={d.measureLabel}
-            value={state.measure}
-            options={(['time', 'rate'] as const).map((m) => ({ value: m, label: d.measures[m]! }))}
-            onChange={(m) => set(state.ideal.trim() === '' ? { measure: m, measureUnit: m === 'time' ? 's' : 'h' } : { measure: m })}
-          />
-          <Segmented
-            label={d.measureUnitLabel}
-            value={state.measureUnit}
-            options={TIME_UNITS.map((u) => ({ value: u, label: state.measure === 'time' ? u : `/${u}`, aria: state.measure === 'time' ? t.tools.takt.unitNames[u] : t.tools.takt.perUnitName(u) }))}
-            onChange={(u) => set({ measureUnit: u })}
-          />
           <div className="flex flex-col gap-1.5">
-            <NumberField compact label={d.ideal[state.measure]!} unit={enteredUnit} value={state.ideal} invalidText={d.invalidNumber} onChange={(v) => set({ ideal: v })} />
+            <PaceField
+              label={d.ideal}
+              unitLabel={d.idealUnitOf}
+              value={state.ideal}
+              pace={{ measure: state.measure, unit: state.measureUnit }}
+              item={look.unitName}
+              onValue={(v) => set({ ideal: v, idealExact: undefined })}
+              onPace={(p) => {
+                // Cambiar la unidad convierte el número: 48.000 botellas/h pasan a 800 botellas/min, no se reinterpretan.
+                const n = convertText({ text: state.ideal, exact: state.idealExact }, { measure: state.measure, unit: state.measureUnit }, p, lang);
+                set({ measure: p.measure, measureUnit: p.unit, ideal: n.text, idealExact: n.exact });
+              }}
+            />
             <Hint>{d.idealHint}</Hint>
           </div>
-          <NumberField compact label={d.total} value={state.total} invalidText={d.invalidNumber} onChange={(v) => set({ total: v })} />
-          <NumberField compact label={d.rejects} value={state.rejects} invalidText={d.invalidNumber} onChange={(v) => set({ rejects: v })} />
+          <div className="flex flex-col gap-1.5">
+            <NumberField compact label={d.total} value={state.total} invalidText={d.invalidNumber} onChange={(v) => set({ total: v })} />
+            <Hint>{d.totalHint}</Hint>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <NumberField compact label={d.rejects} value={state.rejects} invalidText={d.invalidNumber} onChange={(v) => set({ rejects: v })} />
+            <Hint>{d.rejectsHint}</Hint>
+          </div>
           <div className="flex flex-col gap-1.5">
             <label className="flex flex-col gap-1.5">
               <span className="text-[13px] font-semibold text-muted">{d.unitName}</span>
@@ -492,17 +499,16 @@ export default function OeeTool() {
     const furthest = furthestFactor(r);
     const label = viewLabel(saved, r.standardByCategory, t);
     const view = label ? oeeView(r, saved.views) : null;
-    // Pareto: por categoría o por parada; las quitadas en «Otras vistas» siguen, en gris.
-    const excludedIdx = new Set(saved.views.excluded);
-    type Item = { key: string; name: string; minutes: number; color: string; excluded: boolean };
+    // Pareto: por categoría o por parada; con la casilla, también la pérdida por velocidad y la de calidad.
+    type Item = { key: string; name: string; minutes: number; color: string };
     const items: Item[] =
       saved.pareto.by === 'category'
-        ? r.byCategory.map((m, c) => ({ key: `c${c}`, name: categoryName(saved, c, t), minutes: m, color: 'bg-series-2', excluded: excludedIdx.has(c) }))
-        : saved.stops.map((x, k) => ({ key: `s${k}`, name: stopName(saved, k, t), minutes: x.minutes, color: 'bg-series-2', excluded: excludedIdx.has(x.category) }));
+        ? r.byCategory.map((m, c) => ({ key: `c${c}`, name: categoryName(saved, c, t), minutes: m, color: 'bg-series-2' }))
+        : saved.stops.map((x, k) => ({ key: `s${k}`, name: stopName(saved, k, t), minutes: x.minutes, color: 'bg-series-2' }));
     if (saved.pareto.losses)
       items.push(
-        { key: 'speed', name: d.losses.speed!, minutes: Math.max(0, r.minutes.speed), color: 'bg-series-3', excluded: false },
-        { key: 'quality', name: d.losses.quality!, minutes: r.minutes.quality, color: 'bg-series-4', excluded: false },
+        { key: 'speed', name: d.losses.speed!, minutes: Math.max(0, r.minutes.speed), color: 'bg-series-3' },
+        { key: 'quality', name: d.losses.quality!, minutes: r.minutes.quality, color: 'bg-series-4' },
       );
     const byKey = new Map(items.map((x) => [x.key, x]));
     const rows = pareto(items.map((x) => ({ key: x.key, minutes: x.minutes })));
@@ -617,16 +623,13 @@ export default function OeeTool() {
                 return (
                   <li key={row.key} className="flex flex-col gap-1.5">
                     <span className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
-                      <span className={`min-w-0 text-[15px] font-semibold wrap-break-word ${item.excluded ? 'text-muted' : ''}`}>{item.name}</span>
+                      <span className="min-w-0 text-[15px] font-semibold wrap-break-word">{item.name}</span>
                       <span className="shrink-0 font-display text-[16px] font-bold tabular-nums">{f.min(row.minutes)}</span>
                     </span>
                     <span aria-hidden className="block h-3 rounded-full bg-surface-2">
-                      <span className={`block h-full rounded-full ${item.excluded ? 'bg-faint' : item.color}`} style={{ width: `${(row.minutes / maxMinutes) * 100}%` }} />
+                      <span className={`block h-full rounded-full ${item.color}`} style={{ width: `${(row.minutes / maxMinutes) * 100}%` }} />
                     </span>
-                    <span className="text-[13px] text-muted tabular-nums">
-                      {d.paretoRow(f.share(row.share), f.share(row.cumulative))}
-                      {item.excluded && ` · ${d.paretoExcluded}`}
-                    </span>
+                    <span className="text-[13px] text-muted tabular-nums">{d.paretoRow(f.share(row.share), saved.pareto.losses)}</span>
                     {k === cut && k < rows.length - 1 && (
                       <span className="mt-1 flex items-center gap-2 text-[12.5px] font-semibold text-muted">
                         <span aria-hidden className="h-0 flex-1 border-t-2 border-dashed border-line" />
@@ -720,18 +723,5 @@ function CategorySelect({ label, aria, value, cats, nameOf, onChange }: { label:
         ))}
       </select>
     </div>
-  );
-}
-
-/** Casilla de marcar con su texto (y una aclaración debajo). */
-function Check({ label, hint, checked, onChange }: { label: string; hint?: string; checked: boolean; onChange: (on: boolean) => void }) {
-  return (
-    <label className="grid min-h-11 cursor-pointer grid-cols-[22px_minmax(0,1fr)] items-start gap-3 rounded-[12px] py-2">
-      <input type="checkbox" className="mt-0.5 size-[18px] accent-accent" checked={checked} onChange={(e) => onChange(e.target.checked)} />
-      <span className="flex min-w-0 flex-col">
-        <span className="text-[15px] leading-snug font-semibold wrap-break-word">{label}</span>
-        {hint && <span className="text-[13px] text-muted tabular-nums">{hint}</span>}
-      </span>
-    </label>
   );
 }

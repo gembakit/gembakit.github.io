@@ -1,16 +1,14 @@
-import { SECONDS, type LineKind, type Measure, type TaktInput, type TaktResult, type TimeUnit } from '../../calc/takt';
+import { SECONDS, type Pace, type TaktInput, type TaktResult, type TimeUnit } from '../../calc/takt';
 import type { Messages } from '../../i18n';
 import { subscript, type Derivation } from '../../ui/Explained';
 import { frac, minus, times, type Expr } from '../../ui/expr';
 import { formatNumber, formatPercent } from '../../ui/number';
 
-/** Cómo se ve el resultado: forma de medir, unidad de los resultados y nombre de la unidad. */
+/** Cómo se ve el resultado: en qué unidad completa, con qué nombre de unidad y si lleva balanceo. */
 export interface TaktView {
-  measure: Measure;
-  measureUnit: TimeUnit;
-  resultUnit: TimeUnit;
+  result: Pace;
   unitName: string;
-  kind: LineKind;
+  balance: boolean;
 }
 
 /** Unidad de tiempo con la que un número se lee bien: s por debajo del minuto, min por debajo de la hora. */
@@ -31,22 +29,37 @@ export function smartNumber(x: number, lang: 'es' | 'en'): string {
   return formatNumber(x, lang, smartDecimals(x));
 }
 
+/** Unidad completa: «min/pack», «botellas/h» (el nombre va en plural y se pasa a singular cuando hace falta). */
+export function paceLabel(t: Messages, p: Pace, item: string): string {
+  const d = t.tools.takt;
+  return p.measure === 'time' ? d.perItem(d.units[p.unit]!, d.singular(item)) : d.rateOf(item, d.units[p.unit]!);
+}
+
 /** Cómo se muestra cada valor en pantalla y en la hoja: la ventana de «de dónde sale» usa exactamente lo mismo. */
 export function taktFormat(lang: 'es' | 'en', t: Messages, v: TaktView) {
   const d = t.tools.takt;
   const num = (x: number) => smartNumber(x, lang);
-  const time = (sec: number, u: TimeUnit = v.resultUnit) => `${num(sec / SECONDS[u])} ${d.units[u]}`;
-  const rate = (sec: number, u: TimeUnit = v.resultUnit) => `${num(SECONDS[u] / sec)} ${d.rateOf(v.unitName, d.units[u]!)}`;
+  const ru = v.result.unit;
+  /** Una duración: «430 min». */
+  const time = (sec: number, u: TimeUnit = ru) => `${num(sec / SECONDS[u])} ${d.units[u]}`;
+  /** Un tiempo por unidad: «2 min/pack». */
+  const cycle = (sec: number, u: TimeUnit = ru) => `${num(sec / SECONDS[u])} ${paceLabel(t, { measure: 'time', unit: u }, v.unitName)}`;
+  /** Una velocidad: «30 packs/h». */
+  const rate = (sec: number, u: TimeUnit = ru) => `${num(SECONDS[u] / sec)} ${paceLabel(t, { measure: 'rate', unit: u }, v.unitName)}`;
   return {
     num,
     time,
+    cycle,
     rate,
-    /** En la forma de la línea y la unidad de los resultados. */
-    main: (sec: number) => (v.measure === 'time' ? time(sec) : rate(sec)),
-    /** La otra forma, en una unidad legible: «30 packs/h», «0,09 s». */
-    alt: (sec: number) => (v.measure === 'time' ? rate(sec, 'h') : time(sec, readableUnit(sec))),
-    /** Un valor tal como se escribe en las medidas («44.500 /h», «98 s»). */
-    entered: (x: number) => `${num(x)} ${v.measure === 'time' ? d.units[v.measureUnit] : d.perUnit(d.units[v.measureUnit]!)}`,
+    unitName: v.unitName,
+    /** En la unidad de los resultados. */
+    main: (sec: number) => (v.result.measure === 'time' ? cycle(sec) : rate(sec)),
+    /** La otra forma, en una unidad legible: «30 packs/h», «0,09 s/botella». */
+    alt: (sec: number) => (v.result.measure === 'time' ? rate(sec, 'h') : cycle(sec, readableUnit(sec))),
+    /** Cada cuánto sale una unidad, para las frases: «cada 2 min». */
+    every: (sec: number) => time(sec, v.result.measure === 'time' ? ru : readableUnit(sec)),
+    /** Un valor de una estación tal como se escribe, con su unidad completa: «44.500 botellas/h», «98 s/pack». */
+    station: (x: number, st: Pace & { item: string }) => `${num(x)} ${paceLabel(t, st, st.item.trim() || v.unitName)}`,
     /** Unidades: «900.000 botellas». */
     units: (x: number) => `${formatNumber(x, lang, x >= 100 ? 0 : 1)} ${v.unitName}`,
     pct: (x: number) => `${formatPercent(x, lang)} %`,
@@ -68,7 +81,7 @@ export function taktExplain(
   const d = t.tools.takt;
   const x = d.explain;
   const f = taktFormat(lang, t, view);
-  const u = view.resultUnit;
+  const u = view.result.unit;
   // La resta del turno, en la unidad más pequeña escrita (480 − 10 − 20 min, no 8 − 0,167 − 0,333 h).
   const au = subtractionUnit(input);
   const inU = (value: number, unit: TimeUnit) => (value * SECONDS[unit]) / SECONDS[au];
@@ -102,9 +115,9 @@ export function taktExplain(
   const D = f.units(input.demand);
   const wT = { sym: x.availableSym, label: d.availableStat, value: T };
   const wD = { sym: x.demandSym, label: d.demand, value: D };
-  const isTime = view.measure === 'time';
+  const isTime = view.result.measure === 'time';
   const takt: Derivation = isTime
-    ? { term: 'takt', lhs: 'Takt', steps: [frac(x.availableSym, x.demandSym), frac(T, f.num(input.demand)), f.time(r.takt)], where: [wT, wD], notes: [t.explain.rounded] }
+    ? { term: 'takt', lhs: 'Takt', steps: [frac(x.availableSym, x.demandSym), frac(T, f.num(input.demand)), f.cycle(r.takt)], where: [wT, wD], notes: [t.explain.rounded] }
     : {
         term: 'takt',
         title: d.rateTitle,
@@ -118,14 +131,14 @@ export function taktExplain(
   const line = r.line;
   if (!line) return { available, takt, ...none };
 
-  const slowest = names[line.bottleneck] ?? d.stationName(line.bottleneck + 1, view.kind);
+  const slowest = names[line.bottleneck] ?? d.stationName(line.bottleneck + 1);
   const capacity: Derivation = isTime
     ? {
         title: d.capacity,
         meaning: x.capacityMeaning,
         lhs: d.capacity,
-        steps: [frac(x.availableSym, x.maxSym), frac(T, f.time(line.bottleneckCycle)), f.units(line.capacity)],
-        where: [wT, { sym: x.maxSym, label: x.maxLabel(slowest), value: f.time(line.bottleneckCycle) }],
+        steps: [frac(x.availableSym, x.maxSym), frac(T, f.cycle(line.bottleneckCycle)), f.units(line.capacity)],
+        where: [wT, { sym: x.maxSym, label: x.maxLabel(slowest), value: f.cycle(line.bottleneckCycle) }],
         notes: [t.explain.rounded],
       }
     : {
@@ -142,7 +155,7 @@ export function taktExplain(
   if (b) {
     // El balanceo es de tiempos: con velocidades, en una unidad legible.
     const bu = isTime ? u : readableUnit(r.takt);
-    const bt = (sec: number) => f.time(sec, bu);
+    const bt = (sec: number) => f.cycle(sec, bu);
     const sum = bt(b.work);
     const n = String(r.stations.length);
     const eff = f.pct(b.efficiency);
@@ -177,11 +190,11 @@ export function taktExplain(
 
   const o = r.oee;
   if (!o) return { available, takt, capacity, ...balance, expected: null, minOee: null, target: null };
-  const ref = names[o.reference] ?? d.stationName(o.reference + 1, view.kind);
+  const ref = names[o.reference] ?? d.stationName(o.reference + 1);
   const oeePct = f.pct(o.oee);
   const wOee = { sym: x.oeeSym, label: x.oeeLabel, value: oeePct };
   const wTheo = isTime
-    ? { sym: x.theoSym, label: x.theoLabel(ref), value: f.time(o.theoreticalCycle) }
+    ? { sym: x.theoSym, label: x.theoLabel(ref), value: f.cycle(o.theoreticalCycle) }
     : { sym: x.theoRateSym, label: x.theoRateLabel(ref), value: f.rate(o.theoreticalCycle) };
   return {
     available,
@@ -193,7 +206,7 @@ export function taktExplain(
       meaning: x.expectedMeaning,
       lhs: d.expected,
       steps: isTime
-        ? [frac(times(x.availableSym, x.oeeSym), x.theoSym), frac(times(T, oeePct), f.time(o.theoreticalCycle)), f.units(o.expected)]
+        ? [frac(times(x.availableSym, x.oeeSym), x.theoSym), frac(times(T, oeePct), f.cycle(o.theoreticalCycle)), f.units(o.expected)]
         : [times(x.availableSym, x.theoRateSym, x.oeeSym), times(T, f.rate(o.theoreticalCycle), oeePct), f.units(o.expected)],
       where: [wT, wTheo, wOee],
       notes: [t.explain.rounded],
@@ -203,20 +216,20 @@ export function taktExplain(
       meaning: x.minOeeMeaning,
       lhs: d.minOee,
       steps: isTime
-        ? [frac(x.theoSym, 'Takt'), frac(f.time(o.theoreticalCycle), f.time(r.takt)), f.pct(o.minOee)]
+        ? [frac(x.theoSym, 'Takt'), frac(f.cycle(o.theoreticalCycle), f.cycle(r.takt)), f.pct(o.minOee)]
         : [frac(x.rateSym, x.theoRateSym), frac(f.rate(r.takt), f.rate(o.theoreticalCycle)), f.pct(o.minOee)],
-      where: isTime ? [wTheo, { sym: 'Takt', label: x.taktLabel, value: f.time(r.takt) }] : [{ sym: x.rateSym, label: d.rateTitle, value: f.rate(r.takt) }, wTheo],
+      where: isTime ? [wTheo, { sym: 'Takt', label: x.taktLabel, value: f.cycle(r.takt) }] : [{ sym: x.rateSym, label: d.rateTitle, value: f.rate(r.takt) }, wTheo],
       notes: [t.explain.rounded],
     },
     target: {
       title: d.target,
       meaning: isTime ? x.targetMeaning : x.targetRateMeaning,
-      lhs: d.target,
+      lhs: x.targetSym,
       steps: isTime
-        ? [times('Takt', x.oeeSym), times(f.time(r.takt), oeePct), f.time(o.targetCycle)]
+        ? [times('Takt', x.oeeSym), times(f.cycle(r.takt), oeePct), f.cycle(o.targetCycle)]
         : [frac(x.rateSym, x.oeeSym), frac(f.rate(r.takt), oeePct), f.rate(o.targetCycle)],
-      where: isTime ? [{ sym: 'Takt', label: x.taktLabel, value: f.time(r.takt) }, wOee] : [{ sym: x.rateSym, label: d.rateTitle, value: f.rate(r.takt) }, wOee],
-      notes: [x.targetNote(isTime ? f.time(o.theoreticalCycle) : f.rate(o.theoreticalCycle), ref), t.explain.rounded],
+      where: isTime ? [{ sym: 'Takt', label: x.taktLabel, value: f.cycle(r.takt) }, wOee] : [{ sym: x.rateSym, label: d.rateTitle, value: f.rate(r.takt) }, wOee],
+      notes: [x.targetNote(isTime ? f.cycle(o.theoreticalCycle) : f.rate(o.theoreticalCycle), ref), t.explain.rounded],
     },
   };
 }

@@ -68,8 +68,8 @@ test('Takt: con datos, los bloques salen plegados con su resumen; «Calcular con
   render(<App />);
   await user.click(await screen.findByRole('button', { name: /Cargar ejemplo|Load example/ }));
   await user.click(await screen.findByRole('button', { name: /^(Embotelladora|Bottling plant)/ }));
-  // El bloque de las máquinas, plegado, dice cuántas hay y cuál es el cuello de botella.
-  const machines = await screen.findByRole('button', { name: /^(Máquinas|Machines)\s*4/ });
+  // El bloque de las estaciones, plegado, dice cuántas hay y cuál es el cuello de botella.
+  const machines = await screen.findByRole('button', { name: /^(Estaciones|Stations)\s*4/ });
   expect(machines).toHaveAttribute('aria-expanded', 'false');
   expect(machines).toHaveTextContent(/(cuello de botella|bottleneck): (Llenadora|Filler)/);
   await user.click(machines);
@@ -78,8 +78,8 @@ test('Takt: con datos, los bloques salen plegados con su resumen; «Calcular con
   await user.click(filler);
   expect(filler).toHaveAttribute('aria-expanded', 'true');
   expect(screen.getByText(/^(Mayor repetible: la segunda|Highest repeatable: the second-highest)/)).toBeInTheDocument();
-  // «Teórico» en el resultado: la llenadora pasa a su velocidad de placa.
-  await user.click(screen.getByRole('button', { name: /^(Teórico|Theoretical)$/ }));
+  // «Estándar» en el resultado: la llenadora pasa a su velocidad estándar.
+  await user.click(screen.getByRole('button', { name: /^(Estándar|Standard)$/ }));
   expect(screen.getAllByText(/^48[.,]000 (botellas|bottles)\/h$/).length).toBeGreaterThan(0);
   expect(screen.getByLabelText(/^(OEE habitual de la línea|Usual OEE of the line)$/)).toHaveValue('75');
 });
@@ -99,8 +99,28 @@ test('Takt: un OEE mayor que 100 avisa sin quitar la casilla, y se puede corregi
   await user.clear(oee);
   await user.type(oee, '75');
   expect(screen.queryByText(/(tiene que estar entre 0 y 100|must be between 0 and 100)/)).toBeNull();
-  // Ritmo objetivo con el 75 %: 40.000 ÷ 0,75.
-  expect(screen.getByRole('button', { name: /^(Ritmo objetivo con tu OEE|Target pace with your OEE)\s*53[.,]333/ })).toBeInTheDocument();
+  // Capacidad instalada requerida con el 75 %: 40.000 ÷ 0,75.
+  expect(screen.getByRole('button', { name: /^(Capacidad instalada requerida \(afectada por el OEE\)|Installed capacity required \(with your OEE\))\s*53[.,]333/ })).toBeInTheDocument();
+});
+
+test('Takt: cambiar la unidad de las estaciones convierte sus valores y el resultado no se mueve', async () => {
+  const user = userEvent.setup();
+  window.location.hash = '#/herramientas/takt';
+  render(<App />);
+  await user.click(await screen.findByRole('button', { name: /Cargar ejemplo|Load example/ }));
+  await user.click(await screen.findByRole('button', { name: /^(Embotelladora|Bottling plant)/ }));
+  const capacity = /^(Capacidad en el periodo|Capacity in the period)\s*1[.,]001[.,]250/;
+  expect(await screen.findByRole('button', { name: capacity })).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: /^(Unidades y balanceo|Units and line balancing)/ }));
+  // De botellas/h a min/botella: 48.000 botellas/h son 0,00125 min/botella, no 48.000 min/botella.
+  await user.selectOptions(screen.getByRole('combobox', { name: /^(Unidad de las estaciones|Unit of the stations)$/ }), 'time-min');
+  expect(screen.getByRole('button', { name: capacity })).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: /^(Estaciones|Stations)\s*4/ }));
+  await user.click(screen.getByRole('button', { name: /^(Llenadora|Filler)/ }));
+  expect(screen.getByRole('textbox', { name: /^(Velocidad estándar \(opcional\)|Standard speed \(optional\)): (Llenadora|Filler)$/ })).toHaveProperty('value', expect.stringMatching(/^0[.,]00125$/));
+  // La encajonadora sigue contando cajas: 42 cajas/min pasan a 1/42 min/caja.
+  await user.click(screen.getByRole('button', { name: /^(Encajonadora|Case packer)/ }));
+  expect(screen.getByRole('textbox', { name: /^(Velocidad estándar \(opcional\)|Standard speed \(optional\)): (Encajonadora|Case packer)$/ })).toHaveProperty('value', expect.stringMatching(/^0[.,]0238095$/));
 });
 
 test('DPMO: «Exportar» abre el panel con la hoja de Google y Excel como próximamente', async () => {
@@ -294,8 +314,24 @@ test('OEE: la embotelladora enseña el oficial, la otra vista con su nombre y el
   expect(screen.getByRole('button', { name: /^(OEE sin cambios de formato|OEE without changeovers)\s*77[,.]33\s%/ })).toBeInTheDocument();
   // El oficial no cambia.
   expect(screen.getByText(/^70[,.]74\s%$/)).toBeInTheDocument();
-  // Pareto: el acumulado de la primera fila es su parte.
-  expect(screen.getByText(/^42[,.]1\s% · (acumulado|cumulative) 42[,.]1\s%/)).toBeInTheDocument();
+  // Pareto: cada fila dice qué parte de las paradas es, sin acumulado.
+  expect(screen.getByText(/^42[,.]1\s% (de las paradas|of the stops)$/)).toBeInTheDocument();
   // Las paradas, plegadas, dicen cuántas son y cuántos minutos suman.
   expect(screen.getByRole('button', { name: /^(Paradas no planificadas|Unplanned stops)\s*4 (paradas|stops) · 95 min/ })).toBeInTheDocument();
+});
+
+test('OEE: cambiar la unidad de la velocidad estándar convierte el número y el OEE no cambia', async () => {
+  const user = userEvent.setup();
+  window.location.hash = '#/herramientas/oee';
+  render(<App />);
+  await user.click(await screen.findByRole('button', { name: /Cargar ejemplo|Load example/ }));
+  await user.click(await screen.findByRole('button', { name: /^(Caso publicado de Vorne|Vorne published case)/ }));
+  expect(await screen.findByText(/^74[,.]79\s%$/)).toBeInTheDocument();
+  // Calidad con dos decimales, como los otros dos factores.
+  expect(screen.getByText(/^97[,.]80\s%$/)).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: /^(Producción|Production)/ }));
+  // 1 s/pieza son 60 piezas/min.
+  await user.selectOptions(screen.getByRole('combobox', { name: /^(Unidad de la velocidad estándar|Unit of the standard speed)$/ }), 'rate-min');
+  expect(screen.getByRole('textbox', { name: /^(Velocidad estándar|Standard speed)$/ })).toHaveValue('60');
+  expect(screen.getByText(/^74[,.]79\s%$/)).toBeInTheDocument();
 });
