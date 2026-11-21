@@ -192,25 +192,7 @@ export function biggestLoss(r: OeeResult): OeeLoss {
   return (['downtime', 'speed', 'quality'] as const).reduce((a, b) => (m[b] > m[a] ? b : a));
 }
 
-export interface ParetoRow<K> {
-  key: K;
-  minutes: number;
-  /** Parte del total (0 a 1). */
-  share: number;
-  /** Acumulado hasta esta fila, incluida (0 a 1). */
-  cumulative: number;
-}
-
-/** Pareto: de mayor a menor (a igualdad, en el orden dado), sin los ceros, con su parte y su acumulado. */
-export function pareto<K>(items: { key: K; minutes: number }[]): ParetoRow<K>[] {
-  const list = items.filter((x) => x.minutes > 0).sort((a, b) => b.minutes - a.minutes);
-  const total = list.reduce((a, x) => a + x.minutes, 0);
-  let acc = 0;
-  return list.map((x) => {
-    acc += x.minutes;
-    return { key: x.key, minutes: x.minutes, share: x.minutes / total, cumulative: acc / total };
-  });
-}
+export { pareto, type ParetoRow } from './pareto';
 
 /** Referencia de Nakajima: 90 % × 95 % × 99 % ≈ 85 %. */
 export const WORLD_CLASS = { availability: 0.9, performance: 0.95, quality: 0.99 } as const;

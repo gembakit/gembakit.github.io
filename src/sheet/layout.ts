@@ -113,7 +113,11 @@ export function layoutSheet(def: SheetDef): Grid {
     const first = rows.length + 1;
     const last = first + table.rows.length - 1;
     setAddress('label[]', `B${first}:B${last}`);
-    table.columns.forEach((c, i) => setAddress(`${c.key}[]`, `${TABLE_COLUMNS[i]}${first}:${TABLE_COLUMNS[i]}${last}`));
+    table.columns.forEach((c, i) => {
+      setAddress(`${c.key}[]`, `${TABLE_COLUMNS[i]}${first}:${TABLE_COLUMNS[i]}${last}`);
+      // La primera celda de la columna, para acumulados: SUM({valor[1]}:{.valor}).
+      setAddress(`${c.key}[1]`, `${TABLE_COLUMNS[i]}${first}`);
+    });
     if (table.highlightMin) highlightMin = address[`${table.highlightMin}[]`];
     if (table.highlightMax) highlightMax = address[`${table.highlightMax}[]`];
     table.rows.forEach((tr, n) => {
@@ -164,7 +168,7 @@ export function layoutSheet(def: SheetDef): Grid {
   // Las fórmulas se resuelven al final: un resultado puede citar a otro, y el
   // resumen cita resultados que van más abajo.
   for (const { cell, formula, row } of pending) {
-    cell.formula = formula.replace(/\{(\.?)(\w+(?:\[\])?)\}/g, (_, dot: string, k: string) => {
+    cell.formula = formula.replace(/\{(\.?)(\w+(?:\[1?\])?)\}/g, (_, dot: string, k: string) => {
       const a = dot ? row?.[k] : address[k];
       if (!a) throw new SheetDefError(`Referencia desconocida en la fórmula: {${dot}${k}}`);
       return a;

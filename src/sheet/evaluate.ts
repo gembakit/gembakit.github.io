@@ -1,4 +1,5 @@
-import { normalInv } from '../calc/stats';
+import { normalCdf, normalInv } from '../calc/stats';
+import { kurtosis, medianSorted, quantileExc, sampleSd, skewness } from '../calc/descriptive';
 import { COLUMNS, type Grid } from './layout';
 
 // Evaluador mínimo de fórmulas de hoja de cálculo. Lo usan las pruebas que
@@ -182,6 +183,46 @@ const FUNCTIONS: Record<string, (args: Lazy[]) => Value> = {
     const i = num(n!() as Value);
     if (!(Number.isInteger(i) && i >= 1 && i <= cells.length)) throw new FormulaError('#REF!');
     return cells[i - 1]!;
+  },
+  AVERAGE: (args) => {
+    const n = numbers(args);
+    if (!n.length) throw new FormulaError('#DIV/0!');
+    return n.reduce((a, b) => a + b, 0) / n.length;
+  },
+  'STDEV.S': (args) => {
+    const n = numbers(args);
+    if (n.length < 2) throw new FormulaError('#DIV/0!');
+    return sampleSd(n);
+  },
+  MEDIAN: (args) => {
+    const n = numbers(args).sort((a, b) => a - b);
+    if (!n.length) throw new FormulaError('#NUM!');
+    return medianSorted(n);
+  },
+  'QUARTILE.EXC': ([range, q]) => {
+    const n = numbers([range!]).sort((a, b) => a - b);
+    const v = quantileExc(n, num(q!()) / 4);
+    if (v === null) throw new FormulaError('#NUM!');
+    return v;
+  },
+  SKEW: (args) => {
+    const v = skewness(numbers(args));
+    if (v === null) throw new FormulaError('#DIV/0!');
+    return v;
+  },
+  KURT: (args) => {
+    const v = kurtosis(numbers(args));
+    if (v === null) throw new FormulaError('#DIV/0!');
+    return v;
+  },
+  SQRT: ([x]) => {
+    const v = num(x!());
+    if (v < 0) throw new FormulaError('#NUM!');
+    return Math.sqrt(v);
+  },
+  'NORM.S.DIST': ([x, c]) => {
+    if (!c || num(c()) === 0) throw new FormulaError('#N/A solo se admite la acumulada');
+    return normalCdf(num(x!()));
   },
   'NORM.S.INV': ([x]) => {
     const p = num(x!());

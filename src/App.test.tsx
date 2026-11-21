@@ -388,3 +388,37 @@ test('OEE: cambiar la unidad de la velocidad estándar convierte el número y el
   expect(screen.getByRole('textbox', { name: /^(Velocidad estándar|Standard speed)$/ })).toHaveValue('60');
   expect(screen.getByText(/^74[,.]79\s%$/)).toBeInTheDocument();
 });
+
+test('Estadística descriptiva: el ejemplo de NIST da la media y la desviación certificadas, con histograma', async () => {
+  const user = userEvent.setup();
+  window.location.hash = '#/herramientas/descriptiva';
+  render(<App />);
+  await user.click(await screen.findByRole('button', { name: /Cargar ejemplo|Load example/ }));
+  await user.click(await screen.findByRole('button', { name: /^(Velocidad de la luz|Speed of light)/ }));
+  // Media certificada 299,8524; desviación 0,0790105… → 299,8524 y 0,079 con dos decimales más que los datos.
+  expect(await screen.findByRole('button', { name: /^(Media|Mean)\s*299[,.]8524/ })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /^(Desviación estándar|Standard deviation)\s*0[,.]079/ })).toBeInTheDocument();
+  expect(screen.getByRole('img', { name: /^(Histograma|Histogram)/ })).toBeInTheDocument();
+  expect(screen.getByText(/^100 (valores|values)$/)).toBeInTheDocument();
+});
+
+test('Pareto: el ejemplo de pintura ordena de mayor a menor y marca los pocos vitales', async () => {
+  const user = userEvent.setup();
+  window.location.hash = '#/herramientas/pareto';
+  render(<App />);
+  await user.click(await screen.findByRole('button', { name: /Cargar ejemplo|Load example/ }));
+  await user.click(await screen.findByRole('button', { name: /^(Defectos de pintura|Paint defects)/ }));
+  expect(await screen.findByText(/^4 (de|of) 7$/)).toBeInTheDocument();
+  expect(screen.getAllByRole('button', { name: /^(Acumulado|Cumulative)\s*85[,.]3\s%/ }).length).toBeGreaterThan(0);
+  expect(screen.getByRole('img', { name: /^Pareto/ })).toBeInTheDocument();
+});
+
+test('Gráfico de corrida: el ejemplo SMED da tres señales', async () => {
+  const user = userEvent.setup();
+  window.location.hash = '#/herramientas/corrida';
+  render(<App />);
+  await user.click(await screen.findByRole('button', { name: /Cargar ejemplo|Load example/ }));
+  await user.click(await screen.findByRole('button', { name: /^(Tiempo de cambio con una mejora|Changeover time with an improvement)/ }));
+  expect(await screen.findAllByText(/^(Desplazamiento hacia abajo|Downward shift): 12/)).not.toHaveLength(0);
+  expect(screen.getByRole('img', { name: /^(Gráfico de corrida|Run chart)/ })).toBeInTheDocument();
+});

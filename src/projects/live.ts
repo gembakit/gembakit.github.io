@@ -65,7 +65,7 @@ export function headlineLabel(h: Headline, t: Messages): string {
     case 'roi':
       return 'ROI';
     default:
-      return h.key;
+      return t.headlines[h.key] ?? h.key;
   }
 }
 

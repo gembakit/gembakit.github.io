@@ -456,6 +456,56 @@ const APP_TERMS: readonly GlossaryEntry[] = [
     },
   },
 
+  // Estadística descriptiva y gráficos (fase 2)
+  {
+    id: 'mediana',
+    category: 'estadistica',
+    es: { term: 'Mediana', name: 'El dato del medio', def: 'Con los datos ordenados, el que queda en el centro: la mitad está por debajo y la otra mitad por encima (con un número par de datos, la media de los dos centrales). A diferencia de la media, los datos extremos no la mueven.' },
+    en: { term: 'Median', name: 'The middle value', def: 'With the data sorted, the one in the centre: half are below and half above (with an even number of values, the mean of the two central ones). Unlike the mean, extreme values do not move it.' },
+  },
+  {
+    id: 'cuartiles',
+    category: 'estadistica',
+    es: { term: 'Cuartiles', name: 'Q1 y Q3', def: 'Q1 deja por debajo la cuarta parte de los datos y Q3, las tres cuartas partes; entre los dos está la mitad central. La app los calcula como Minitab (posición (n + 1) × 0,25 interpolando), igual que QUARTILE.EXC en Excel y Sheets.' },
+    en: { term: 'Quartiles', name: 'Q1 and Q3', def: 'Q1 leaves a quarter of the data below it and Q3, three quarters; the middle half lies between them. The app computes them as Minitab does (position (n + 1) × 0.25, interpolating), the same as QUARTILE.EXC in Excel and Sheets.' },
+  },
+  {
+    id: 'asimetria',
+    category: 'estadistica',
+    es: { term: 'Asimetría', name: 'Sesgo de la distribución', def: 'Cuánto se inclina la distribución hacia un lado. Cerca de 0, simétrica; positiva, con la cola larga hacia los valores altos; negativa, hacia los bajos. Se calcula como SKEW en Excel.' },
+    en: { term: 'Skewness', name: 'Lean of the distribution', def: 'How much the distribution leans to one side. Near 0, symmetric; positive, with the long tail towards high values; negative, towards low ones. Computed like SKEW in Excel.' },
+  },
+  {
+    id: 'curtosis',
+    category: 'estadistica',
+    es: { term: 'Curtosis', name: 'Peso de las colas', def: 'Compara las colas y el pico de la distribución con los de una normal (que da 0). Positiva: más datos en las colas y un pico más agudo; negativa: más plana. Se calcula como KURT en Excel.' },
+    en: { term: 'Kurtosis', name: 'Weight of the tails', def: 'Compares the tails and peak of the distribution with those of a normal one (which gives 0). Positive: more data in the tails and a sharper peak; negative: flatter. Computed like KURT in Excel.' },
+  },
+  {
+    id: 'histograma',
+    category: 'estadistica',
+    es: { term: 'Histograma', name: 'Forma de los datos', def: 'Barras con cuántos datos caen en cada tramo. Enseña el centro, la dispersión y la forma: una campana, una cola larga, dos jorobas (dos fuentes mezcladas) o un corte brusco (datos filtrados).' },
+    en: { term: 'Histogram', name: 'Shape of the data', def: 'Bars with how many values fall in each interval. It shows the centre, the spread and the shape: a bell, a long tail, two humps (two mixed sources) or a sharp cut (filtered data).' },
+  },
+  {
+    id: 'grafico-corrida',
+    category: 'estadistica',
+    es: { term: 'Gráfico de corrida', name: 'Run chart', def: 'Los datos en el orden en que pasaron, con la línea de la mediana. Sus reglas (desplazamiento, tendencia y número de corridas) separan un cambio real del azar sin necesidad de límites de control.' },
+    en: { term: 'Run chart', name: 'Run chart', def: 'The data in the order they happened, with the median line. Its rules (shift, trend and number of runs) tell a real change apart from chance without needing control limits.' },
+  },
+  {
+    id: 'corrida',
+    category: 'estadistica',
+    es: { term: 'Corrida', name: 'Racha del mismo lado', def: 'Uno o más puntos seguidos del mismo lado de la mediana (los que caen en ella no cuentan). Demasiadas o muy pocas corridas indican que el orden no es al azar.' },
+    en: { term: 'Run', name: 'Streak on the same side', def: 'One or more consecutive points on the same side of the median (points on it do not count). Too many or too few runs mean the order is not random.' },
+  },
+  {
+    id: 'tendencia',
+    category: 'estadistica',
+    es: { term: 'Tendencia', name: 'Puntos seguidos subiendo o bajando', def: 'En un gráfico de corrida, 5 o más puntos seguidos subiendo, o bajando (los repetidos cuentan como uno). Es una señal de cambio, no azar.' },
+    en: { term: 'Trend', name: 'Points rising or falling in a row', def: 'In a run chart, 5 or more points in a row rising, or falling (repeated values count as one). It is a sign of change, not chance.' },
+  },
+
   // Finanzas
   {
     id: 'roi',

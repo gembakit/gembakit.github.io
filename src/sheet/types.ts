@@ -24,7 +24,7 @@ export interface SheetResult extends SheetRowBase {
    * Fórmula en sintaxis inglesa de hoja de cálculo (comas, punto decimal,
    * nombres de función en inglés), sin el «=» inicial. Las referencias a
    * otras filas van entre llaves: {units}, {dpo}. Una columna entera de la
-   * tabla, como rango: {fpy[]}; la columna de nombres de la tabla: {label[]}.
+   * tabla, como rango: {fpy[]}; su primera celda: {fpy[1]}; la columna de nombres de la tabla: {label[]}.
    */
   formula: string;
   /** Resultado principal: se destaca en la tabla y encabeza el resumen. */

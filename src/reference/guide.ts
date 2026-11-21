@@ -207,7 +207,7 @@ export const GUIDE: readonly GuideTopic[] = [
     es: {
       title: 'Cómo es cada herramienta',
       body: [
-        'Ahora hay seis calculadoras, en Herramientas: DPMO y nivel sigma, FPY y RTY, takt y cuello de botella, OEE, kanban, y ahorro con ROI y payback. Las demás herramientas del catálogo llegan en las fases siguientes.',
+        'Las herramientas están en Herramientas, ordenadas por para qué sirven: encontrar el problema (Pareto, gráfico de corrida, estadística descriptiva con histograma), medir (DPMO y nivel sigma, FPY y RTY, takt, OEE, capacidad), vigilar (cartas de control), buscar la causa, actuar y cálculos rápidos (kanban, ahorro con ROI y payback). El buscador de arriba encuentra cualquiera por su nombre.',
         'Todas tienen los mismos cuatro bloques, siempre en este orden: Datos (lo que metes), Resultado (el número o gráfico principal), Cómo leerlo (la conclusión en una frase, los avisos y el error típico) y Acciones (guardar, exportar y ver la fórmula).',
         'Si no sabes por dónde empezar, pulsa «Cargar ejemplo»: verás un caso resuelto y publicado, con el resultado que se espera.',
         'Arriba de cada herramienta, «Cómo usarla» se despliega con los pasos para usarla bien.',
@@ -218,7 +218,7 @@ export const GUIDE: readonly GuideTopic[] = [
     en: {
       title: 'How every tool works',
       body: [
-        'There are six calculators now, under Tools: DPMO and sigma level, FPY and RTY, takt and bottleneck, OEE, kanban, and savings with ROI and payback. The other tools in the catalogue arrive in the next phases.',
+        'The tools are under Tools, grouped by what they are for: finding the problem (Pareto, run chart, descriptive statistics with histogram), measuring (DPMO and sigma level, FPY and RTY, takt, OEE, capability), monitoring (control charts), finding the cause, acting and quick calculations (kanban, savings with ROI and payback). The search box at the top finds any of them by name.',
         'They all have the same four blocks, always in this order: Data (what you enter), Result (the main number or chart), How to read it (the conclusion in one sentence, the warnings and the typical mistake) and Actions (save, export and see the formula).',
         'If you do not know where to start, tap “Load example”: you will see a solved, published case with the expected result.',
         'At the top of every tool, “How to use it” opens with the steps to use it well.',

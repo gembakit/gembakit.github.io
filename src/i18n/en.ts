@@ -1,6 +1,9 @@
 import type { Messages } from './types';
+import { corridaEn, dataColumnEn, descriptivaEn, paretoEn } from './tools/phase2';
 
 export const en: Messages = {
+  dataColumn: dataColumnEn,
+  headlines: { mean: 'Mean', vital: 'Vital few', median: 'Median', cpk: 'Cpk', ppk: 'Ppk', signals: 'Signals' },
   app: {
     name: 'Gemba Kit',
   },
@@ -231,6 +234,9 @@ export const en: Messages = {
     infoSaved: 'Details saved',
   },
   tools: {
+    descriptiva: descriptivaEn,
+    pareto: paretoEn,
+    corrida: corridaEn,
     title: 'Tools',
     search: 'Search tools',
     noResults: (q) => `No tool matches “${q}”.`,

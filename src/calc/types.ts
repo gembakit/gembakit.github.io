@@ -60,7 +60,25 @@ export type CalcWarning =
   /** ROI: el ahorro neto es cero o negativo; la inversión no se recupera. */
   | { code: 'no-payback' }
   /** ROI: la inversión no se recupera dentro del horizonte. */
-  | { code: 'payback-beyond-horizon' };
+  | { code: 'payback-beyond-horizon' }
+  /** Todos los datos son iguales: no hay variación. */
+  | { code: 'constant' }
+  /** Pocos datos para fiarse del resultado (se recomiendan al menos `min`). */
+  | { code: 'few-data'; min: number }
+  /** La prueba de normalidad la rechaza (valor p < 0,05). */
+  | { code: 'not-normal'; p: number }
+  /** Valores atípicos (fuera de 1,5 veces el rango intercuartílico). */
+  | { code: 'outliers'; count: number }
+  /** Pareto: menos de tres categorías con valor. */
+  | { code: 'few-categories' }
+  /** Pareto: más de doce categorías; conviene juntar las pequeñas en «Otros». */
+  | { code: 'many-categories' }
+  /** Pareto: hacen falta casi todas para llegar al 80 % (no hay pocos vitales). */
+  | { code: 'flat-pareto' }
+  /** Gráfico de corrida: menos corridas de lo esperable por azar. */
+  | { code: 'few-runs'; p: number }
+  /** Gráfico de corrida: más corridas de lo esperable por azar. */
+  | { code: 'many-runs'; p: number };
 
 export interface CalcOutput<T> {
   result: T | null;

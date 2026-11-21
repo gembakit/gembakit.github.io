@@ -1,6 +1,11 @@
 // Textos en español. Es el idioma de referencia: en.ts debe tener exactamente
 // las mismas claves (TypeScript y una prueba lo comprueban).
+import { corridaEs, dataColumnEs, descriptivaEs, paretoEs } from './tools/phase2';
+
 export const es = {
+  dataColumn: dataColumnEs,
+  /** Nombre del resultado principal guardado de las herramientas nuevas. */
+  headlines: { mean: 'Media', vital: 'Pocos vitales', median: 'Mediana', cpk: 'Cpk', ppk: 'Ppk', signals: 'Señales' } as Record<string, string>,
   app: {
     name: 'Gemba Kit',
   },
@@ -231,6 +236,9 @@ export const es = {
     infoSaved: 'Información guardada',
   },
   tools: {
+    descriptiva: descriptivaEs,
+    pareto: paretoEs,
+    corrida: corridaEs,
     title: 'Herramientas',
     search: 'Buscar herramienta',
     noResults: (q: string) => `Ninguna herramienta coincide con «${q}».`,

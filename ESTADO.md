@@ -293,8 +293,12 @@ Orden de trabajo y estado:
    la receta con su estándar y Pareto por máquina («Toda la línea» para
    velocidad y calidad). Formato OEE v3 con `machine`, `recipe`, `machines`,
    `changeovers` opcionales.
-3. [ ] Motor de gráficos común (SVG, tocables).
-4. [ ] Fase 2: descriptiva con histograma, Pareto, gráfico de corrida.
+3. [x] Motor de gráficos común (`src/ui/charts.tsx`: serie con límites,
+   histograma, Pareto en un solo eje; tocables).
+4. [x] Fase 2: descriptiva con histograma, Pareto, gráfico de corrida
+   (fichas en `docs/fichas/fase-2.md`; textos de herramientas nuevas en
+   `src/i18n/tools/`, español e inglés juntos; columna de datos común en
+   `src/tools/DataColumn.tsx`).
 5. [ ] Fase 3: capacidad (Cp, Cpk, Pp, Ppk), cartas I-MR y X-barra R.
 6. [ ] Fase 5: 5 porqués, espina de pescado, acciones, A3, Kaizen, plan de
    control.
@@ -304,7 +308,10 @@ Orden de trabajo y estado:
    PDF, contexto para IA).
 9. [ ] Formato de ordenador; Referencia con fórmulas y árboles de decisión.
 
-Preguntas de producto para el final: (ninguna todavía).
+Preguntas de producto para el final:
+- Anderson-Darling: no encontré un caso publicado con el valor p ya
+  calculado (NIST da A² y el valor crítico; Minitab, la tabla del valor p).
+  Si el dueño tiene Minitab a mano en algún momento, comparar un caso.
 
 ### Recetas, paso 1 de 2 (2026-11-21, hecho)
 
