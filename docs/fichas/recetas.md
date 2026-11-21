@@ -1,8 +1,19 @@
 # Ficha: líneas y recetas
 
-**Borrador para aprobar (2026-11-21).** El dueño ya aprobó el 2026-11-21
-que vivan en **Referencia**, se carguen desde cada proyecto y se ordenen
-así: **Planta o compañía → Línea de producción → Receta**.
+**Aprobada por el dueño el 2026-11-21** (pendiente de construir, después de
+la torta del OEE). Decisiones del dueño:
+
+- Viven en **Referencia**, se cargan desde cada proyecto y se ordenan así:
+  **Planta o compañía → Línea de producción → Receta**.
+- **La línea es solo un título** para distinguirla de las otras. Toda la
+  información va en la receta, que es el «archivo» que se abre: qué produce
+  (12 oz, 20 oz…), sus estaciones y los estándares de sus cambios. Una línea
+  produce una u otra según la programación.
+- **Varias recetas por línea**, tantas como haga falta.
+- A. Velocidad estándar de la línea para el OEE: la de la estación más lenta
+  de la receta (en su planta coincidía con la llenadora porque era la más
+  lenta), y si se cambia a mano, se queda la escrita.
+- B. Primero la torta del OEE, después las recetas.
 
 ## Para qué sirve
 
@@ -17,8 +28,8 @@ cargan de un toque.
 | Nivel | Datos | Ejemplo |
 |---|---|---|
 | Planta o compañía | nombre | Planta Norte |
-| Línea | nombre; qué produce (unidad); tiempos estándar de sus cambios | Línea 3; botellas; cambio de sabor 30 min, cambio de tamaño 2 h |
-| Receta | nombre; sus estaciones (nombre, qué cuenta y su equivalencia, unidad, velocidad estándar); velocidad estándar de la línea para el OEE | 12 oz; Llenadora 48.000 botellas/h, Encajonadora 42 cajas/min (1 caja = 24 botellas)… |
+| Línea | solo su nombre | Línea 3 |
+| Receta | nombre; qué produce (unidad); sus estaciones (nombre, qué cuenta y su equivalencia, unidad, velocidad estándar); velocidad estándar de la línea para el OEE (la más lenta, o la escrita); tiempos estándar de sus cambios | 12 oz Coca-Cola; botellas; Llenadora 48.000 botellas/h, Encajonadora 42 cajas/min (1 caja = 24 botellas)…; cambio de sabor 30 min |
 
 ## 2. Dónde se ven
 
@@ -34,7 +45,7 @@ de la 12 oz) y borrar con «Deshacer».
   - Takt: carga las estaciones con sus unidades, equivalencias y
     velocidades estándar. Las medidas reales las tomas tú.
   - OEE: carga la velocidad estándar de la línea y lo que produce. Al
-    añadir una parada se ofrecen los cambios de la línea con su estándar
+    añadir una parada se ofrecen los cambios de la receta con su estándar
     («Cambio de sabor · estándar 30 min»).
 - En el takt, **«Guardar como receta»** guarda las estaciones que tienes
   escritas en una receta nueva o encima de una existente.
@@ -45,13 +56,3 @@ de la 12 oz) y borrar con «Deshacer».
 
 Las recetas entran en la copia de seguridad y, con la cuenta de Google
 conectada, se sincronizan entre tus aparatos como los proyectos.
-
-## Preguntas al dueño
-
-- **A. Velocidad estándar de la línea para el OEE.** Propuesta: por defecto,
-  la de la estación más lenta de la receta (el cuello de botella),
-  pasada a lo que produce la línea, y se puede cambiar a mano. ¿O en tu
-  planta se usaba siempre la de la llenadora?
-- **B. Orden.** Propuesta: primero la torta del OEE (`oee-v3.md`) y después
-  las recetas, porque las recetas guardan los estándares de los cambios que
-  usa la torta.

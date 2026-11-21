@@ -1,10 +1,10 @@
 import type { Messages } from '../../i18n';
-import { biggestLoss, furthestFactor, oee, oeeView, pareto, WORLD_CLASS, type OeeResult } from '../../calc/oee';
+import { biggestLoss, furthestFactor, oee, pareto, utilization, WORLD_CLASS, type OeeResult } from '../../calc/oee';
 import type { CalcWarning } from '../../calc/types';
 import type { ReadingLine, SheetDef } from '../../sheet/types';
 import { formatNumber } from '../../ui/number';
 import { oeeFormat, oeeLook } from './explain';
-import { categoryName, plannedName, readOeeSaved, stopName, toOeeInput, viewLabel, type OeeSaved } from './model';
+import { categoryName, isOfficial, plannedName, readOeeSaved, stopName, toOeeInput, utilizationLabel, type OeeSaved } from './model';
 import { oeeSheet } from './sheet';
 
 // «Cómo leerlo» del OEE sin pantalla: la usan la herramienta y la hoja del
@@ -55,8 +55,8 @@ export function oeeConclusion(r: OeeResult, s: OeeSaved, t: Messages, lang: 'es'
     const withStd = s.stops.reduce((a, x) => a + (x.standard !== null ? x.minutes : 0), 0);
     parts.push(d.excessSentence(one(withStd), one(r.standard), one(r.excess)));
   }
-  const label = viewLabel(s, r.standardByCategory, t);
-  if (label) parts.push(d.viewSentence(label, f.pct(oeeView(r, s.views).oee), f.pct(r.oee)));
+  // La utilización de la torta, salvo cuando coincide con el OEE oficial.
+  if (!isOfficial(s, r)) parts.push(d.utilizationSentence(utilizationLabel(s, r, t), f.pct(utilization(r, s.off).value)));
   const k = furthestFactor(r);
   parts.push(d.furthestSentence(d.factorNames[k]!, f.share(r[k]), `${formatNumber(WORLD_CLASS[k] * 100, lang, 0)}\u00a0%`));
   return parts.join(' ');

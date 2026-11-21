@@ -1,18 +1,19 @@
 import type { Messages } from '../../i18n';
 import { SECONDS, toCycle, type Measure, type TimeUnit } from '../../calc/takt';
-import type { OeeInput, OeeViewDef } from '../../calc/oee';
+import type { OeeInput, OeeResult } from '../../calc/oee';
 
-// Lo que se guarda de una medición de OEE (versión 2, docs/fichas/oee-v2.md)
-// y cómo se leen las de la versión 1 sin perder nada.
+// Lo que se guarda de una medición de OEE (versión 3, docs/fichas/oee-v3.md)
+// y cómo se leen las de las versiones 1 y 2 sin perder nada.
 
 export interface OeeSaved {
-  v: 2;
+  v: 3;
   shift: number;
   shiftUnit: TimeUnit;
-  planned: { name: string; value: number; unit: TimeUnit }[];
+  /** Paradas planificadas, con su motivo o comentario. */
+  planned: { name: string; value: number; unit: TimeUnit; note: string }[];
   categories: string[];
-  /** Paradas no planificadas: minutos, posición de su categoría y estándar (min) opcional. */
-  stops: { name: string; minutes: number; category: number; standard: number | null }[];
+  /** Paradas no planificadas: minutos, posición de su categoría, estándar (min) opcional y motivo o comentario. */
+  stops: { name: string; minutes: number; category: number; standard: number | null; note: string }[];
   measure: Measure;
   measureUnit: TimeUnit;
   /** Ciclo ideal (en la unidad elegida) o velocidad ideal (unidades por esa unidad). */
@@ -20,8 +21,8 @@ export interface OeeSaved {
   total: number;
   rejects: number;
   unitName: string;
-  /** Lo marcado en «Otras vistas». */
-  views: OeeViewDef;
+  /** Porciones desmarcadas en la torta del turno («p0», «c1», «s1», «speed», «quality»). */
+  off: string[];
   pareto: { by: 'category' | 'stop'; losses: boolean };
 }
 
@@ -34,7 +35,7 @@ export function readOeeSaved(x: unknown, t: Messages): OeeSaved | null {
   const s = obj(x);
   if (!s) return null;
   const d = t.tools.oee;
-  if (s.v === 2) {
+  if (s.v === 2 || s.v === 3) {
     const planned = Array.isArray(s.planned) ? s.planned.map(obj) : null;
     const stops = Array.isArray(s.stops) ? s.stops.map(obj) : null;
     const categories = Array.isArray(s.categories) && s.categories.every((c) => typeof c === 'string') ? (s.categories as string[]) : null;
@@ -42,25 +43,36 @@ export function readOeeSaved(x: unknown, t: Messages): OeeSaved | null {
     if (!(s.measure === 'time' || s.measure === 'rate') || !isUnit(s.measureUnit)) return null;
     if (planned.some((p) => !p || !isNum(p.value) || !isUnit(p.unit))) return null;
     if (stops.some((p) => !p || !isNum(p.minutes) || !isNum(p.category) || !(p.category >= 0 && p.category < categories.length) || !(p.standard === null || isNum(p.standard)))) return null;
-    const views = obj(s.views);
     const pareto = obj(s.pareto);
+    const text = (x: unknown) => (typeof x === 'string' ? x : '');
+    let off: string[] = [];
+    if (s.v === 3) off = Array.isArray(s.off) ? (s.off as unknown[]).filter((k): k is string => typeof k === 'string') : [];
+    else {
+      // Versión 2: «Otras vistas» se medía sobre el tiempo planificado. Lo marcado pasa a
+      // desmarcado en la torta, junto con las paradas planificadas, y sale el mismo número.
+      const views = obj(s.views);
+      const excluded = Array.isArray(views?.excluded) ? (views.excluded as unknown[]).filter((c): c is number => isNum(c) && c >= 0 && c < categories.length) : [];
+      const standard = views?.standard === true;
+      if (excluded.length || standard) {
+        const keys = new Set([...planned.map((_, k) => `p${k}`), ...excluded.flatMap((c) => [`c${c}`, `s${c}`])]);
+        if (standard) categories.forEach((_, c) => keys.add(`s${c}`));
+        off = [...keys];
+      }
+    }
     return {
-      v: 2,
+      v: 3,
       shift: s.shift,
       shiftUnit: s.shiftUnit,
-      planned: planned.map((p) => ({ name: typeof p!.name === 'string' ? p!.name : '', value: p!.value as number, unit: p!.unit as TimeUnit })),
+      planned: planned.map((p) => ({ name: text(p!.name), value: p!.value as number, unit: p!.unit as TimeUnit, note: text(p!.note) })),
       categories,
-      stops: stops.map((p) => ({ name: typeof p!.name === 'string' ? p!.name : '', minutes: p!.minutes as number, category: p!.category as number, standard: p!.standard as number | null })),
+      stops: stops.map((p) => ({ name: text(p!.name), minutes: p!.minutes as number, category: p!.category as number, standard: p!.standard as number | null, note: text(p!.note) })),
       measure: s.measure,
       measureUnit: s.measureUnit,
       ideal: s.ideal,
       total: s.total,
       rejects: s.rejects,
       unitName: typeof s.unitName === 'string' ? s.unitName : '',
-      views: {
-        excluded: Array.isArray(views?.excluded) ? (views.excluded as unknown[]).filter((c): c is number => isNum(c) && c >= 0 && c < categories.length) : [],
-        standard: views?.standard === true,
-      },
+      off,
       pareto: { by: pareto?.by === 'stop' ? 'stop' : 'category', losses: pareto?.losses === true },
     };
   }
@@ -70,19 +82,19 @@ export function readOeeSaved(x: unknown, t: Messages): OeeSaved | null {
   const n = (k: (typeof v1)[number]) => s[k] as number;
   const categories = [...d.defaultCategories];
   return {
-    v: 2,
+    v: 3,
     shift: n('shift'),
     shiftUnit: 'min',
-    planned: n('plannedStops') > 0 ? [{ name: d.plannedStops, value: n('plannedStops'), unit: 'min' }] : [],
+    planned: n('plannedStops') > 0 ? [{ name: d.plannedStops, value: n('plannedStops'), unit: 'min', note: '' }] : [],
     categories,
-    stops: n('unplannedStops') > 0 ? [{ name: d.exampleData.unplanned, minutes: n('unplannedStops'), category: categories.length - 1, standard: null }] : [],
+    stops: n('unplannedStops') > 0 ? [{ name: d.exampleData.unplanned, minutes: n('unplannedStops'), category: categories.length - 1, standard: null, note: '' }] : [],
     measure: 'time',
     measureUnit: 's',
     ideal: n('idealCycle'),
     total: n('total'),
     rejects: n('rejects'),
     unitName: '',
-    views: { excluded: [], standard: false },
+    off: [],
     pareto: { by: 'category', losses: false },
   };
 }
@@ -110,15 +122,62 @@ export function inSentence(name: string): string {
   return name.length > 1 && name[1] === name[1]!.toLowerCase() ? name[0]!.toLowerCase() + name.slice(1) : name;
 }
 
-/** ¿Queda tiempo estándar fuera de las categorías quitadas? (Si no, marcarlo no cambia nada.) */
-export const standardLeft = (s: OeeSaved, standardByCategory: number[]) => standardByCategory.some((m, c) => m > 0 && !s.views.excluded.includes(c));
-
-/** Nombre de la otra vista con lo marcado, o null si no hay nada marcado. */
-export function viewLabel(s: OeeSaved, standardByCategory: number[], t: Messages): string | null {
+/** Nombre de una porción de la torta: «Reunión de arranque», «Cambios de formato · estándar», «Pérdida por velocidad». */
+export function sliceName(s: OeeSaved, key: string, r: OeeResult, t: Messages): string {
   const d = t.tools.oee;
-  const parts = s.views.excluded.map((c) => inSentence(categoryName(s, c, t)));
-  if (s.views.standard && standardLeft(s, standardByCategory)) parts.push(d.viewStandardPart);
-  return parts.length ? d.viewName(parts) : null;
+  const x = r.slices.find((y) => y.key === key);
+  if (!x) return key;
+  switch (x.kind) {
+    case 'useful':
+      return d.losses.useful!;
+    case 'planned':
+      return plannedName(s, x.index, t);
+    case 'standard':
+      return d.slice.standard(categoryName(s, x.index, t));
+    case 'stops':
+      // Si todo lo que queda de la categoría es exceso sobre el estándar, se llama así.
+      return x.excess >= x.minutes - 1e-9 ? d.slice.excess(categoryName(s, x.index, t)) : categoryName(s, x.index, t);
+    case 'speed':
+      return d.losses.speed!;
+    case 'quality':
+      return d.losses.quality!;
+  }
+}
+
+/** Porciones desmarcadas que existen (sin el tiempo útil), en el orden de la torta. */
+export const offSlices = (s: OeeSaved, r: OeeResult) => r.slices.filter((x) => x.kind !== 'useful' && s.off.includes(x.key));
+
+/** ¿Lo desmarcado son justo las paradas planificadas? Entonces es el OEE oficial. */
+export function isOfficial(s: OeeSaved, r: OeeResult): boolean {
+  const off = offSlices(s, r);
+  const planned = r.slices.filter((x) => x.kind === 'planned');
+  return off.length === planned.length && off.every((x) => x.kind === 'planned');
+}
+
+/** Nombre del número de la torta: «Utilización de la línea» o «… sin cambios de formato ni la reunión». */
+export function utilizationLabel(s: OeeSaved, r: OeeResult, t: Messages): string {
+  const d = t.tools.oee;
+  const off = offSlices(s, r);
+  if (!off.length) return d.utilization;
+  const planned = r.slices.filter((x) => x.kind === 'planned');
+  const allPlanned = planned.length > 1 && planned.every((x) => s.off.includes(x.key));
+  // Una categoría desmarcada entera (lo suyo y su estándar) se nombra una sola vez, por su nombre.
+  const has = (key: string) => r.slices.some((x) => x.key === key);
+  const whole = (c: number) => [`c${c}`, `s${c}`].every((k) => !has(k) || s.off.includes(k));
+  const parts: string[] = [];
+  if (allPlanned) parts.push(d.slice.allPlanned);
+  const named = new Set<number>();
+  for (const x of off) {
+    if (x.kind === 'planned') {
+      if (!allPlanned) parts.push(inSentence(plannedName(s, x.index, t)));
+    } else if ((x.kind === 'stops' || x.kind === 'standard') && whole(x.index)) {
+      if (!named.has(x.index)) parts.push(inSentence(categoryName(s, x.index, t)));
+      named.add(x.index);
+    } else if (x.kind === 'speed') parts.push(d.slice.speedPart);
+    else if (x.kind === 'quality') parts.push(d.slice.qualityPart);
+    else parts.push(inSentence(sliceName(s, x.key, r, t)));
+  }
+  return d.utilizationWithout(parts);
 }
 
 // ── Ejemplos ──
@@ -128,42 +187,43 @@ export const VORNE = (t: Messages): OeeSaved => {
   const d = t.tools.oee;
   const categories = [...d.defaultCategories];
   return {
-    v: 2,
+    v: 3,
     shift: 480,
     shiftUnit: 'min',
-    planned: [{ name: d.exampleData.breaks, value: 60, unit: 'min' }],
+    planned: [{ name: d.exampleData.breaks, value: 60, unit: 'min', note: '' }],
     categories,
-    stops: [{ name: d.exampleData.unplanned, minutes: 47, category: categories.length - 1, standard: null }],
+    stops: [{ name: d.exampleData.unplanned, minutes: 47, category: categories.length - 1, standard: null, note: '' }],
     measure: 'time',
     measureUnit: 's',
     ideal: 1,
     total: 19271,
     rejects: 423,
     unitName: '',
-    views: { excluded: [], standard: false },
+    off: [],
     pareto: { by: 'category', losses: false },
   };
 };
 
 /**
  * Embotelladora (ficha oee-v2, cuentas propias): 8 h − 10 min de reunión = 470 min;
- * cuatro paradas (95 min), una con estándar (40 = 30 + 10 de exceso); 48.000 botellas/h
- * de placa, 270.000 producidas, 4.000 rechazadas → OEE 70,74 %; sin el estándar, 75,57 %.
+ * cuatro paradas (95 min), una con estándar (40 = 30 + 10 de exceso, con su motivo);
+ * 48.000 botellas/h estándar, 270.000 producidas, 4.000 rechazadas → OEE 70,74 %;
+ * utilización de la línea con todo, 69,27 % (ficha oee-v3).
  */
 export const BOTTLING = (t: Messages): OeeSaved => {
   const d = t.tools.oee;
   const x = d.exampleData;
   return {
-    v: 2,
+    v: 3,
     shift: 8,
     shiftUnit: 'h',
-    planned: [{ name: x.meeting, value: 10, unit: 'min' }],
+    planned: [{ name: x.meeting, value: 10, unit: 'min', note: '' }],
     categories: [...d.defaultCategories],
     stops: [
-      { name: x.breakdown, minutes: 25, category: 0, standard: null },
-      { name: x.changeover, minutes: 40, category: 1, standard: 30 },
-      { name: x.material, minutes: 12, category: 2, standard: null },
-      { name: x.jams, minutes: 18, category: 3, standard: null },
+      { name: x.breakdown, minutes: 25, category: 0, standard: null, note: '' },
+      { name: x.changeover, minutes: 40, category: 1, standard: 30, note: x.changeoverNote },
+      { name: x.material, minutes: 12, category: 2, standard: null, note: '' },
+      { name: x.jams, minutes: 18, category: 3, standard: null, note: '' },
     ],
     measure: 'rate',
     measureUnit: 'h',
@@ -171,7 +231,7 @@ export const BOTTLING = (t: Messages): OeeSaved => {
     total: 270_000,
     rejects: 4_000,
     unitName: x.bottles,
-    views: { excluded: [], standard: true },
+    off: [],
     pareto: { by: 'category', losses: false },
   };
 };

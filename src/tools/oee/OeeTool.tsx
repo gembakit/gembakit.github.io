@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react';
-import { CircleAlert, Eraser, Factory, Gauge, Plus, Trash2 } from 'lucide-react';
+import { Check as CheckMark, CircleAlert, Eraser, Factory, Gauge, Plus, Trash2 } from 'lucide-react';
 import { useI18n, type Messages } from '../../i18n';
-import { furthestFactor, oee, oeeView, pareto, WORLD_CLASS } from '../../calc/oee';
+import { furthestFactor, oee, pareto, plannedKeys, utilization, WORLD_CLASS, type OeeResult, type OeeSliceKind } from '../../calc/oee';
 import type { Measure, TimeUnit } from '../../calc/takt';
 import { formatNumber, parseDecimal, toFieldText } from '../../ui/number';
 import { useSavedInput } from '../../projects/live';
@@ -14,17 +14,18 @@ import { Sheet } from '../../ui/Sheet';
 import { Dotted, Explained, type Derivation } from '../../ui/Explained';
 import { useToast } from '../../ui/Toast';
 import { APP_VERSION } from '../../version';
-import { Check, convertText, ExampleOption, Fold, Group, Hint, isBad, MeasureBox, NameInput, PaceField, Segmented, Stat, SubTitle, Tag, TimeField, UnitSelect } from '../form';
+import { Check, convertText, ExampleOption, Fold, Group, Hint, isBad, MeasureBox, NameInput, PaceField, Segmented, SubTitle, Tag, TimeField, UnitSelect } from '../form';
 import { oeeExplain, oeeFormat, oeeLook } from './explain';
 import { oeeSheet } from './sheet';
 import { oeeConclusion, oeeReadingLines, oeeWarnings } from './reading';
-import { BOTTLING, categoryName, readOeeSaved, stopName, toOeeInput, viewLabel, VORNE, type OeeSaved } from './model';
+import { BOTTLING, categoryName, isOfficial, readOeeSaved, sliceName, stopName, toOeeInput, utilizationLabel, VORNE, type OeeSaved } from './model';
 
 interface PlanRow {
   id: number;
   name: string;
   value: string;
   unit: TimeUnit;
+  note: string;
 }
 interface StopRow {
   id: number;
@@ -33,6 +34,7 @@ interface StopRow {
   /** id de su categoría. */
   cat: number;
   standard: string;
+  note: string;
 }
 interface CatRow {
   id: number;
@@ -52,9 +54,8 @@ interface State {
   total: string;
   rejects: string;
   unitName: string;
-  /** ids de las categorías marcadas en «Otras vistas». */
-  excluded: number[];
-  standard: boolean;
+  /** Porciones desmarcadas en la torta, por id: «p:3» (parada planificada), «c:5» y «s:5» (categoría y su estándar), «speed», «quality». */
+  off: string[];
   paretoBy: 'category' | 'stop';
   paretoLosses: boolean;
 }
@@ -76,31 +77,48 @@ function emptyState(t: Messages, keep?: Pick<State, 'shiftUnit' | 'measure' | 'm
     total: '',
     rejects: '',
     unitName: '',
-    excluded: [],
-    standard: false,
+    off: [],
     paretoBy: 'category',
     paretoLosses: false,
   };
+}
+
+/** Claves de la torta: de posiciones (lo guardado, «p0», «c1») a ids de la pantalla («p:3», «c:5») y al revés. */
+function offToIds(off: string[], planned: { id: number }[], cats: { id: number }[]): string[] {
+  return off.flatMap((k) => {
+    const m = /^([pcs])(\d+)$/.exec(k);
+    if (!m) return k === 'speed' || k === 'quality' ? [k] : [];
+    const row = (m[1] === 'p' ? planned : cats)[Number(m[2])];
+    return row ? [`${m[1]}:${row.id}`] : [];
+  });
+}
+function offToPositions(off: string[], planned: { id: number }[], cats: { id: number }[]): string[] {
+  return off.flatMap((k) => {
+    const m = /^([pcs]):(\d+)$/.exec(k);
+    if (!m) return k === 'speed' || k === 'quality' ? [k] : [];
+    const i = (m[1] === 'p' ? planned : cats).findIndex((x) => x.id === Number(m[2]));
+    return i >= 0 ? [`${m[1]}${i}`] : [];
+  });
 }
 
 /** De lo guardado (o de un ejemplo) a los campos de la pantalla. */
 function fromSaved(s: OeeSaved, lang: 'es' | 'en'): State {
   const txt = (v: number) => toFieldText(v, lang);
   const cats = s.categories.map((name) => ({ id: nextId(), name }));
+  const planned = s.planned.map((p) => ({ id: nextId(), name: p.name, value: txt(p.value), unit: p.unit, note: p.note }));
   return {
     shift: txt(s.shift),
     shiftUnit: s.shiftUnit,
-    planned: s.planned.map((p) => ({ id: nextId(), name: p.name, value: txt(p.value), unit: p.unit })),
+    planned,
     cats,
-    stops: s.stops.map((x) => ({ id: nextId(), name: x.name, minutes: txt(x.minutes), cat: cats[x.category]!.id, standard: x.standard === null ? '' : txt(x.standard) })),
+    stops: s.stops.map((x) => ({ id: nextId(), name: x.name, minutes: txt(x.minutes), cat: cats[x.category]!.id, standard: x.standard === null ? '' : txt(x.standard), note: x.note })),
     measure: s.measure,
     measureUnit: s.measureUnit,
     ideal: txt(s.ideal),
     total: txt(s.total),
     rejects: txt(s.rejects),
     unitName: s.unitName,
-    excluded: s.views.excluded.map((c) => cats[c]!.id),
-    standard: s.views.standard,
+    off: offToIds(s.off, planned, cats),
     paretoBy: s.pareto.by,
     paretoLosses: s.pareto.losses,
   };
@@ -117,11 +135,15 @@ function toSaved(st: State, t: Messages): { saved: OeeSaved | null; bad: string 
     return v;
   };
   const planned: OeeSaved['planned'] = [];
+  // Las filas que cuentan (con número), para que las claves de la torta apunten a la parada buena.
+  const plannedRows: PlanRow[] = [];
   st.planned.forEach((p, i) => {
     const where = p.name.trim() || d.plannedName(i + 1);
     const v = num(p.value, where);
-    if (v !== null) planned.push({ name: p.name.trim(), value: v, unit: p.unit });
-    else if (p.name.trim() && p.value.trim() === '') bad ??= where;
+    if (v !== null) {
+      planned.push({ name: p.name.trim(), value: v, unit: p.unit, note: p.note.trim() });
+      plannedRows.push(p);
+    } else if (p.name.trim() && p.value.trim() === '') bad ??= where;
   });
   const catIndex = new Map(st.cats.map((c, i) => [c.id, i]));
   const stops: OeeSaved['stops'] = [];
@@ -129,7 +151,7 @@ function toSaved(st: State, t: Messages): { saved: OeeSaved | null; bad: string 
     const where = x.name.trim() || d.stopName(i + 1);
     const minutes = num(x.minutes, where);
     const standard = num(x.standard, where);
-    if (minutes !== null) stops.push({ name: x.name.trim(), minutes, category: catIndex.get(x.cat) ?? st.cats.length - 1, standard });
+    if (minutes !== null) stops.push({ name: x.name.trim(), minutes, category: catIndex.get(x.cat) ?? st.cats.length - 1, standard, note: x.note.trim() });
     else if (x.name.trim() || x.standard.trim()) bad ??= where;
   });
   const shift = num(st.shift, d.shift);
@@ -139,7 +161,7 @@ function toSaved(st: State, t: Messages): { saved: OeeSaved | null; bad: string 
   if (bad || shift === null || ideal === null || total === null) return { saved: null, bad };
   return {
     saved: {
-      v: 2,
+      v: 3,
       shift,
       shiftUnit: st.shiftUnit,
       planned,
@@ -151,20 +173,82 @@ function toSaved(st: State, t: Messages): { saved: OeeSaved | null; bad: string 
       total,
       rejects,
       unitName: st.unitName.trim(),
-      views: { excluded: st.excluded.flatMap((id) => (catIndex.has(id) ? [catIndex.get(id)!] : [])).sort((a, b) => a - b), standard: st.standard },
+      off: offToPositions(st.off, plannedRows, st.cats),
       pareto: { by: st.paretoBy, losses: st.paretoLosses },
     },
     bad: null,
   };
 }
 
-// Colores de gráfico, comunes a todos los temas y bien distintos entre sí (también con daltonismo).
-const SEGMENTS = [
-  { key: 'useful', color: 'bg-series-1' },
-  { key: 'downtime', color: 'bg-series-2' },
-  { key: 'speed', color: 'bg-series-3' },
-  { key: 'quality', color: 'bg-series-4' },
-] as const;
+// Colores de la torta por familia, comunes a todos los temas y bien distintos entre sí
+// (también con daltonismo). Cada porción lleva además su nombre en la lista.
+const FAMILY: Record<OeeSliceKind, string> = {
+  useful: 'var(--series-1)',
+  planned: 'var(--series-7)',
+  stops: 'var(--series-2)',
+  standard: 'var(--series-5)',
+  speed: 'var(--series-3)',
+  quality: 'var(--series-4)',
+};
+
+/** Clave de la torta con ids de pantalla («c1» → «c:5»). */
+function screenKey(key: string, st: State): string {
+  return offToIds([key], st.planned.filter((p) => parseDecimal(p.value) !== null), st.cats)[0] ?? key;
+}
+
+/** Torta con hueco: una porción por clave, las desmarcadas en gris rayado. */
+function Donut({ slices, children }: { slices: { key: string; minutes: number; color: string; off: boolean }[]; children: ReactNode }) {
+  const hatch = useId();
+  const total = slices.reduce((a, x) => a + x.minutes, 0);
+  const R = 96;
+  const r = 62;
+  const point = (rad: number, a: number) => `${(100 + rad * Math.sin(a)).toFixed(3)} ${(100 - rad * Math.cos(a)).toFixed(3)}`;
+  let acc = 0;
+  const paths = slices.map((x) => {
+    const a0 = (acc / total) * 2 * Math.PI;
+    acc += x.minutes;
+    // Una porción que es toda la torta se parte en dos para que el arco se pueda dibujar.
+    const a1 = Math.min((acc / total) * 2 * Math.PI, a0 + 2 * Math.PI - 1e-4);
+    const large = a1 - a0 > Math.PI ? 1 : 0;
+    const d = `M ${point(R, a0)} A ${R} ${R} 0 ${large} 1 ${point(R, a1)} L ${point(r, a1)} A ${r} ${r} 0 ${large} 0 ${point(r, a0)} Z`;
+    return { ...x, d };
+  });
+  return (
+    <div className="relative mx-auto aspect-square w-full max-w-[260px]">
+      <svg viewBox="0 0 200 200" aria-hidden className="block size-full">
+        <defs>
+          <pattern id={hatch} width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <rect width="7" height="7" fill="var(--surface-2)" />
+            <line x1="0" y1="0" x2="0" y2="7" stroke="var(--line)" strokeWidth="3" />
+          </pattern>
+        </defs>
+        {paths.map((x) => (
+          <path key={x.key} d={x.d} fill={x.off ? `url(#${hatch})` : x.color} stroke="var(--surface)" strokeWidth="2" strokeLinejoin="round" />
+        ))}
+      </svg>
+      <div className="absolute inset-0 grid place-items-center">{children}</div>
+    </div>
+  );
+}
+
+/** Motivo o comentario de una parada (opcional, hasta 200 caracteres). */
+function NoteInput({ value, label, placeholder, onChange }: { value: string; label: string; placeholder: string; onChange: (v: string) => void }) {
+  return (
+    <label className="flex flex-col gap-1.5">
+      <span className="text-[13px] font-semibold text-muted">{label}</span>
+      <textarea
+        rows={1}
+        value={value}
+        placeholder={placeholder}
+        autoComplete="off"
+        maxLength={200}
+        onChange={(e) => onChange(e.target.value.replace(/\s*\n\s*/g, ' '))}
+        onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+        className="field-sizing-content min-h-12 w-full resize-none rounded-[12px] border-[1.5px] border-line bg-surface px-3 py-2.5 text-[16px] leading-snug outline-none placeholder:text-muted focus:border-accent"
+      />
+    </label>
+  );
+}
 
 export default function OeeTool() {
   const { t, lang } = useI18n();
@@ -199,7 +283,7 @@ export default function OeeTool() {
       const last = (await listMeasurements(projectId)).find((a) => a.toolId === 'oee');
       const cats = last ? readOeeSaved(latest(last).input, t)?.categories : undefined;
       if (!alive || !cats?.length || touched.current) return;
-      setState((s) => (s.stops.length ? s : { ...s, cats: cats.map((name) => ({ id: nextId(), name })), excluded: [] }));
+      setState((s) => (s.stops.length ? s : { ...s, cats: cats.map((name) => ({ id: nextId(), name })), off: s.off.filter((k) => !/^[cs]:/.test(k)) }));
     })();
     return () => {
       alive = false;
@@ -232,13 +316,13 @@ export default function OeeTool() {
 
   // ── Paradas planificadas ──
   const updatePlan = (id: number, patch: Partial<PlanRow>) => setState((s) => ({ ...s, planned: s.planned.map((x) => (x.id === id ? { ...x, ...patch } : x)) }));
-  const addPlan = () => setState((s) => ({ ...s, planned: [...s.planned, { id: nextId(), name: '', value: '', unit: 'min' }] }));
+  const addPlan = () => setState((s) => ({ ...s, planned: [...s.planned, { id: nextId(), name: '', value: '', unit: 'min', note: '' }] }));
 
   // ── Paradas no planificadas ──
   const updateStop = (id: number, patch: Partial<StopRow>) => change((s) => ({ ...s, stops: s.stops.map((x) => (x.id === id ? { ...x, ...patch } : x)) }));
   const addStop = () => {
     const id = nextId();
-    change((s) => ({ ...s, stops: [...s.stops, { id, name: '', minutes: '', cat: s.cats[0]?.id ?? 0, standard: '' }] }));
+    change((s) => ({ ...s, stops: [...s.stops, { id, name: '', minutes: '', cat: s.cats[0]?.id ?? 0, standard: '', note: '' }] }));
     setOpen((o) => new Set([...o, `st${id}`]));
   };
 
@@ -312,6 +396,7 @@ export default function OeeTool() {
                       <MeasureBox className="flex-1" label={d.timeOf(name)} value={row.value} onChange={(v) => updatePlan(row.id, { value: v })} />
                       <UnitSelect value={row.unit} onChange={(u) => updatePlan(row.id, { unit: u })} label={t.common.unitOf(d.timeOf(name))} />
                     </div>
+                    <NoteInput value={row.note} label={d.note} placeholder={d.notePlaceholder} onChange={(v) => updatePlan(row.id, { note: v })} />
                   </li>
                 );
               })}
@@ -369,6 +454,13 @@ export default function OeeTool() {
                       <NumberField compact label={d.standard} unit="min" value={row.standard} invalidText={d.invalidNumber} onChange={(v) => updateStop(row.id, { standard: v })} />
                       <Hint>{d.standardHint}</Hint>
                     </div>
+                    <NoteInput value={row.note} label={d.note} placeholder={d.notePlaceholder} onChange={(v) => updateStop(row.id, { note: v })} />
+                    {minutes !== null && standard !== null && standard > 0 && minutes > standard && !row.note.trim() && (
+                      <p className="flex items-start gap-2.5 rounded-[14px] bg-warn-soft p-3 text-[14.5px]">
+                        <CircleAlert aria-hidden size={18} className="mt-0.5 shrink-0 text-warn" />
+                        <span>{d.excessAsk(f.min(minutes - standard))}</span>
+                      </p>
+                    )}
                   </Fold>
                 );
               })}
@@ -393,7 +485,7 @@ export default function OeeTool() {
                         icon={Trash2}
                         label={d.removeItem(name)}
                         disabled={inUse || state.cats.length <= 1}
-                        onClick={() => removeWithUndo(name, (s) => ({ ...s, cats: s.cats.filter((x) => x.id !== c.id), excluded: s.excluded.filter((x) => x !== c.id) }))}
+                        onClick={() => removeWithUndo(name, (s) => ({ ...s, cats: s.cats.filter((x) => x.id !== c.id), off: s.off.filter((k) => k !== `c:${c.id}` && k !== `s:${c.id}`) }))}
                       />
                     </li>
                   );
@@ -495,10 +587,33 @@ export default function OeeTool() {
     );
   } else {
     const ex = oeeExplain(saved, input.idealCycle, r, t, lang);
-    const explainOf: Partial<Record<(typeof SEGMENTS)[number]['key'], Derivation>> = { useful: ex.useful, speed: ex.speed, quality: ex.qualityLoss };
+    const explainOf: Partial<Record<OeeSliceKind, Derivation>> = { useful: ex.useful, speed: ex.speed, quality: ex.qualityLoss };
     const furthest = furthestFactor(r);
-    const label = viewLabel(saved, r.standardByCategory, t);
-    const view = label ? oeeView(r, saved.views) : null;
+    const u = utilization(r, saved.off);
+    const uLabel = utilizationLabel(saved, r, t);
+    // La torta: el tiempo útil primero y después de mayor a menor.
+    const slices = [r.slices[0]!, ...r.slices.slice(1).sort((a, b) => b.minutes - a.minutes)];
+    const isOff = (key: string) => saved.off.includes(key);
+    const toggleSlice = (key: string) => {
+      const k = screenKey(key, state);
+      change((s) => ({ ...s, off: s.off.includes(k) ? s.off.filter((x) => x !== k) : [...s.off, k] }));
+    };
+    const sliceHints = (x: OeeResult['slices'][number]): string[] => {
+      const notes = (list: { name: string; note: string }[]) => list.filter((y) => y.note.trim()).map((y) => `${y.name}: ${y.note.trim()}`);
+      switch (x.kind) {
+        case 'planned':
+          return saved.planned[x.index]?.note.trim() ? [saved.planned[x.index]!.note.trim()] : [];
+        case 'standard':
+          return [d.slice.standardHint];
+        case 'stops':
+          return [
+            ...(x.excess > 0 && x.excess < x.minutes - 1e-9 ? [d.slice.excessHint(f.min(x.excess))] : []),
+            ...notes(saved.stops.flatMap((y, k) => (y.category === x.index ? [{ name: stopName(saved, k, t), note: y.note }] : []))),
+          ];
+        default:
+          return [];
+      }
+    };
     // Pareto: por categoría o por parada; con la casilla, también la pérdida por velocidad y la de calidad.
     type Item = { key: string; name: string; minutes: number; color: string };
     const items: Item[] =
@@ -514,7 +629,6 @@ export default function OeeTool() {
     const rows = pareto(items.map((x) => ({ key: x.key, minutes: x.minutes })));
     const maxMinutes = rows[0]?.minutes ?? 1;
     const cut = rows.findIndex((x) => x.cumulative >= 0.8 - 1e-9);
-    const catsWithStops = r.byCategory.flatMap((m, c) => (m > 0 ? [c] : []));
     const factorRef = (k: keyof typeof WORLD_CLASS) => `${formatNumber(WORLD_CLASS[k] * 100, lang, 0)}\u00a0%`;
 
     result = (
@@ -543,69 +657,97 @@ export default function OeeTool() {
           ))}
         </div>
 
-        <div className="flex flex-col gap-2.5">
-          <h3 className="text-[13px] font-semibold text-muted">{d.timeSplit}</h3>
-          <span aria-hidden className="flex h-4 gap-0.5 overflow-hidden rounded-full">
-            {SEGMENTS.filter((s) => r.minutes[s.key] > 0).map((s) => (
-              <span key={s.key} className={`h-full min-w-1 ${s.color}`} style={{ flexGrow: r.minutes[s.key], flexBasis: 0 }} />
-            ))}
-          </span>
-          <ul className="flex flex-col gap-1">
-            {SEGMENTS.map((s) => {
-              const body = (
-                <>
-                  <span className="flex min-w-0 items-center gap-2.5">
-                    <span aria-hidden className={`size-3 shrink-0 rounded-full ${s.color}`} />
-                    <span className="min-w-0 text-[14.5px]">{explainOf[s.key] ? <Dotted>{d.losses[s.key]}</Dotted> : d.losses[s.key]}</span>
+        <div className="flex flex-col gap-3 border-t border-line pt-4">
+          <SubTitle>{d.pieTitle}</SubTitle>
+          <Hint>{d.pieHint}</Hint>
+          <Donut slices={slices.map((x) => ({ key: x.key, minutes: x.minutes, color: FAMILY[x.kind], off: isOff(x.key) }))}>
+            <Explained calc={ex.utilization} className="flex size-[58%] flex-col items-center justify-center gap-0.5 rounded-full text-center">
+              <span className="sr-only">{uLabel} </span>
+              <span className="font-display text-[clamp(22px,8vw,32px)] leading-none font-bold tracking-tight tabular-nums">{f.pct(u.value)}</span>
+              <span aria-hidden className="px-1 text-[12px] leading-tight font-semibold text-muted">
+                <Dotted>{d.utilization}</Dotted>
+              </span>
+            </Explained>
+          </Donut>
+          <p className="text-center text-[14.5px] leading-snug font-semibold text-balance wrap-break-word">
+            {uLabel}
+            {isOfficial(saved, r) && <span className="block text-[13px] font-normal text-muted">{d.pieIsOfficial}</span>}
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <Button onClick={() => change((s) => ({ ...s, off: [] }))} disabled={saved.off.length === 0}>
+              {d.pieAll}
+            </Button>
+            <Button
+              onClick={() => change((s) => ({ ...s, off: plannedKeys(r).map((k) => screenKey(k, s)) }))}
+              disabled={isOfficial(saved, r) && plannedKeys(r).length > 0}
+            >
+              {d.pieOfficial}
+            </Button>
+          </div>
+          <ul className="flex flex-col">
+            {slices.map((x) => {
+              const off = isOff(x.key);
+              const name = sliceName(saved, x.key, r, t);
+              const hints = sliceHints(x);
+              const label = (
+                <span className="flex min-w-0 flex-col">
+                  <span className={`text-[15px] leading-snug font-semibold wrap-break-word ${off ? 'text-muted' : ''}`}>{name}</span>
+                  <span className="text-[13px] text-muted tabular-nums">
+                    {d.pieShare(f.share(x.minutes / r.shift))}
+                    {off ? ` · ${d.pieOff}` : ''}
                   </span>
-                  <span className="flex shrink-0 flex-col items-end leading-tight tabular-nums">
-                    <span className="font-semibold">{f.min(r.minutes[s.key])}</span>
-                    <span className="text-[13px] text-muted">{f.share(r.minutes[s.key] / r.planned)}</span>
-                  </span>
-                </>
+                  {hints.map((h) => (
+                    <span key={h} className="text-[13px] leading-snug text-muted wrap-break-word">
+                      {h}
+                    </span>
+                  ))}
+                </span>
               );
-              const cls = 'flex w-full items-center justify-between gap-3 rounded-[10px] py-1.5';
+              const swatch = (
+                <span
+                  aria-hidden
+                  className="mt-1 size-3.5 shrink-0 rounded-full border border-line"
+                  style={off ? { background: 'repeating-linear-gradient(45deg, var(--line) 0 2px, var(--surface-2) 2px 5px)' } : { background: FAMILY[x.kind] }}
+                />
+              );
+              const minutes = <span className={`font-semibold tabular-nums ${off ? 'text-muted line-through' : ''}`}>{f.min(x.minutes)}</span>;
               return (
-                <li key={s.key}>
-                  {explainOf[s.key] ? (
-                    <Explained calc={explainOf[s.key]!} className={cls}>
-                      {body}
+                <li key={x.key} className="flex items-start gap-2 border-b border-line py-1 last:border-b-0">
+                  {x.kind === 'useful' ? (
+                    <div className="flex min-h-12 min-w-0 flex-1 items-start gap-3 py-2 pl-[34px]">
+                      {swatch}
+                      {label}
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      role="checkbox"
+                      aria-checked={!off}
+                      onClick={() => toggleSlice(x.key)}
+                      className="press flex min-h-12 min-w-0 flex-1 cursor-pointer items-start gap-3 rounded-[12px] py-2 text-left"
+                    >
+                      <span
+                        aria-hidden
+                        className={`grid size-[22px] shrink-0 place-items-center rounded-[6px] border-2 ${off ? 'border-line bg-surface' : 'border-accent bg-accent text-surface'}`}
+                      >
+                        {!off && <CheckMark size={15} strokeWidth={3} />}
+                      </span>
+                      {swatch}
+                      {label}
+                    </button>
+                  )}
+                  {explainOf[x.kind] ? (
+                    <Explained calc={explainOf[x.kind]!} className="flex min-h-12 shrink-0 items-start rounded-[10px] py-2 pl-1">
+                      <Dotted>{minutes}</Dotted>
                     </Explained>
                   ) : (
-                    <div className={cls}>{body}</div>
+                    <span className="flex min-h-12 shrink-0 items-start py-2 pl-1">{minutes}</span>
                   )}
                 </li>
               );
             })}
           </ul>
         </div>
-
-        {catsWithStops.length > 0 && (
-          <div className="flex flex-col gap-3 border-t border-line pt-4">
-            <SubTitle>{d.viewsTitle}</SubTitle>
-            <Hint>{d.viewsHint}</Hint>
-            <div className="flex flex-col gap-1">
-              {catsWithStops.map((c) => {
-                const id = state.cats[c]!.id;
-                return (
-                  <Check
-                    key={id}
-                    label={categoryName(saved, c, t)}
-                    hint={f.min(r.byCategory[c]!)}
-                    checked={state.excluded.includes(id)}
-                    onChange={(on) => set({ excluded: on ? [...state.excluded, id] : state.excluded.filter((x) => x !== id) })}
-                  />
-                );
-              })}
-              {r.standard > 0 && <Check label={d.standardToggle} hint={d.standardToggleHint(f.min(r.standard))} checked={state.standard} onChange={(on) => set({ standard: on })} />}
-            </div>
-            {label && view && ex.view && (
-              <div className="rounded-[16px] bg-soft p-2">
-                <Stat label={label} value={f.pct(view.oee)} calc={ex.view} />
-              </div>
-            )}
-          </div>
-        )}
 
         {rows.length > 0 && (
           <div className="flex flex-col gap-3 border-t border-line pt-4">

@@ -204,13 +204,8 @@ Todas en el Android, después de pulsar **Actualizar**:
    copia».
 5. **Importar un .xlsx real suyo** y un .csv descargado de Google Sheets en
    FPY o takt.
-6. **Desde el 2026-11-21**: paso 3 de la pantalla de prueba de Google (que
-   el permiso sigue valiendo a los 8 días). Camino: barra de abajo →
-   Ajustes → sección «Cuenta de Google» → tarjeta «Prueba de conexión con
-   Google» → círculo 3, «Escribir y leer» → botón «Escribir y leer» (si dice
-   «Primero crea la hoja», antes el botón «Crear hoja» del círculo 2) → al
-   final, sección «Registro» → botón «Copiar registro» → pegar en el chat. Después se retira la pantalla de
-   prueba (`GoogleTestScreen` y `projectTest.*`).
+6. ~~Prueba de Google a los 8 días~~: hecha el 2026-11-21 (ver Fase 0).
+   Falta retirar la pantalla de prueba.
 7. **Bienvenida y cuenta de Google** (2026-11-19): Ajustes › Cuenta de
    Google, ver su cuenta, «Abrir la carpeta en Drive», «Desconectar», y
    conectar de nuevo; la bienvenida se ve en el navegador abriendo
@@ -253,22 +248,30 @@ con sus decisiones del mismo día:
   tres factores con dos decimales (97,80 %), Pareto con solo «44,4 % de las
   paradas» (o «de todo lo perdido» con la casilla de pérdidas).
 
-### Comentarios del dueño del 2026-11-21 (fichas por aprobar)
+### OEE versión 3: la torta del turno (2026-11-21, hecho)
 
-- **Recetas:** aprobado que vivan en Referencia, ordenadas Planta o compañía
-  → Línea → Receta, y que se carguen desde cada proyecto. Borrador:
-  `docs/fichas/recetas.md` (preguntas A y B al final).
-- **«Otras vistas» del OEE:** el dueño preguntó por qué con «Cambios de
-  formato» (40 min) + «Falta de material» (12) + «Tiempo estándar de las
-  paradas» (30) el divisor quita 52 y no 82. Es lo aprobado en la ficha v2
-  (B: «quitar una categoría ya incluye su estándar»): el estándar de 30 min
-  es el de la parada «Cambio de formato» del ejemplo (40 = 30 + 10 de
-  exceso), así que ya va dentro de los 40. Pero la casilla seguía marcada sin
-  aportar nada, y eso confunde. El dueño pide otro enfoque, como el LU de
-  su embotelladora: una torta con todas las afectaciones del turno que se
-  pueden desmarcar. Borrador: `docs/fichas/oee-v3.md` (preguntas A, B y C).
-- **Prueba de Google del paso 3:** las instrucciones eran vagas; se le dan
-  de nuevo con el camino completo (ver la prueba 6 de la lista).
+Pedido del dueño a partir del LU (Line Utilization) de su embotelladora;
+ficha `docs/fichas/oee-v3.md`, aprobada con sus respuestas. Sustituye a
+«Otras vistas» y al reparto «En qué se va el tiempo planificado»:
+- «En qué se va el turno»: torta con hueco; cada minuto del turno en una
+  sola porción (útil, cada planificada, cada categoría con su estándar
+  aparte, velocidad, calidad). En el centro, **«Utilización de la línea»**
+  = útil ÷ (turno − desmarcado), tocable. Empieza con todo marcado;
+  botones «Marcar todo» y «Ver el OEE oficial» (desmarca las planificadas).
+  Las desmarcadas se ven grises y rayadas, tachadas y con «desmarcada».
+- «Motivo o comentario» en cada parada; si se pasa del estándar, aviso que
+  pide explicarlo. Sale en la lista de porciones y en las notas de la hoja.
+- Glosario: TEEP (Vorne, oee.com/teep: OEE × tiempo planificado ÷ todo el
+  tiempo; ejemplo 65 % × 80/168 = 30,95 %) y «Utilización de la línea».
+- Formato guardado v3 (`off` con las porciones desmarcadas, `note` en cada
+  parada); v1 y v2 se leen y dan el mismo número que antes.
+- La duda del dueño (52 min y no 82): era intencional (la parada de cambio
+  de formato de 40 min ya incluía sus 30 de estándar); con la torta ya no
+  puede confundir, porque cada minuto está en una sola porción.
+
+**Siguiente:** retirar la pantalla de prueba de Google y, después, las
+**recetas** (`docs/fichas/recetas.md`, aprobada: Planta → Línea → Receta; la
+línea es solo un título y todo va en la receta).
 
 ### Plan hasta terminar la app (propuesto el 2026-11-20, pendiente de aprobar)
 
@@ -450,10 +453,15 @@ PLAN.md, sección 5.
   - Opinión del dueño sobre la presentación de prueba: portada «muy
     básica», gráficos marrones «no me gustan». Pide colores estándar,
     profesionales y mucho más cuidados (ver sección 6).
-  - [ ] A los 8 días: lo mismo. En modo pruebas Google puede retirar los
-        permisos concedidos a los 7 días; si pasa, decidir con el dueño si
-        se pasa la app a producción (con solo permisos no confidenciales no
-        debería exigir revisión de Google; comprobarlo antes).
+  - [x] A los 8 días (2026-11-21, registro pegado en el chat): al pulsar
+        «Escribir y leer», Google **volvió a enseñar** «Google no ha
+        verificado esta aplicación» y la lista de permisos (37,9 s hasta
+        conceder, frente a 0,5 s los días anteriores). Después escribió y
+        leyó bien (A1, B3 = 6, fórmula `=SUM(A3:A4)`). Es lo esperado en
+        modo pruebas: Google retira lo concedido a los 7 días. Al publicar
+        la app (paso 7 del plan) debería desaparecer, porque `drive.file` y
+        `drive.appdata` no son permisos confidenciales; comprobarlo
+        entonces con otra cuenta.
   - [ ] Al terminar, retirar la pantalla: `src/app/screens/GoogleTestScreen.tsx`,
         su ruta en `AppShell.tsx`, el enlace de Ajustes, los textos
         `googleTest` y `settings.googleTest*`, su prueba en `App.test.tsx` y

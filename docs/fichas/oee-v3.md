@@ -1,6 +1,27 @@
 # Ficha: OEE, versión 3 — la torta del turno
 
-**Borrador para aprobar (2026-11-21).** Sustituye la sección «Otras vistas
+**Aprobada por el dueño el 2026-11-21 y construida ese día**, con estas
+respuestas (mandan sobre el texto de abajo):
+
+- A. «Utilización», sí, y TEEP explicado en el glosario. Al construirlo se
+  llamó **«Utilización de la línea»**: Vorne llama «utilization» a otra cosa
+  (tiempo planificado ÷ todo el tiempo) y así no se confunden; es además lo
+  que significa LU (Line Utilization).
+- B. La torta empieza con todo marcado.
+- C. Los cambios de tamaño siguen siendo paradas **no planificadas** (con su
+  estándar), como manda el estándar del sector: así se ven como algo que se
+  puede mejorar, y la torta permite mirarlos desde otra perspectiva.
+
+Construcción: cada categoría da hasta dos porciones, «Categoría · estándar» y
+el resto de la categoría (que se llama «Categoría · exceso sobre el
+estándar» si todo lo que queda es exceso). En la hoja de Google, la
+utilización es una fórmula viva con lo desmarcado. Las mediciones v2 se leen
+con lo marcado en «Otras vistas» desmarcado en la torta junto con las
+paradas planificadas, y dan el mismo número que antes.
+
+---
+
+Sustituye la sección «Otras vistas
 (no son el OEE oficial)» de la versión 2 (`oee-v2.md`, punto B). El resto de
 la herramienta no cambia: datos, OEE oficial con sus tres factores, Pareto y
 explicaciones.

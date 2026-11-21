@@ -287,32 +287,42 @@ test('el botón central abre la hoja de Capturar y se cierra', async () => {
   expect(nav).toBeInTheDocument();
 });
 
-test('OEE: cada parte del tiempo planificado lleva sus minutos y su porcentaje', async () => {
+test('OEE: cada porción de la torta lleva sus minutos y su parte del turno', async () => {
   const user = userEvent.setup();
   window.location.hash = '#/herramientas/oee';
   render(<App />);
   await user.click(await screen.findByRole('button', { name: /Cargar ejemplo|Load example/ }));
   await user.click(await screen.findByRole('button', { name: /^(Caso publicado de Vorne|Vorne published case)/ }));
-  // Vorne: 420 min planificados; 47 min de paradas = 11,2 %.
-  // La primera vez sale en el reparto del tiempo; después, en el Pareto.
-  const downtime = (await screen.findAllByText(/^47(,0|\.0)? min$/))[0]!;
-  expect(downtime.nextElementSibling).toHaveTextContent(/^11[,.]2\s%$/);
-  expect(screen.getByText(/^74[,.]8\s%$/)).toBeInTheDocument();
+  // Vorne: 47 min de paradas de 480 = 9,8 % del turno; con todo marcado, 314,1 ÷ 480 = 65,44 %.
+  const stops = await screen.findByRole('checkbox', { name: /^(Otras|Other)/ });
+  expect(stops).toHaveTextContent(/9[,.]8\s% (del turno|of the shift)/);
+  expect(stops).toHaveAttribute('aria-checked', 'true');
+  expect(screen.getByRole('button', { name: /^(Utilización de la línea|Line utilization)\s*65[,.]44\s%/ })).toBeInTheDocument();
+  // «Ver el OEE oficial» desmarca las paradas planificadas: sale el 74,79 % publicado.
+  await user.click(screen.getByRole('button', { name: /^(Ver el OEE oficial|Show the official OEE)$/ }));
+  expect(screen.getByRole('checkbox', { name: /^(Descansos y comida|Breaks and lunch)/ })).toHaveAttribute('aria-checked', 'false');
+  expect(screen.getByRole('button', { name: /^(Utilización de la línea sin descansos y comida|Line utilization without breaks and lunch)\s*74[,.]79\s%/ })).toBeInTheDocument();
 });
 
-test('OEE: la embotelladora enseña el oficial, la otra vista con su nombre y el Pareto', async () => {
+test('OEE: la embotelladora enseña el oficial, la torta que se desmarca y el Pareto', async () => {
   const user = userEvent.setup();
   window.location.hash = '#/herramientas/oee';
   render(<App />);
   await user.click(await screen.findByRole('button', { name: /Cargar ejemplo|Load example/ }));
   await user.click(await screen.findByRole('button', { name: /^(Embotelladora|Bottling plant)/ }));
-  // Oficial 70,74 %; marcado el tiempo estándar: «OEE sin el tiempo estándar de las paradas» 75,57 %.
+  // Oficial 70,74 %; la torta empieza con todo: 332,5 ÷ 480 = 69,27 %.
   expect(await screen.findByText(/^70[,.]74\s%$/)).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: /^(OEE sin el tiempo estándar de las paradas|OEE without the standard time of the stops)\s*75[,.]57\s%/ })).toBeInTheDocument();
-  // Marcar «Cambios de formato»: ya incluye su estándar → «OEE sin cambios de formato» 77,33 %.
-  await user.click(screen.getByRole('checkbox', { name: /^(Cambios de formato|Changeovers)/ }));
-  expect(screen.getByRole('button', { name: /^(OEE sin cambios de formato|OEE without changeovers)\s*77[,.]33\s%/ })).toBeInTheDocument();
-  // El oficial no cambia.
+  expect(screen.getByRole('button', { name: /^(Utilización de la línea|Line utilization)\s*69[,.]27\s%/ })).toBeInTheDocument();
+  // El caso que preguntó el dueño: reunión, cambio de formato (estándar y exceso) y falta de material,
+  // cada minuto una sola vez: 332,5 ÷ (480 − 10 − 40 − 12) = 79,55 %.
+  for (const name of [/^(Reunión de arranque|Start-up meeting)/, /^(Cambios de formato · estándar|Changeovers · standard)/, /^(Cambios de formato · exceso|Changeovers · over)/, /^(Falta de material|Missing material)/])
+    await user.click(screen.getByRole('checkbox', { name }));
+  expect(screen.getByRole('button', { name: /^(Utilización de la línea sin reunión de arranque, cambios de formato ni falta de material|Line utilization without start-up meeting, changeovers or missing material)\s*79[,.]55\s%/ })).toBeInTheDocument();
+  // El motivo de la parada sale en su porción.
+  expect(screen.getByRole('checkbox', { name: /^(Cambios de formato · exceso|Changeovers · over)/ })).toHaveTextContent(/(Se atascó la guía|The labeller guide jammed)/);
+  // «Marcar todo» lo vuelve a meter todo; el oficial no cambia nunca.
+  await user.click(screen.getByRole('button', { name: /^(Marcar todo|Tick all)$/ }));
+  expect(screen.getByRole('button', { name: /^(Utilización de la línea|Line utilization)\s*69[,.]27\s%/ })).toBeInTheDocument();
   expect(screen.getByText(/^70[,.]74\s%$/)).toBeInTheDocument();
   // Pareto: cada fila dice qué parte de las paradas es, sin acumulado.
   expect(screen.getByText(/^42[,.]1\s% (de las paradas|of the stops)$/)).toBeInTheDocument();

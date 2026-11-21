@@ -4,10 +4,11 @@ import type { CalcOutput, CalcStep, CalcWarning } from './types';
 // «Calculating OEE»). Tiempos en minutos; ciclo ideal en segundos por unidad.
 // - Las paradas no planificadas van una a una, con su categoría y, si lo
 //   tienen, su tiempo estándar (la parte que le toca durar).
-// - El OEE oficial cuenta siempre todas las paradas. Las «otras vistas»
-//   calculan otro porcentaje tratando como planificadas las categorías que se
-//   quiten (o solo la parte estándar de las paradas): cambia la
-//   disponibilidad; el rendimiento y la calidad, no.
+// - El OEE oficial cuenta siempre todas las paradas.
+// - La torta del turno (versión 3, docs/fichas/oee-v3.md) reparte cada minuto
+//   del turno en una sola porción. La utilización de la línea es
+//   útil ÷ (turno − porciones desmarcadas); con las planificadas desmarcadas
+//   es el OEE oficial.
 
 export interface OeeStop {
   minutes: number;
@@ -35,6 +36,8 @@ export interface OeeInput {
 }
 
 export interface OeeResult {
+  /** Duración del turno (min). */
+  shift: number;
   /** Tiempo planificado = turno − paradas planificadas (min). */
   planned: number;
   /** Tiempo en marcha = planificado − paradas no planificadas (min). */
@@ -54,24 +57,42 @@ export interface OeeResult {
   standard: number;
   /** Lo que las paradas con estándar se pasaron de él (min). */
   excess: number;
+  /** Exceso sobre el estándar de cada categoría (min). */
+  excessByCategory: number[];
+  /** La torta del turno: cada minuto en una sola porción; suman el turno. */
+  slices: OeeSlice[];
 }
 
 export type OeeLoss = 'downtime' | 'speed' | 'quality';
 
-/** Qué se quita en una de las «otras vistas». */
-export interface OeeViewDef {
-  /** Categorías que se tratan como planificadas. */
-  excluded: number[];
-  /** Tratar como planificada la parte estándar de las paradas (de las categorías no quitadas). */
-  standard: boolean;
+/**
+ * Familias de porciones de la torta:
+ * - useful: tiempo útil (no se puede desmarcar);
+ * - planned: una parada planificada (`index` = su posición);
+ * - stops: paradas no planificadas de una categoría, sin su parte estándar
+ *   (incluye el exceso sobre el estándar); `index` = la categoría;
+ * - standard: parte estándar de las paradas de una categoría;
+ * - speed y quality: las pérdidas por velocidad y por calidad.
+ */
+export type OeeSliceKind = 'useful' | 'planned' | 'stops' | 'standard' | 'speed' | 'quality';
+
+export interface OeeSlice {
+  /** Clave estable: «useful», «p0», «c1», «s1», «speed», «quality». */
+  key: string;
+  kind: OeeSliceKind;
+  index: number;
+  minutes: number;
+  /** En «stops»: cuántos de sus minutos son exceso sobre el estándar. */
+  excess: number;
 }
 
-export interface OeeView {
-  /** Minutos que pasan a planificados. */
+export interface OeeUtilization {
+  /** Minutos desmarcados. */
   removed: number;
-  planned: number;
-  availability: number;
-  oee: number;
+  /** Turno − desmarcado (min). */
+  base: number;
+  /** Tiempo útil ÷ base. */
+  value: number;
 }
 
 export function oee(i: OeeInput): CalcOutput<OeeResult> {
@@ -103,15 +124,29 @@ export function oee(i: OeeInput): CalcOutput<OeeResult> {
 
   const byCategory = Array.from({ length: i.categories }, () => 0);
   const standardByCategory = Array.from({ length: i.categories }, () => 0);
-  let excess = 0;
+  const excessByCategory = Array.from({ length: i.categories }, () => 0);
   for (const s of i.stops) {
     byCategory[s.category] = (byCategory[s.category] ?? 0) + s.minutes;
     if (s.standard !== null) {
       standardByCategory[s.category] = (standardByCategory[s.category] ?? 0) + Math.min(s.standard, s.minutes);
-      excess += Math.max(0, s.minutes - s.standard);
+      excessByCategory[s.category] = (excessByCategory[s.category] ?? 0) + Math.max(0, s.minutes - s.standard);
     }
   }
+  const useful = (i.idealCycle * good) / 60;
+  const speed = run - (i.idealCycle * i.total) / 60;
+  const qualityLoss = (i.idealCycle * i.rejects) / 60;
+  const slices: OeeSlice[] = [{ key: 'useful', kind: 'useful', index: 0, minutes: useful, excess: 0 }];
+  i.plannedStops.forEach((m, k) => slices.push({ key: `p${k}`, kind: 'planned', index: k, minutes: m, excess: 0 }));
+  byCategory.forEach((m, c) => {
+    const std = standardByCategory[c] ?? 0;
+    if (m - std > 0) slices.push({ key: `c${c}`, kind: 'stops', index: c, minutes: m - std, excess: excessByCategory[c] ?? 0 });
+    if (std > 0) slices.push({ key: `s${c}`, kind: 'standard', index: c, minutes: std, excess: 0 });
+  });
+  // Con el rendimiento por encima del 100 % (ya avisado) no hay pérdida por velocidad que enseñar.
+  if (speed > 0) slices.push({ key: 'speed', kind: 'speed', index: 0, minutes: speed, excess: 0 });
+  if (qualityLoss > 0) slices.push({ key: 'quality', kind: 'quality', index: 0, minutes: qualityLoss, excess: 0 });
   const result: OeeResult = {
+    shift: i.shift,
     planned,
     run,
     good,
@@ -119,16 +154,13 @@ export function oee(i: OeeInput): CalcOutput<OeeResult> {
     performance,
     quality,
     oee: value,
-    minutes: {
-      useful: (i.idealCycle * good) / 60,
-      downtime,
-      speed: run - (i.idealCycle * i.total) / 60,
-      quality: (i.idealCycle * i.rejects) / 60,
-    },
+    minutes: { useful, downtime, speed, quality: qualityLoss },
     byCategory,
     standardByCategory,
     standard: standardByCategory.reduce((a, b) => a + b, 0),
-    excess,
+    excess: excessByCategory.reduce((a, b) => a + b, 0),
+    excessByCategory,
+    slices,
   };
   const steps: CalcStep[] = [
     { key: 'planned', value: planned },
@@ -142,18 +174,17 @@ export function oee(i: OeeInput): CalcOutput<OeeResult> {
 }
 
 /**
- * Una de las «otras vistas»: el OEE tratando como planificado lo que se quita.
- * El tiempo útil no cambia; el planificado baja: OEE = útil ÷ (planificado − quitado).
+ * Utilización de la línea con las porciones `off` desmarcadas:
+ * útil ÷ (turno − desmarcado). El tiempo útil no se puede desmarcar.
  */
-export function oeeView(r: OeeResult, v: OeeViewDef): OeeView {
-  let removed = 0;
-  r.byCategory.forEach((m, c) => {
-    if (v.excluded.includes(c)) removed += m;
-    else if (v.standard) removed += r.standardByCategory[c] ?? 0;
-  });
-  const planned = r.planned - removed;
-  return { removed, planned, availability: r.run / planned, oee: r.minutes.useful / planned };
+export function utilization(r: OeeResult, off: readonly string[]): OeeUtilization {
+  const removed = r.slices.reduce((a, x) => (x.kind !== 'useful' && off.includes(x.key) ? a + x.minutes : a), 0);
+  const base = r.shift - removed;
+  return { removed, base, value: r.minutes.useful / base };
 }
+
+/** Las claves de las paradas planificadas: desmarcarlas da el OEE oficial. */
+export const plannedKeys = (r: OeeResult) => r.slices.filter((x) => x.kind === 'planned').map((x) => x.key);
 
 /** La pérdida que más minutos se lleva. */
 export function biggestLoss(r: OeeResult): OeeLoss {

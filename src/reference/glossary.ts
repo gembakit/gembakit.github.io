@@ -427,6 +427,34 @@ const APP_TERMS: readonly GlossaryEntry[] = [
       def: 'The design speed of the equipment: the most it can do under optimal conditions (also called ideal speed or ideal cycle time). It can be given as time per part or as parts per time. Using the usual speed instead inflates OEE.',
     },
   },
+  {
+    id: 'teep',
+    category: 'indicador',
+    es: {
+      term: 'TEEP',
+      name: 'Rendimiento efectivo total del equipo (Total Effective Equipment Performance)',
+      def: 'OEE × utilización del calendario, donde la utilización es el tiempo planificado ÷ todo el tiempo (24 h × 7 días). Cuenta también las horas en que no se planificó producir: dice cuánta capacidad queda sin usar. Ejemplo de Vorne (oee.com): OEE 65 % con 80 h planificadas de las 168 de la semana → 65 % × 47,62 % = 30,95 %.',
+    },
+    en: {
+      term: 'TEEP',
+      name: 'Total Effective Equipment Performance',
+      def: 'OEE × calendar utilization, where utilization is planned time ÷ all time (24 h × 7 days). It also counts the hours when no production was planned: it tells how much capacity is left unused. Vorne example (oee.com): 65 % OEE with 80 planned hours out of the 168 in a week → 65 % × 47.62 % = 30.95 %.',
+    },
+  },
+  {
+    id: 'utilizacion-linea',
+    category: 'indicador',
+    es: {
+      term: 'Utilización de la línea',
+      name: 'LU (Line Utilization), la torta del OEE',
+      def: 'Tiempo útil ÷ (turno − lo desmarcado en la torta). Con todo marcado cuenta todo lo que le pasó al turno, también lo planificado: es como un TEEP medido sobre el turno en vez de sobre las 24 h. Desmarcando porciones (un cambio de tamaño, la pérdida por velocidad…) se ve la línea desde otro punto de vista; con las paradas planificadas desmarcadas es el OEE oficial. Algunas empresas lo llaman LU. No confundir con la «utilización» de Vorne, que es solo tiempo planificado ÷ todo el tiempo.',
+    },
+    en: {
+      term: 'Line utilization',
+      name: 'LU, the OEE pie',
+      def: 'Useful time ÷ (shift − what is unticked in the pie). With everything ticked it counts everything that happened in the shift, planned time included: like a TEEP measured over the shift instead of 24 h. Unticking slices (a size change, the speed loss…) shows the line from another angle; with the planned stops unticked it is the official OEE. Some companies call it LU. Not to be confused with Vorne’s “utilization”, which is only planned time ÷ all time.',
+    },
+  },
 
   // Finanzas
   {

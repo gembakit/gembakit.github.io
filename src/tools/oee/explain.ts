@@ -1,11 +1,11 @@
-import { oeeView, type OeeResult } from '../../calc/oee';
+import { utilization, type OeeResult } from '../../calc/oee';
 import { fromCycle, SECONDS, type Measure, type TimeUnit } from '../../calc/takt';
 import type { Messages } from '../../i18n';
 import type { Derivation } from '../../ui/Explained';
 import { frac, minus, times } from '../../ui/expr';
 import { formatNumber } from '../../ui/number';
 import { paceLabel, smartNumber } from '../takt/explain';
-import { viewLabel, type OeeSaved } from './model';
+import { isOfficial, offSlices, sliceName, utilizationLabel, type OeeSaved } from './model';
 
 /** Cómo se mide la línea: decide cómo se escribe el ciclo o la velocidad ideal. */
 export interface OeeLook {
@@ -50,7 +50,7 @@ export function oeeExplain(
   r: OeeResult,
   t: Messages,
   lang: 'es' | 'en',
-): Record<OeeKey, Derivation> & { view: Derivation | null } {
+): Record<OeeKey | 'utilization', Derivation> {
   const d = t.tools.oee;
   const x = d.explain;
   const look = oeeLook(s, t);
@@ -80,8 +80,13 @@ export function oeeExplain(
   const wR = { sym: x.rejectsSym, label: x.rejectsLabel, value: R };
   const wGood = { sym: x.goodSym, label: x.goodLabel, value: good };
   const rounded = [t.explain.rounded];
-  const label = viewLabel(s, r.standardByCategory, t);
-  const v = label ? oeeView(r, s.views) : null;
+  const u = utilization(r, s.off);
+  const uLabel = utilizationLabel(s, r, t);
+  const off = offSlices(s, r);
+  const T = f.min(r.shift);
+  const Tu = f.min(r.minutes.useful);
+  const wT = { sym: x.shiftSym, label: x.shiftLabel, value: T };
+  const wTu = { sym: x.usefulSym, label: d.losses.useful!, value: Tu };
   return {
     availability: {
       term: 'disponibilidad',
@@ -146,20 +151,17 @@ export function oeeExplain(
       where: [wIdeal, wR],
       notes: rounded,
     },
-    view:
-      label && v
-        ? {
-            title: label,
-            meaning: x.viewMeaning,
-            lhs: label,
-            steps: [frac(x.usefulSym, minus(x.plannedSym, x.removedSym)), frac(f.min(r.minutes.useful), minus(Tp, f.min(v.removed))), f.pct(v.oee)],
-            where: [
-              { sym: x.usefulSym, label: d.losses.useful!, value: f.min(r.minutes.useful) },
-              wTp,
-              { sym: x.removedSym, label: x.removedLabel, value: f.min(v.removed) },
-            ],
-            notes: [d.viewOfficial(f.pct(r.oee)), ...rounded],
-          }
-        : null,
+    utilization: {
+      title: uLabel,
+      meaning: x.utilMeaning,
+      lhs: uLabel,
+      steps: off.length
+        ? [frac(x.usefulSym, minus(x.shiftSym, x.removedSym)), frac(Tu, minus(T, f.min(u.removed))), f.pct(u.value)]
+        : [frac(x.usefulSym, x.shiftSym), frac(Tu, T), f.pct(u.value)],
+      where: off.length
+        ? [wTu, wT, { sym: x.removedSym, label: x.removedLabel(off.map((y) => `${sliceName(s, y.key, r, t)} ${f.min(y.minutes)}`).join(' + ')), value: f.min(u.removed) }]
+        : [wTu, wT],
+      notes: [isOfficial(s, r) ? d.pieIsOfficial : d.viewOfficial(f.pct(r.oee)), ...rounded],
+    },
   };
 }

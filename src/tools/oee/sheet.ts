@@ -3,15 +3,12 @@ import type { OeeResult } from '../../calc/oee';
 import type { ReadingLine, SheetDef, SheetInput, SheetResult, SheetTable } from '../../sheet/types';
 import { formatNumber } from '../../ui/number';
 import { oeeFormat, oeeLook } from './explain';
-import { categoryName, plannedName, standardLeft, stopName, toOeeInput, viewLabel, type OeeSaved } from './model';
+import { categoryName, offSlices, plannedName, stopName, toOeeInput, utilizationLabel, type OeeSaved } from './model';
 
 // Hoja de OEE: los mismos cálculos que src/calc/oee.ts, como fórmulas vivas.
 // La tabla lleva una fila por categoría con paradas (sus minutos y su parte
 // estándar); las paradas una a una van en las notas. La prueba sheet.test.ts
 // comprueba que las fórmulas dan lo mismo que el cálculo.
-
-/** Texto entre comillas para una fórmula de hoja. */
-const quoted = (s: string) => `"${s.replace(/"/g, '""')}"`;
 
 export function oeeSheet(s: OeeSaved, r: OeeResult, t: Messages, lang: 'es' | 'en', opts: { reading: ReadingLine[]; version: string; date: string }): SheetDef {
   const d = t.tools.oee;
@@ -39,24 +36,16 @@ export function oeeSheet(s: OeeSaved, r: OeeResult, t: Messages, lang: 'es' | 'e
     { key: 'rejects', label: d.rejects, value: s.rejects, note: look.unitName, format: 'integer' },
   ];
 
-  // Una fila por categoría con paradas; dos categorías con el mismo nombre se juntan.
-  const rows = new Map<string, { min: number; std: number }>();
-  r.byCategory.forEach((m, k) => {
-    if (!(m > 0)) return;
-    const name = categoryName(s, k, t);
-    const row = rows.get(name) ?? { min: 0, std: 0 };
-    row.min += m;
-    row.std += r.standardByCategory[k] ?? 0;
-    rows.set(name, row);
-  });
-  const table: SheetTable | undefined = rows.size
+  // Una fila por categoría con paradas (la torta desmarca cada categoría por su posición).
+  const cats = r.byCategory.flatMap((m, k) => (m > 0 ? [k] : []));
+  const table: SheetTable | undefined = cats.length
     ? {
         labelHead: sh.categoryHead,
         columns: [
           { key: 'min', head: sh.minutesHead, format: 'auto' },
           { key: 'std', head: sh.standardHead, format: 'auto' },
         ],
-        rows: [...rows].map(([label, v]) => ({ label, values: { min: v.min, std: v.std } })),
+        rows: cats.map((k) => ({ label: categoryName(s, k, t), values: { min: r.byCategory[k]!, std: r.standardByCategory[k] ?? 0 } })),
         highlightMax: 'min',
       }
     : undefined;
@@ -76,19 +65,38 @@ export function oeeSheet(s: OeeSaved, r: OeeResult, t: Messages, lang: 'es' | 'e
     { key: 'qualityLoss', label: d.losses.quality!, formula: '{idealCycle}*{rejects}/60', note: n.qualityLoss, format: 'auto' },
   ];
 
-  // La otra vista marcada al exportar, con su nombre y su fórmula.
-  const label = viewLabel(s, r.standardByCategory, t);
-  if (label && table) {
-    const excluded = [...new Set(s.views.excluded.filter((k) => (r.byCategory[k] ?? 0) > 0).map((k) => categoryName(s, k, t)))];
-    const cell = (col: string, name: string) => `INDEX({${col}[]},MATCH(${quoted(name)},{label[]},0))`;
-    const parts = excluded.map((name) => cell('min', name));
-    if (s.views.standard && standardLeft(s, r.standardByCategory)) parts.push(['SUM({std[]})', ...excluded.map((name) => cell('std', name))].join('-'));
-    results.push({ key: 'view', label, formula: `{useful}/({planned}-(${parts.join('+') || '0'}))`, note: sh.viewNote, format: 'percent', summary: true });
-  }
+  // La utilización de la línea con lo desmarcado en la torta, como fórmula viva.
+  const row = (k: number) => cats.indexOf(k) + 1;
+  const removed = offSlices(s, r).map((x) => {
+    switch (x.kind) {
+      case 'planned':
+        return `{p${x.index}}`;
+      case 'stops':
+        return `(INDEX({min[]},${row(x.index)})-INDEX({std[]},${row(x.index)}))`;
+      case 'standard':
+        return `INDEX({std[]},${row(x.index)})`;
+      case 'speed':
+        return '{speed}';
+      case 'quality':
+        return '{qualityLoss}';
+      default:
+        return '0';
+    }
+  });
+  results.push({
+    key: 'utilization',
+    label: utilizationLabel(s, r, t),
+    formula: removed.length ? `{useful}/({shift}-(${removed.join('+')}))` : '{useful}/{shift}',
+    note: sh.utilizationNote,
+    format: 'percent',
+    summary: true,
+  });
 
   const stopNotes = s.stops.map(
-    (x, k) => sh.stopNote(stopName(s, k, t), num(x.minutes), categoryName(s, x.category, t)) + (x.standard !== null ? sh.stopStandard(num(x.standard)) : '') + '.',
+    (x, k) =>
+      sh.stopNote(stopName(s, k, t), num(x.minutes), categoryName(s, x.category, t)) + (x.standard !== null ? sh.stopStandard(num(x.standard)) : '') + '.' + (x.note.trim() ? sh.notePart(x.note.trim()) : ''),
   );
+  const plannedNotes = s.planned.flatMap((p, k) => (p.note.trim() ? [`${plannedName(s, k, t)}:${sh.notePart(p.note.trim())}`] : []));
   return {
     fileTitle: `${sh.file} · ${opts.date}`,
     tabTitle: sh.tab,
@@ -109,6 +117,6 @@ export function oeeSheet(s: OeeSaved, r: OeeResult, t: Messages, lang: 'es' | 'e
     table,
     results,
     reading: opts.reading,
-    notes: [...stopNotes, d.reference, d.referenceSource, c.readingNote],
+    notes: [...plannedNotes, ...stopNotes, d.reference, d.referenceSource, c.readingNote],
   };
 }

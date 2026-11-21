@@ -130,7 +130,8 @@ describe('OEE: de dónde sale cada valor', () => {
     expect(ex.availability.where[0]!.label).toBe('Tiempo en marcha: planificado − paradas no planificadas = 420 min − 47 min');
     expect(ex.availability.where[1]!.label).toBe('Tiempo planificado: turno − paradas planificadas = 480 − 60 min');
     expect(ex.quality.where.map((w) => w.value)).toEqual(['19.271', '423', '18.848']);
-    expect(ex.view).toBeNull();
+    // Torta con todo marcado: útil ÷ turno.
+    expect(txt(ex.utilization)).toEqual(['Tu ÷ T', '314,1 min ÷ 480 min', '65,44 %']);
   });
   test('Vorne: las pérdidas en minutos', () => {
     const ex = explainOee(VORNE_OEE(es));
@@ -138,11 +139,20 @@ describe('OEE: de dónde sale cada valor', () => {
     expect(txt(ex.qualityLoss)).toEqual(['TCe × R', '1 s/pieza × 423', '7,1 min']);
     expect(txt(ex.useful)).toEqual(['TCe × (N − R)', '1 s/pieza × 18.848', '314,1 min']);
   });
-  test('embotelladora: velocidad en botellas/h y la otra vista', () => {
+  test('embotelladora: velocidad en botellas/h y la utilización con lo desmarcado', () => {
     const ex = explainOee(BOTTLING_OEE(es));
     expect(txt(ex.performance)).toEqual(['N ÷ (Ve × Tm)', '270.000 ÷ (48.000 botellas/h × 6,25 h)', '90,00 %']);
     expect(txt(ex.useful)).toEqual(['(N − R) ÷ Ve', '266.000 ÷ 48.000 botellas/h', '332,5 min']);
-    expect(txt(ex.view!)).toEqual(['Tu ÷ (Tp − Q)', '332,5 min ÷ (470 min − 30 min)', '75,57 %']);
+    expect(txt(ex.utilization)).toEqual(['Tu ÷ T', '332,5 min ÷ 480 min', '69,27 %']);
+    // La pregunta del dueño (2026-11-21): falta de material, cambio de formato entero y reunión: 12 + 40 + 10, una sola vez.
+    const off = explainOee({ ...BOTTLING_OEE(es), off: ['p0', 'c1', 's1', 'c2'] }).utilization;
+    expect(off.title).toBe('Utilización de la línea sin reunión de arranque, cambios de formato ni falta de material');
+    expect(txt(off)).toEqual(['Tu ÷ (T − Q)', '332,5 min ÷ (480 min − 62 min)', '79,55 %']);
+    expect(off.where[2]!.label).toBe(
+      'Lo desmarcado: Reunión de arranque 10 min + Cambios de formato · exceso sobre el estándar 10 min + Cambios de formato · estándar 30 min + Falta de material 12 min',
+    );
+    expect(off.notes![0]).toBe('El OEE oficial sigue siendo el 70,74 %.');
+    expect(explainOee({ ...BOTTLING_OEE(es), off: ['p0'] }).utilization.notes![0]).toBe('Con las paradas planificadas desmarcadas, es el OEE oficial.');
   });
 });
 

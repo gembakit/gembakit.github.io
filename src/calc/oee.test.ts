@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { biggestLoss, furthestFactor, oee, oeeView, pareto, type OeeInput } from './oee';
+import { biggestLoss, furthestFactor, oee, pareto, plannedKeys, utilization, type OeeInput } from './oee';
 
 // Caso de referencia de la ficha 4: Vorne, oee.com, «Calculating OEE».
 const VORNE: OeeInput = { shift: 480, plannedStops: [60], stops: [{ minutes: 47, category: 0, standard: null }], categories: 1, idealCycle: 1, total: 19271, rejects: 423 };
@@ -57,17 +57,45 @@ describe('OEE', () => {
     expect(r.excess).toBe(10);
   });
 
-  test('otras vistas: sin cambios de formato 77,33 %; sin el estándar 75,57 %; el oficial no cambia', () => {
+  test('torta del turno: cada minuto en una sola porción, y suman el turno', () => {
     const r = oee(BOTTLING).result!;
-    expect(pct2(oeeView(r, { excluded: [1], standard: false }).oee)).toBe(77.33);
-    expect(pct2(oeeView(r, { excluded: [], standard: true }).oee)).toBe(75.57);
-    // Quitar una categoría entera ya incluye su estándar: no se cuenta dos veces.
-    expect(oeeView(r, { excluded: [1], standard: true }).removed).toBe(40);
-    expect(oeeView(r, { excluded: [0, 1], standard: false }).removed).toBe(65);
-    // Solo cambia la disponibilidad: OEE de la vista = disponibilidad de la vista × rendimiento × calidad.
-    const v = oeeView(r, { excluded: [1], standard: false });
-    expect(v.oee).toBeCloseTo(v.availability * r.performance * r.quality, 12);
-    expect(pct2(r.oee)).toBe(70.74);
+    const m = Object.fromEntries(r.slices.map((x) => [x.key, x.minutes]));
+    // Útil 332,5; reunión 10; averías 25; cambio de formato 30 de estándar + 10 de exceso; material 12; microparos 18; velocidad 37,5; calidad 5.
+    expect(Object.keys(m)).toEqual(['useful', 'p0', 'c0', 'c1', 's1', 'c2', 'c3', 'speed', 'quality']);
+    expect(m.useful).toBeCloseTo(332.5, 9);
+    expect([m.p0, m.c0, m.c1, m.s1, m.c2, m.c3]).toEqual([10, 25, 10, 30, 12, 18]);
+    expect(r.slices.find((x) => x.key === 'c1')!.excess).toBe(10);
+    expect(m.speed).toBeCloseTo(37.5, 9);
+    expect(m.quality).toBeCloseTo(5, 9);
+    expect(r.slices.reduce((a, x) => a + x.minutes, 0)).toBeCloseTo(480, 9);
+  });
+
+  test('utilización: con todo 69,27 %; sin las planificadas, el OEE oficial (70,74 %)', () => {
+    const r = oee(BOTTLING).result!;
+    expect(pct2(utilization(r, []).value)).toBe(69.27);
+    // TEEP de Vorne (oee.com, «TEEP»): OEE × tiempo planificado ÷ todo el tiempo, aquí sobre el turno.
+    expect(utilization(r, []).value).toBeCloseTo(r.oee * (r.planned / r.shift), 12);
+    expect(plannedKeys(r)).toEqual(['p0']);
+    expect(utilization(r, plannedKeys(r)).value).toBeCloseTo(r.oee, 12);
+    // Sin la reunión ni el cambio de formato entero (estándar y exceso, una sola vez): 332,5 ÷ (480 − 10 − 40).
+    const u = utilization(r, ['p0', 'c1', 's1']);
+    expect(u.removed).toBe(50);
+    expect(u.value).toBeCloseTo(332.5 / 430, 12);
+    // El tiempo útil no se desmarca; todo lo demás fuera da el 100 %.
+    expect(utilization(r, r.slices.map((x) => x.key)).value).toBeCloseTo(1, 12);
+  });
+
+  test('Vorne: sin las paradas planificadas, la utilización es el OEE publicado (74,79 %)', () => {
+    const r = oee(VORNE).result!;
+    expect(pct2(utilization(r, plannedKeys(r)).value)).toBe(74.79);
+  });
+
+  test('el caso del dueño: 4 h, 2 de cambio de tamaño y 2 al 70 % → 35 %; sin el cambio, 70 %', () => {
+    // Cambio de tamaño como parada no planificada con su estándar (decisión del dueño, 2026-11-21); 1 s por unidad, 5.040 unidades = 84 min.
+    const r = oee({ shift: 240, plannedStops: [], stops: [{ minutes: 120, category: 0, standard: 120 }], categories: 1, idealCycle: 1, total: 5040, rejects: 0 }).result!;
+    expect(r.minutes.useful).toBeCloseTo(84, 9);
+    expect(pct2(utilization(r, []).value)).toBe(35);
+    expect(pct2(utilization(r, ['s0']).value)).toBe(70);
   });
 
   test('un estándar mayor que la parada: todo es estándar, sin exceso', () => {
