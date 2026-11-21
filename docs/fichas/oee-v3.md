@@ -12,6 +12,15 @@ respuestas (mandan sobre el texto de abajo):
   estándar), como manda el estándar del sector: así se ven como algo que se
   puede mejorar, y la torta permite mirarlos desde otra perspectiva.
 
+Colores (pedido del dueño tras probarla, 2026-11-21: «diferenciar colores»):
+útil azul, velocidad verde y calidad ámbar, fijos; cada parada planificada y
+cada categoría con su color propio en un orden comprobado con el validador
+de paletas, y la parte estándar en el color de su categoría, más claro.
+Desde la sexta se repite el color con puntos. El Pareto usa los mismos. Por
+eso la lista va en orden fijo (útil, planificadas, cada categoría con su
+estándar al lado, velocidad, calidad) y no de mayor a menor: el color sigue
+a cada parada, no a su tamaño; el tamaño lo ordena el Pareto.
+
 Construcción: cada categoría da hasta dos porciones, «Categoría · estándar» y
 el resto de la categoría (que se llama «Categoría · exceso sobre el
 estándar» si todo lo que queda es exceso). En la hoja de Google, la

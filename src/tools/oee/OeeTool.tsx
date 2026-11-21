@@ -180,16 +180,49 @@ function toSaved(st: State, t: Messages): { saved: OeeSaved | null; bad: string 
   };
 }
 
-// Colores de la torta por familia, comunes a todos los temas y bien distintos entre sí
-// (también con daltonismo). Cada porción lleva además su nombre en la lista.
-const FAMILY: Record<OeeSliceKind, string> = {
-  useful: 'var(--series-1)',
-  planned: 'var(--series-7)',
-  stops: 'var(--series-2)',
-  standard: 'var(--series-5)',
-  speed: 'var(--series-3)',
-  quality: 'var(--series-4)',
-};
+// Colores de la torta (y del Pareto), comunes a todos los temas. Fijos: útil azul,
+// velocidad verde y calidad ámbar. Cada parada planificada y cada categoría lleva el
+// suyo, en este orden (comprobado con el validador de paletas: los vecinos se distinguen,
+// también con daltonismo). La parte estándar de una categoría va en su mismo color,
+// más claro. Desde la sexta, el color se repite con puntos. Cada porción lleva además
+// su nombre en la lista: nada depende solo del color.
+const POOL = ['var(--series-2)', 'var(--series-7)', 'var(--series-5)', 'var(--series-6)', 'var(--series-8)'];
+interface Paint {
+  color: string;
+  /** Parte estándar: el color de su categoría, más claro. */
+  tint: boolean;
+  /** Color repetido: lleva puntos. */
+  dots: boolean;
+}
+const FIXED: Partial<Record<OeeSliceKind, string>> = { useful: 'var(--series-1)', speed: 'var(--series-3)', quality: 'var(--series-4)' };
+
+/** Color de cada porción por su clave; las categorías también por «cat3». */
+function paints(r: OeeResult): Map<string, Paint> {
+  const m = new Map<string, Paint>();
+  let j = 0;
+  const next = () => {
+    const p = { color: POOL[j % POOL.length]!, tint: false, dots: j >= POOL.length };
+    j++;
+    return p;
+  };
+  for (const x of r.slices) {
+    const fixed = FIXED[x.kind];
+    if (fixed) m.set(x.key, { color: fixed, tint: false, dots: false });
+    else if (x.kind === 'planned') m.set(x.key, next());
+    else {
+      const base = m.get(`cat${x.index}`) ?? next();
+      m.set(`cat${x.index}`, base);
+      m.set(x.key, { ...base, tint: x.kind === 'standard' });
+    }
+  }
+  return m;
+}
+
+/** El color de relleno de una pintura (la parte estándar, mezclada con el fondo). */
+const fillOf = (p: Paint) => (p.tint ? `color-mix(in srgb, ${p.color} 50%, var(--surface))` : p.color);
+/** Fondo CSS de una pintura: color, y puntos si se repite. */
+const backgroundOf = (p: Paint) =>
+  p.dots ? `radial-gradient(var(--surface) 1.3px, transparent 1.7px) 0 0 / 5px 5px, ${fillOf(p)}` : fillOf(p);
 
 /** Clave de la torta con ids de pantalla («c1» → «c:5»). */
 function screenKey(key: string, st: State): string {
@@ -197,8 +230,9 @@ function screenKey(key: string, st: State): string {
 }
 
 /** Torta con hueco: una porción por clave, las desmarcadas en gris rayado. */
-function Donut({ slices, children }: { slices: { key: string; minutes: number; color: string; off: boolean }[]; children: ReactNode }) {
+function Donut({ slices, children }: { slices: { key: string; minutes: number; paint: Paint; off: boolean }[]; children: ReactNode }) {
   const hatch = useId();
+  const dots = useId();
   const total = slices.reduce((a, x) => a + x.minutes, 0);
   const R = 96;
   const r = 62;
@@ -221,9 +255,24 @@ function Donut({ slices, children }: { slices: { key: string; minutes: number; c
             <rect width="7" height="7" fill="var(--surface-2)" />
             <line x1="0" y1="0" x2="0" y2="7" stroke="var(--line)" strokeWidth="3" />
           </pattern>
+          {paths
+            .filter((x) => x.paint.dots && !x.off)
+            .map((x) => (
+              <pattern key={x.key} id={`${dots}${x.key}`} width="5" height="5" patternUnits="userSpaceOnUse">
+                <rect width="5" height="5" style={{ fill: fillOf(x.paint) }} />
+                <circle cx="2.5" cy="2.5" r="1.2" fill="var(--surface)" />
+              </pattern>
+            ))}
         </defs>
         {paths.map((x) => (
-          <path key={x.key} d={x.d} fill={x.off ? `url(#${hatch})` : x.color} stroke="var(--surface)" strokeWidth="2" strokeLinejoin="round" />
+          <path
+            key={x.key}
+            d={x.d}
+            style={{ fill: x.off ? `url("#${hatch}")` : x.paint.dots ? `url("#${dots}${x.key}")` : fillOf(x.paint) }}
+            stroke="var(--surface)"
+            strokeWidth="2"
+            strokeLinejoin="round"
+          />
         ))}
       </svg>
       <div className="absolute inset-0 grid place-items-center">{children}</div>
@@ -591,8 +640,10 @@ export default function OeeTool() {
     const furthest = furthestFactor(r);
     const u = utilization(r, saved.off);
     const uLabel = utilizationLabel(saved, r, t);
-    // La torta: el tiempo útil primero y después de mayor a menor.
-    const slices = [r.slices[0]!, ...r.slices.slice(1).sort((a, b) => b.minutes - a.minutes)];
+    // La torta, en un orden fijo (el color sigue a cada parada, no a su tamaño): útil, planificadas,
+    // cada categoría con su estándar al lado, velocidad y calidad. El tamaño lo ordena el Pareto.
+    const slices = r.slices;
+    const paint = paints(r);
     const isOff = (key: string) => saved.off.includes(key);
     const toggleSlice = (key: string) => {
       const k = screenKey(key, state);
@@ -618,12 +669,17 @@ export default function OeeTool() {
     type Item = { key: string; name: string; minutes: number; color: string };
     const items: Item[] =
       saved.pareto.by === 'category'
-        ? r.byCategory.map((m, c) => ({ key: `c${c}`, name: categoryName(saved, c, t), minutes: m, color: 'bg-series-2' }))
-        : saved.stops.map((x, k) => ({ key: `s${k}`, name: stopName(saved, k, t), minutes: x.minutes, color: 'bg-series-2' }));
+        ? r.byCategory.map((m, c) => ({ key: `c${c}`, name: categoryName(saved, c, t), minutes: m, color: backgroundOf(paint.get(`cat${c}`) ?? { color: POOL[0]!, tint: false, dots: false }) }))
+        : saved.stops.map((x, k) => ({
+            key: `s${k}`,
+            name: stopName(saved, k, t),
+            minutes: x.minutes,
+            color: backgroundOf(paint.get(`cat${x.category}`) ?? { color: POOL[0]!, tint: false, dots: false }),
+          }));
     if (saved.pareto.losses)
       items.push(
-        { key: 'speed', name: d.losses.speed!, minutes: Math.max(0, r.minutes.speed), color: 'bg-series-3' },
-        { key: 'quality', name: d.losses.quality!, minutes: r.minutes.quality, color: 'bg-series-4' },
+        { key: 'speed', name: d.losses.speed!, minutes: Math.max(0, r.minutes.speed), color: FIXED.speed! },
+        { key: 'quality', name: d.losses.quality!, minutes: r.minutes.quality, color: FIXED.quality! },
       );
     const byKey = new Map(items.map((x) => [x.key, x]));
     const rows = pareto(items.map((x) => ({ key: x.key, minutes: x.minutes })));
@@ -660,7 +716,7 @@ export default function OeeTool() {
         <div className="flex flex-col gap-3 border-t border-line pt-4">
           <SubTitle>{d.pieTitle}</SubTitle>
           <Hint>{d.pieHint}</Hint>
-          <Donut slices={slices.map((x) => ({ key: x.key, minutes: x.minutes, color: FAMILY[x.kind], off: isOff(x.key) }))}>
+          <Donut slices={slices.map((x) => ({ key: x.key, minutes: x.minutes, paint: paint.get(x.key)!, off: isOff(x.key) }))}>
             <Explained calc={ex.utilization} className="flex size-[58%] flex-col items-center justify-center gap-0.5 rounded-full text-center">
               <span className="sr-only">{uLabel} </span>
               <span className="font-display text-[clamp(22px,8vw,32px)] leading-none font-bold tracking-tight tabular-nums">{f.pct(u.value)}</span>
@@ -707,7 +763,7 @@ export default function OeeTool() {
                 <span
                   aria-hidden
                   className="mt-1 size-3.5 shrink-0 rounded-full border border-line"
-                  style={off ? { background: 'repeating-linear-gradient(45deg, var(--line) 0 2px, var(--surface-2) 2px 5px)' } : { background: FAMILY[x.kind] }}
+                  style={{ background: off ? 'repeating-linear-gradient(45deg, var(--line) 0 2px, var(--surface-2) 2px 5px)' : backgroundOf(paint.get(x.key)!) }}
                 />
               );
               const minutes = <span className={`font-semibold tabular-nums ${off ? 'text-muted line-through' : ''}`}>{f.min(x.minutes)}</span>;
@@ -769,7 +825,7 @@ export default function OeeTool() {
                       <span className="shrink-0 font-display text-[16px] font-bold tabular-nums">{f.min(row.minutes)}</span>
                     </span>
                     <span aria-hidden className="block h-3 rounded-full bg-surface-2">
-                      <span className={`block h-full rounded-full ${item.color}`} style={{ width: `${(row.minutes / maxMinutes) * 100}%` }} />
+                      <span className="block h-full rounded-full" style={{ width: `${(row.minutes / maxMinutes) * 100}%`, background: item.color }} />
                     </span>
                     <span className="text-[13px] text-muted tabular-nums">{d.paretoRow(f.share(row.share), saved.pareto.losses)}</span>
                     {k === cut && k < rows.length - 1 && (
