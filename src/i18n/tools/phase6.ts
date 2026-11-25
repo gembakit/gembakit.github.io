@@ -6,9 +6,10 @@ import type { Widen } from '../types';
 export const projectPlusEs = {
   tabs: { fases: 'Fases', hoja: 'Hoja', acciones: 'Acciones', informe: 'Informe' } as Record<string, string>,
   tabsLabel: 'Secciones del proyecto',
-  phaseTitle: (p: string) => `Fase ${p}`,
-  usualTools: 'Herramientas de esta fase',
-  toClose: 'Para cerrar la fase',
+  suggestions: 'Sugerencias',
+  suggestionsSub: (phase: string, done: number, total: number) => `Fase ${phase} · ${done} de ${total} hecho`,
+  toDo: 'Qué hacer en esta fase',
+  usualTools: 'Herramientas que puedes usar',
   allDone: 'Todo lo de esta fase está hecho: puedes pasar a la siguiente.',
   checks: {
     goal: 'Objetivo escrito (Editar el proyecto)',
@@ -23,8 +24,6 @@ export const projectPlusEs = {
   } as Record<string, string>,
   done: 'Hecho',
   pending: 'Pendiente',
-  assistant: '¿Qué necesitas hacer?',
-  assistantHint: 'Elige lo que quieres conseguir y abre la herramienta: lo que guardes irá a este proyecto.',
   needs: {
     priority: 'Ver qué problema o causa pesa más',
     stable: 'Saber si el proceso es estable o si cambió',
@@ -68,7 +67,7 @@ export const projectPlusEs = {
   ref: {
     decide: '¿Qué herramienta uso?',
     decideCount: (n: number) => `${n} situaciones`,
-    decideHint: 'Elige lo que quieres conseguir y abre la herramienta. Dentro de un proyecto, el mismo asistente está en la pestaña Fases y guarda en ese proyecto.',
+    decideHint: 'Elige lo que quieres conseguir y abre la herramienta.',
     formulas: 'Fórmulas',
     formulasCount: (n: number) => (n === 1 ? '1 herramienta' : `${n} herramientas`),
     formulasMore: 'Dentro de cada herramienta, toca cualquier resultado para ver su fórmula con tus números.',
@@ -78,9 +77,10 @@ export const projectPlusEs = {
 export const projectPlusEn: Widen<typeof projectPlusEs> = {
   tabs: { fases: 'Phases', hoja: 'Sheet', acciones: 'Actions', informe: 'Report' },
   tabsLabel: 'Project sections',
-  phaseTitle: (p) => `${p} phase`,
-  usualTools: 'Tools for this phase',
-  toClose: 'To close the phase',
+  suggestions: 'Suggestions',
+  suggestionsSub: (phase, done, total) => `${phase} phase · ${done} of ${total} done`,
+  toDo: 'What to do in this phase',
+  usualTools: 'Tools you can use',
   allDone: 'Everything in this phase is done: you can move on to the next one.',
   checks: {
     goal: 'Goal written (Edit the project)',
@@ -95,8 +95,6 @@ export const projectPlusEn: Widen<typeof projectPlusEs> = {
   },
   done: 'Done',
   pending: 'Pending',
-  assistant: 'What do you need to do?',
-  assistantHint: 'Choose what you want to achieve and open the tool: what you save will go to this project.',
   needs: {
     priority: 'See which problem or cause weighs most',
     stable: 'Know whether the process is stable or changed',
@@ -140,7 +138,7 @@ export const projectPlusEn: Widen<typeof projectPlusEs> = {
   ref: {
     decide: 'Which tool do I use?',
     decideCount: (n) => `${n} situations`,
-    decideHint: 'Choose what you want to achieve and open the tool. Inside a project, the same assistant is in the Phases tab and saves to that project.',
+    decideHint: 'Choose what you want to achieve and open the tool.',
     formulas: 'Formulas',
     formulasCount: (n) => (n === 1 ? '1 tool' : `${n} tools`),
     formulasMore: 'Inside each tool, tap any result to see its formula with your numbers.',

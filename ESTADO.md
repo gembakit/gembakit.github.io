@@ -272,6 +272,26 @@ ficha `docs/fichas/oee-v3.md`, aprobada con sus respuestas. Sustituye a
 Colores (2026-11-21, pedido del dueño): cada parada y categoría con su color
 en la torta y en el Pareto (ver la ficha).
 
+### Interfaz más limpia (pedido del dueño el 2026-11-25)
+
+Tras ver la app terminada, el dueño dice que «escupe toda la información de
+golpe». Pasos, uno por commit y parando después de cada uno:
+
+1. [x] Fases del proyecto: primero fase, mediciones e hitos; al final
+   «Sugerencias», plegado siempre al entrar, con «Qué hacer en esta fase» y
+   «Herramientas que puedes usar» (solo la fase actual). El asistente de 13
+   situaciones sale del proyecto (sigue en Referencia).
+2. [ ] Textos de ejemplo dentro de los cuadros: más claros, que no parezcan
+   ya escritos.
+3. [ ] «Mis líneas» (recetas) fuera de Referencia.
+4. [ ] Informe del proyecto: elegir qué entra (mediciones, acciones, hitos).
+5. [ ] Hoja de Google: dos mediciones con el mismo nombre daban dos pestañas
+   casi iguales («… · 14 nov» y «… (2)»). Son dos mediciones distintas, no
+   versiones (las versiones no crean pestañas); poner nombres que se
+   distingan.
+6. [ ] «Proyecto modelo» bloqueado: un caso real de principio a fin con varias
+   herramientas y la guía «¿Qué necesitas hacer?». Ficha antes de construir.
+
 ### Encargo: terminar la app (desde el 2026-11-21)
 
 El dueño pidió terminar la app entera de forma autónoma (todas las

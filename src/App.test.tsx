@@ -474,8 +474,10 @@ test('Acciones: se añaden en el proyecto y la lista de proyectos avisa de las v
   await user.type(await screen.findByRole('textbox', { name: /^(Nombre|Name)$/ }), 'Kaizen acciones');
   await user.click(screen.getByRole('button', { name: /Crear proyecto|Create project/ }));
   expect(await screen.findByRole('heading', { level: 1, name: 'Kaizen acciones' })).toBeInTheDocument();
-  // Fases muestra lo que falta para cerrar la fase; las acciones están en su pestaña.
-  expect(await screen.findByText(/^(Para cerrar la fase|To close the phase)$/)).toBeInTheDocument();
+  // «Sugerencias» viene plegado; al abrirlo dice qué hacer en la fase. Las acciones están en su pestaña.
+  expect(screen.queryByText(/^(Qué hacer en esta fase|What to do in this phase)$/)).not.toBeInTheDocument();
+  await user.click(await screen.findByRole('button', { name: /^(Sugerencias|Suggestions)/ }));
+  expect(await screen.findByText(/^(Qué hacer en esta fase|What to do in this phase)$/)).toBeInTheDocument();
   await user.click(screen.getByRole('tab', { name: /^(Acciones|Actions)$/ }));
   await user.click(await screen.findByRole('button', { name: /^(Añadir acción|Add action)$/ }));
   const dialog = await screen.findByRole('dialog');

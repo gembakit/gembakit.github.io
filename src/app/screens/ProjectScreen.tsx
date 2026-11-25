@@ -12,7 +12,7 @@ import { FilterSheet } from '../../projects/FilterSheet';
 import { MilestoneSheet } from '../../projects/MilestoneSheet';
 import { SheetCard } from '../../projects/SheetCard';
 import { ActionsSection } from '../../projects/Actions';
-import { AssistantPanel, PhasePanel, ProjectTabs, ReportPanel, type ProjectTab } from '../../projects/ProjectPanels';
+import { ProjectTabs, ReportPanel, SuggestionsPanel, type ProjectTab } from '../../projects/ProjectPanels';
 import { activeFilters, applyFilter, isDefault, NO_FILTER, recallFilter, rememberFilter, type MeasurementFilter } from '../../projects/filter';
 import { formatDateTime, formatHeadline, useLive } from '../../projects/live';
 import { deleteProject, getProject, latest, listMeasurements, listMilestones, restoreProject, updateProject } from '../../projects/store';
@@ -104,9 +104,6 @@ export function ProjectScreen({ id, tab: initialTab = 'fases' }: { id: string; t
         </Card>
       )}
 
-      {tab === 'fases' && <PhasePanel project={project} />}
-      {tab === 'fases' && <AssistantPanel projectId={project.id} />}
-
       {tab === 'fases' && (
       <section className="flex flex-col gap-3">
         <div className="flex min-h-12 items-center justify-between gap-3">
@@ -180,6 +177,7 @@ export function ProjectScreen({ id, tab: initialTab = 'fases' }: { id: string; t
       </section>
       )}
 
+      {tab === 'fases' && <SuggestionsPanel project={project} />}
       {tab === 'hoja' && <SheetCard projectId={project.id} />}
       {tab === 'informe' && <ReportPanel projectId={project.id} />}
 
