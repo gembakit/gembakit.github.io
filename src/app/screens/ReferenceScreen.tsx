@@ -1,16 +1,15 @@
 import { useId, useMemo, useState, type ReactNode } from 'react';
-import { BookA, BookOpenText, ChevronDown, Factory, Search, Signpost, Sigma, type LucideIcon } from 'lucide-react';
+import { BookA, BookOpenText, ChevronDown, Search, Signpost, Sigma, type LucideIcon } from 'lucide-react';
 import { useI18n } from '../../i18n';
 import { BigHeader, Screen } from '../../ui/Layout';
 import { GLOSSARY_CATEGORIES, normalize, searchGlossary, type GlossaryCategory } from '../../reference/glossary';
 import { guideFor } from '../../reference/guide';
-import { MyLines, useRecipeCount } from '../../recipes/RecipeUI';
 import { NeedsList, ToolChip } from '../../projects/ProjectPanels';
 import { NEEDS } from '../../projects/phaseGuide';
 import { TOOLS } from '../../tools/registry';
 
 // Qué bloques dejó abiertos el usuario: se recuerda mientras la app está abierta.
-const remembered = { guide: false, glossary: false, lines: false, decide: false, formulas: false };
+const remembered = { guide: false, glossary: false, decide: false, formulas: false };
 
 /** Fórmulas de cada herramienta que tiene cálculo (las de documento no tienen). */
 function toolFormulas(tools: unknown): { id: string; lines: string[] }[] {
@@ -117,9 +116,6 @@ export function ReferenceScreen() {
   const [openGlossary, setOpenGlossary] = useState(remembered.glossary);
   const toggleGuide = () => setOpenGuide((v) => (remembered.guide = !v));
   const toggleGlossary = () => setOpenGlossary((v) => (remembered.glossary = !v));
-  const [openLines, setOpenLines] = useState(remembered.lines);
-  const toggleLines = () => setOpenLines((v) => (remembered.lines = !v));
-  const recipeCount = useRecipeCount();
   const [openDecide, setOpenDecide] = useState(remembered.decide);
   const toggleDecide = () => setOpenDecide((v) => (remembered.decide = !v));
   const [openFormulas, setOpenFormulas] = useState(remembered.formulas);
@@ -156,11 +152,6 @@ export function ReferenceScreen() {
           );
         })}
         <p className="border-t border-line px-4 py-3 text-[13.5px] text-muted">{r.formulasMore}</p>
-      </Block>
-
-      <Block icon={Factory} title={t.recipes.title} count={t.recipes.count(recipeCount ?? 0)} open={openLines} onToggle={toggleLines}>
-        <p className="border-b border-line px-4 py-3 text-[14.5px] leading-relaxed text-muted">{t.recipes.intro}</p>
-        <MyLines />
       </Block>
 
       <Block icon={BookOpenText} title={t.reference.guide} count={t.reference.topics(guide.length)} open={openGuide} onToggle={toggleGuide}>

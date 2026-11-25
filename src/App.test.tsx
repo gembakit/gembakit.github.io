@@ -152,11 +152,12 @@ test('Recetas: guardar las estaciones del takt como receta, verla en Mis líneas
   expect(await screen.findByText(/^(Receta cargada|Recipe loaded): Planta Norte · Línea 3 · 12 oz$/)).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /^(Encajonadora|Case packer)/ })).toBeInTheDocument();
 
-  // En Referencia › Mis líneas: planta, línea y receta, con sus estaciones.
+  // En Ajustes › Mis líneas: planta, línea y receta, con sus estaciones.
   await act(async () => {
-    window.location.hash = '#/referencia';
+    window.location.hash = '#/ajustes';
   });
-  await user.click(await screen.findByRole('button', { name: /^(Mis líneas|My lines)\s*1 (receta|recipe)/ }));
+  await user.click(await screen.findByRole('button', { name: /^1 (receta|recipe)/ }));
+  expect(await screen.findByRole('heading', { level: 1, name: /^(Mis líneas|My lines)$/ })).toBeInTheDocument();
   expect(await screen.findByRole('heading', { name: 'Planta Norte' })).toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: /^12 oz/ }));
   expect(screen.getByText(/^(Llenadora · 48\.000\sbotellas\/h|Filler · 48,000\sbottles\/h)$/)).toBeInTheDocument();

@@ -284,7 +284,8 @@ golpe». Pasos, uno por commit y parando después de cada uno:
 2. [x] Textos de ejemplo dentro de los cuadros: más claros, que no parezcan
    ya escritos. Empiezan por «Ej.:» («e.g.» en inglés), en cursiva y más
    claros; los que no cabían a 320 px se acortaron (medidos uno a uno).
-3. [ ] «Mis líneas» (recetas) a Ajustes (aprobado por el dueño).
+3. [x] «Mis líneas» (recetas) a Ajustes (aprobado por el dueño): fila en Ajustes
+   con el número de recetas, que abre su pantalla (#/ajustes/lineas).
 4. [ ] Informe del proyecto: elegir qué entra (mediciones, acciones, hitos).
 5. [ ] Hoja de Google: dos mediciones con el mismo nombre daban dos pestañas
    casi iguales («… · 14 nov» y «… (2)»). Son dos mediciones distintas, no

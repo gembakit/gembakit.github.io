@@ -702,7 +702,7 @@ export const es = {
         balanceAppOnly: 'El balanceo con velocidades se ve en la app.',
       },
       guide: [
-        'Arriba, «Cargar receta» trae las estaciones de una línea ya guardadas (con su unidad, su equivalencia y su velocidad estándar) y «Guardar como receta» guarda las que tienes escritas, por planta, línea y nombre. Después de cargarla puedes cambiar lo que quieras: la receta no cambia hasta que la guardes otra vez. Las recetas están en Referencia › Mis líneas.',
+        'Arriba, «Cargar receta» trae las estaciones de una línea ya guardadas (con su unidad, su equivalencia y su velocidad estándar) y «Guardar como receta» guarda las que tienes escritas, por planta, línea y nombre. Después de cargarla puedes cambiar lo que quieras: la receta no cambia hasta que la guardes otra vez. Las recetas están en Ajustes › Mis líneas.',
         'Los datos van en cuatro bloques plegables: «Tiempo disponible», «Demanda», «Unidades y balanceo» y «Estaciones». Toca el título de un bloque para abrirlo o cerrarlo; cerrado, enseña un resumen de lo que tiene.',
         'En «Tiempo disponible», escribe la duración del turno y cada descuento planificado con su nombre (reunión, limpieza, descansos si la línea para). Cada tiempo tiene su unidad: s, min u h. Si la demanda cubre varios turnos, pon cuántos. La app enseña la resta.',
         'En «Demanda», escribe la demanda del periodo y, si quieres, el nombre de la unidad en plural (botellas, cajas…): sale en todas las unidades, como «botellas/h» o «s/botella».',
@@ -1229,6 +1229,7 @@ export const es = {
   recipes: {
     title: 'Mis líneas',
     count: (n: number) => (n === 1 ? '1 receta' : `${n} recetas`),
+    entryDesc: 'Estaciones y velocidades de cada línea, para el takt y el OEE',
     intro: 'Cada receta guarda la configuración de una línea para un producto: sus estaciones, con su unidad, su equivalencia y su velocidad estándar. Se ordenan por planta y línea. Se crean desde el takt con «Guardar como receta» y se cargan con «Cargar receta».',
     load: 'Cargar receta',
     saveAs: 'Guardar como receta',
@@ -1245,8 +1246,8 @@ export const es = {
     linePh: 'Ej.: Línea 3',
     namePh: 'Ej.: 12 oz',
     saveTitle: 'Guardar como receta',
-    saveHint: 'Se guardan las estaciones con su unidad, su equivalencia y su velocidad estándar, y lo que produce la línea. Las medidas reales no: esas son de cada medición. Si la receta ya existe, lo que guardó el OEE se queda igual. La encontrarás en Referencia › Mis líneas.',
-    saveHintOee: 'Se guardan la velocidad estándar de la línea, lo que produce y los cambios con su tiempo estándar (las paradas que lo tienen). Si la receta ya existe, sus estaciones se quedan igual. La encontrarás en Referencia › Mis líneas.',
+    saveHint: 'Se guardan las estaciones con su unidad, su equivalencia y su velocidad estándar, y lo que produce la línea. Las medidas reales no: esas son de cada medición. Si la receta ya existe, lo que guardó el OEE se queda igual. La encontrarás en Ajustes › Mis líneas.',
+    saveHintOee: 'Se guardan la velocidad estándar de la línea, lo que produce y los cambios con su tiempo estándar (las paradas que lo tienen). Si la receta ya existe, sus estaciones se quedan igual. La encontrarás en Ajustes › Mis líneas.',
     exists: 'Ya hay una receta con este nombre en esta línea: se actualiza con lo de esta herramienta y lo demás se queda igual. Podrás deshacerlo.',
     existsError: 'Ya hay una receta con estos nombres.',
     save: 'Guardar receta',

@@ -11,6 +11,7 @@ import { ToolsScreen } from './screens/ToolsScreen';
 import { ReferenceScreen } from './screens/ReferenceScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { DataScreen } from './screens/DataScreen';
+import { LinesScreen } from './screens/LinesScreen';
 import { WelcomeScreen } from './screens/WelcomeScreen';
 import { welcomeDone } from '../google/account';
 import { currentAccount } from '../google/session';
@@ -88,6 +89,7 @@ export function AppShell({ persisted }: { persisted: boolean | null }) {
   else if (section === 'herramientas') screen = <ToolsScreen />;
   else if (section === 'referencia') screen = <ReferenceScreen />;
   else if (section === 'ajustes' && sub === 'datos') screen = <DataScreen />;
+  else if (section === 'ajustes' && sub === 'lineas') screen = <LinesScreen />;
   else if (section === 'ajustes') screen = <SettingsScreen persisted={persisted} />;
   else if (sub === 'nuevo') screen = <ProjectFormScreen />;
   else if (sub && kind === 'editar') screen = <ProjectFormScreen key={sub} id={sub} />;

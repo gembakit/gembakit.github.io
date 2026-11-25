@@ -694,7 +694,7 @@ export const en: Messages = {
         balanceAppOnly: 'Line balancing with speeds is shown in the app.',
       },
       guide: [
-        'At the top, “Load recipe” brings in the stations of a line you saved before (with their unit, their equivalence and their standard speed) and “Save as recipe” saves the ones you have entered, by plant, line and name. After loading it you can change anything: the recipe does not change until you save it again. Recipes are in Reference › My lines.',
+        'At the top, “Load recipe” brings in the stations of a line you saved before (with their unit, their equivalence and their standard speed) and “Save as recipe” saves the ones you have entered, by plant, line and name. After loading it you can change anything: the recipe does not change until you save it again. Recipes are in Settings › My lines.',
         'The data sits in four folding blocks: “Available time”, “Demand”, “Units and line balancing” and “Stations”. Tap a block’s title to open or close it; when closed, it shows a summary of what is inside.',
         'In “Available time”, enter the shift length and each planned deduction with its name (meeting, cleaning, breaks if the line stops). Each time has its own unit: s, min or h. If the demand covers several shifts, enter how many. The app shows the subtraction.',
         'In “Demand”, enter the demand for the period and, if you like, the unit name in the plural (bottles, cases…): it appears in every unit, such as “bottles/h” or “s/bottle”.',
@@ -1221,6 +1221,7 @@ export const en: Messages = {
   recipes: {
     title: 'My lines',
     count: (n) => (n === 1 ? '1 recipe' : `${n} recipes`),
+    entryDesc: 'Stations and speeds of each line, for takt and OEE',
     intro: 'Each recipe keeps the set-up of a line for one product: its stations, with their unit, their equivalence and their standard speed. They are sorted by plant and line. You create them from the takt tool with “Save as recipe” and load them with “Load recipe”.',
     load: 'Load recipe',
     saveAs: 'Save as recipe',
@@ -1237,8 +1238,8 @@ export const en: Messages = {
     linePh: 'e.g. Line 3',
     namePh: 'e.g. 12 oz',
     saveTitle: 'Save as recipe',
-    saveHint: 'It keeps the stations with their unit, their equivalence and their standard speed, and what the line produces. Not the actual measurements: those belong to each measurement. If the recipe already exists, what the OEE saved stays the same. You will find it in Reference › My lines.',
-    saveHintOee: 'It keeps the standard speed of the line, what it produces and the changeovers with their standard time (the stops that have one). If the recipe already exists, its stations stay the same. You will find it in Reference › My lines.',
+    saveHint: 'It keeps the stations with their unit, their equivalence and their standard speed, and what the line produces. Not the actual measurements: those belong to each measurement. If the recipe already exists, what the OEE saved stays the same. You will find it in Settings › My lines.',
+    saveHintOee: 'It keeps the standard speed of the line, what it produces and the changeovers with their standard time (the stops that have one). If the recipe already exists, its stations stay the same. You will find it in Settings › My lines.',
     exists: 'There is already a recipe with this name on this line: it is updated with what this tool keeps and the rest stays the same. You can undo it.',
     existsError: 'There is already a recipe with these names.',
     save: 'Save recipe',

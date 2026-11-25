@@ -11,7 +11,7 @@ import type { SyncedRecord } from './record';
 // - el que está y la copia es más antigua, la copia pasa a su historial;
 // - el que está y la copia es más reciente, la copia pasa a ser la actual y
 //   lo del teléfono queda en su historial.
-// Las recetas (Referencia › Mis líneas) van aparte: de cada una se queda la
+// Las recetas (Ajustes › Mis líneas) van aparte: de cada una se queda la
 // más reciente, la del teléfono o la de la copia. Las copias sin recetas
 // (anteriores al 2026-11-21) se leen igual.
 

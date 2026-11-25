@@ -185,7 +185,7 @@ export class GembaDB extends Dexie {
     this.version(3).stores({
       projectVersions: 'id, projectId',
     });
-    // Versión 4: recetas de las líneas (Referencia › Mis líneas).
+    // Versión 4: recetas de las líneas (Ajustes › Mis líneas).
     this.version(4).stores({
       recipes: 'id, updatedAt, deleted',
     });

@@ -1,4 +1,4 @@
-import { Check, ChevronRight, Copy, DatabaseBackup, Monitor, Moon, ShieldCheck, ShieldAlert, Sun } from 'lucide-react';
+import { Check, ChevronRight, Copy, DatabaseBackup, Factory, Monitor, Moon, ShieldCheck, ShieldAlert, Sun } from 'lucide-react';
 import { navigate } from '../router';
 import { Button } from '../../ui/Button';
 import { useCopyHealth } from '../HealthBanner';
@@ -9,6 +9,7 @@ import { useTheme, type ModeChoice } from '../../ui/theme/ThemeProvider';
 import { DEFAULT_THEME, THEMES, THEME_IDS } from '../../ui/theme/themes';
 import { APP_VERSION } from '../../version';
 import { GoogleAccountPanel } from '../GoogleAccount';
+import { useRecipeCount } from '../../recipes/RecipeUI';
 
 function Segmented<T extends string>({ value, options, onChange, label }: { value: T; options: { id: T; label: string; icon?: ReactNode }[]; onChange: (v: T) => void; label: string }) {
   return (
@@ -37,6 +38,7 @@ export function SettingsScreen({ persisted }: { persisted: boolean | null }) {
   const { t, choice, setChoice } = useI18n();
   const { theme, setTheme, modeChoice, setModeChoice, mode } = useTheme();
   const copyHealth = useCopyHealth();
+  const recipeCount = useRecipeCount();
 
   return (
     <Screen>
@@ -112,6 +114,24 @@ export function SettingsScreen({ persisted }: { persisted: boolean | null }) {
             })}
           </div>
         </Card>
+      </section>
+
+      <section className="flex flex-col gap-2.5">
+        <Label>{t.recipes.title}</Label>
+        <button
+          type="button"
+          onClick={() => navigate('/ajustes/lineas')}
+          className="press raised grid min-h-18 grid-cols-[48px_minmax(0,1fr)_20px] items-center gap-3 rounded-[20px] p-3 text-left"
+        >
+          <span className="grid size-12 place-items-center rounded-[14px] bg-soft text-accent-ink">
+            <Factory aria-hidden size={22} />
+          </span>
+          <span className="min-w-0">
+            <span className="block text-[15.5px] font-semibold">{t.recipes.count(recipeCount ?? 0)}</span>
+            <span className="block text-[13px] text-muted">{t.recipes.entryDesc}</span>
+          </span>
+          <ChevronRight aria-hidden size={20} className="text-muted" />
+        </button>
       </section>
 
       <section className="flex flex-col gap-2.5">
