@@ -296,7 +296,12 @@ golpe». Pasos, uno por commit y parando después de cada uno:
    distingan.
 6. [ ] Rediseño de los exportables (PDF y hoja de Google): el dueño dice que
    solo cambió el color y que no se ve profesional ni de alta calidad.
-   Primero una propuesta visual para aprobar, luego construir.
+   Primero una propuesta visual para aprobar, luego construir. El dueño
+   aceptó juntar aquí el paso 5 (nombres de pestaña). Propuesta del
+   2026-11-25 (lienzo privado del dueño, «Exportables Gemba Kit»): PDF opción A
+   «Informe técnico» y opción B «Ficha de una página»; hoja con resumen,
+   datos y resultados lado a lado, gráfico de la hoja y pestaña «Índice»;
+   pestañas «Nº · Fase · Nombre». Esperando su elección.
 7. [ ] «Proyecto modelo» bloqueado: un caso real de principio a fin con varias
    herramientas y la guía «¿Qué necesitas hacer?». Ficha antes de construir.
 
