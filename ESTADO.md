@@ -281,15 +281,19 @@ golpe». Pasos, uno por commit y parando después de cada uno:
    «Sugerencias», plegado siempre al entrar, con «Qué hacer en esta fase» y
    «Herramientas que puedes usar» (solo la fase actual). El asistente de 13
    situaciones sale del proyecto (sigue en Referencia).
-2. [ ] Textos de ejemplo dentro de los cuadros: más claros, que no parezcan
-   ya escritos.
-3. [ ] «Mis líneas» (recetas) fuera de Referencia.
+2. [x] Textos de ejemplo dentro de los cuadros: más claros, que no parezcan
+   ya escritos. Empiezan por «Ej.:» («e.g.» en inglés), en cursiva y más
+   claros; los que no cabían a 320 px se acortaron (medidos uno a uno).
+3. [ ] «Mis líneas» (recetas) a Ajustes (aprobado por el dueño).
 4. [ ] Informe del proyecto: elegir qué entra (mediciones, acciones, hitos).
 5. [ ] Hoja de Google: dos mediciones con el mismo nombre daban dos pestañas
    casi iguales («… · 14 nov» y «… (2)»). Son dos mediciones distintas, no
    versiones (las versiones no crean pestañas); poner nombres que se
    distingan.
-6. [ ] «Proyecto modelo» bloqueado: un caso real de principio a fin con varias
+6. [ ] Rediseño de los exportables (PDF y hoja de Google): el dueño dice que
+   solo cambió el color y que no se ve profesional ni de alta calidad.
+   Primero una propuesta visual para aprobar, luego construir.
+7. [ ] «Proyecto modelo» bloqueado: un caso real de principio a fin con varias
    herramientas y la guía «¿Qué necesitas hacer?». Ficha antes de construir.
 
 ### Encargo: terminar la app (desde el 2026-11-21)

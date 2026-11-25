@@ -50,6 +50,20 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/*
+ * Textos de ejemplo dentro de los cuadros: en cursiva y más claros que lo que
+ * escribe el usuario, para que no parezcan ya escritos (pedido del dueño,
+ * 2026-11-25). Fuera de las capas de Tailwind, para que mande sobre
+ * placeholder:text-muted.
+ */
+input::placeholder,
+textarea::placeholder {
+  color: color-mix(in oklab, var(--muted) 72%, transparent);
+  font-style: italic;
+  font-weight: 400;
+  opacity: 1;
+}
+
 /* Relieve: piezas separadas que flotan sobre el fondo (dirección visual aprobada). */
 :root {
   --elev: 0 1px 0 rgb(255 255 255 / 0.75) inset, 0 1px 2px rgb(50 35 20 / 0.07),

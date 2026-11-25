@@ -108,7 +108,7 @@ export default function Auditoria5sTool() {
           title={d.examples.one}
           hint={d.examples.oneHint}
           onPick={() => {
-            setS({ ...emptyAudit(), area: d.examples.one, auditor: d.auditorPh, scores: AUDIT_EXAMPLE_SCORES.map((row) => [...row]) });
+            setS({ ...emptyAudit(), area: d.examples.one, auditor: d.examples.auditor, scores: AUDIT_EXAMPLE_SCORES.map((row) => [...row]) });
             setOpen(null);
             setExamplesOpen(false);
           }}
