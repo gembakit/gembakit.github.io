@@ -286,7 +286,10 @@ golpe». Pasos, uno por commit y parando después de cada uno:
    claros; los que no cabían a 320 px se acortaron (medidos uno a uno).
 3. [x] «Mis líneas» (recetas) a Ajustes (aprobado por el dueño): fila en Ajustes
    con el número de recetas, que abre su pantalla (#/ajustes/lineas).
-4. [ ] Informe del proyecto: elegir qué entra (mediciones, acciones, hitos).
+4. [x] Informe del proyecto: elegir qué entra. En la pestaña Informe, «Qué
+   incluir»: Mediciones (todas, o una a una con la flecha), Acciones e Hitos
+   (solo si hay). Tipo, fase y objetivo van siempre. Vale para el PDF y para
+   «Copiar contexto para IA». No se recuerda: al volver, todo marcado.
 5. [ ] Hoja de Google: dos mediciones con el mismo nombre daban dos pestañas
    casi iguales («… · 14 nov» y «… (2)»). Son dos mediciones distintas, no
    versiones (las versiones no crean pestañas); poner nombres que se

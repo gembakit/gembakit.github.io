@@ -1,8 +1,9 @@
 import { useCallback, useId, useState } from 'react';
-import { ChevronDown, CircleCheck, CircleDashed, ClipboardCheck, Copy, FileText, Flag, Lightbulb, Loader2, Sheet, type LucideIcon } from 'lucide-react';
+import { ChevronDown, ChevronUp, CircleCheck, CircleDashed, ClipboardCheck, Copy, FileText, Flag, Lightbulb, Loader2, Sheet, type LucideIcon } from 'lucide-react';
 import { useI18n } from '../i18n';
 import type { Project } from '../data/db';
-import { Button } from '../ui/Button';
+import { Button, IconButton } from '../ui/Button';
+import { Check } from '../tools/form';
 import { Card } from '../ui/Layout';
 import { useToast } from '../ui/Toast';
 import { PrintNow } from '../ui/PrintDoc';
@@ -10,10 +11,10 @@ import { findTool } from '../tools/registry';
 import { APP_VERSION } from '../version';
 import type { SheetDef } from '../sheet/types';
 import { navigate } from '../app/router';
-import { useLive } from './live';
-import { listActions, listMeasurements, rememberLast } from './store';
+import { formatHeadline, useLive } from './live';
+import { latest, listActions, listMeasurements, listMilestones, rememberLast } from './store';
 import { NEEDS, PHASE_GUIDE, phaseChecks } from './phaseGuide';
-import { projectReport } from './report';
+import { projectReport, type ReportInclude } from './report';
 
 export const PROJECT_TABS = ['fases', 'hoja', 'acciones', 'informe'] as const;
 export type ProjectTab = (typeof PROJECT_TABS)[number];
@@ -151,15 +152,33 @@ export function NeedsList({ projectId }: { projectId?: string }) {
   );
 }
 
-/** Pestaña «Informe»: PDF del proyecto y contexto para IA. */
+/** Pestaña «Informe»: elegir qué entra, y luego el PDF del proyecto o el contexto para IA. */
 export function ReportPanel({ projectId }: { projectId: string }) {
   const { t, lang } = useI18n();
   const r = t.projectPlus.report;
   const toast = useToast();
+  const measurements = useLive(() => listMeasurements(projectId), [projectId]);
+  const actions = useLive(() => listActions(projectId), [projectId]);
+  const milestones = useLive(() => listMilestones(projectId), [projectId]);
+  // Lo que el usuario quita; todo lo demás entra (también lo que se guarde después).
+  const [left, setLeft] = useState<ReadonlySet<string>>(() => new Set());
+  const [withActions, setWithActions] = useState(true);
+  const [withMilestones, setWithMilestones] = useState(true);
+  const [choosing, setChoosing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [printing, setPrinting] = useState<SheetDef | null>(null);
   const done = useCallback(() => setPrinting(null), []);
-  const build = () => projectReport(projectId, t, lang, { version: APP_VERSION, date: new Date().toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB') });
+  const all = measurements ?? [];
+  const nm = all.length;
+  const nIn = all.filter((m) => !left.has(m.id)).length;
+  const na = actions?.length ?? 0;
+  const nh = milestones?.length ?? 0;
+  const include = (): ReportInclude => ({
+    measurements: new Set(all.filter((m) => !left.has(m.id)).map((m) => m.id)),
+    actions: withActions && na > 0,
+    milestones: withMilestones && nh > 0,
+  });
+  const build = () => projectReport(projectId, t, lang, { version: APP_VERSION, date: new Date().toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB'), include: include() });
   const pdf = async () => {
     setBusy(true);
     try {
@@ -179,10 +198,50 @@ export function ReportPanel({ projectId }: { projectId: string }) {
       toast(r.copyFailed);
     }
   };
+  const toggleOne = (id: string, on: boolean) => {
+    const next = new Set(left);
+    if (on) next.delete(id);
+    else next.add(id);
+    setLeft(next);
+  };
   return (
     <Card>
       <h2 className="font-display text-[18px] font-bold">{r.title}</h2>
       <p className="text-[14.5px] leading-relaxed text-muted">{r.hint}</p>
+      <div className="flex flex-col">
+        <h3 className="text-[14px] font-bold text-accent-ink">{r.include}</h3>
+        {nm + na + nh === 0 && measurements && actions && milestones && <p className="py-2 text-[14.5px] leading-relaxed text-muted">{r.onlyProject}</p>}
+        {nm > 0 && (
+          <Check
+            label={r.measurements}
+            hint={r.chosen(nIn, nm)}
+            checked={nIn > 0}
+            onChange={(on) => setLeft(on ? new Set() : new Set(all.map((m) => m.id)))}
+            aside={<IconButton icon={choosing ? ChevronUp : ChevronDown} label={choosing ? r.chooseClose : r.chooseOpen} onClick={() => setChoosing(!choosing)} />}
+          />
+        )}
+        {nm > 0 && choosing && (
+          <ul className="mb-1 ml-3 flex flex-col border-l-2 border-line pl-3">
+            {all.map((m) => {
+              const tool = findTool(m.toolId);
+              const v = latest(m);
+              const phase = m.phase ? (t.projects.phases[m.phase] ?? m.phase) : t.projects.noPhase;
+              return (
+                <li key={m.id}>
+                  <Check
+                    label={m.name}
+                    hint={[phase, tool?.text(t).name, v.headline ? formatHeadline(v.headline, t, lang) : ''].filter(Boolean).join(' · ')}
+                    checked={!left.has(m.id)}
+                    onChange={(on) => toggleOne(m.id, on)}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        {na > 0 && <Check label={r.actions} hint={r.count(na)} checked={withActions} onChange={setWithActions} />}
+        {nh > 0 && <Check label={r.milestones} hint={r.count(nh)} checked={withMilestones} onChange={setWithMilestones} />}
+      </div>
       <Button variant="primary" icon={busy ? Loader2 : FileText} disabled={busy} onClick={() => void pdf()} className="w-full">
         {busy ? r.building : r.pdf}
       </Button>
@@ -195,4 +254,3 @@ export function ReportPanel({ projectId }: { projectId: string }) {
     </Card>
   );
 }
-

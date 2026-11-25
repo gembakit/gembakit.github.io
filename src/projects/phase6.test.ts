@@ -76,4 +76,24 @@ describe('informe del proyecto', () => {
     expect(rep.context).toContain('- Cambiar guía (Mantenimiento · ');
     expect(await projectReport('no-existe', t, 'es', { version: '1', date: 'x' }, database)).toBeNull();
   });
+
+  test('solo entra lo que el usuario elige', async () => {
+    const p = await createProject({ name: 'Elegir', type: 'dmaic', goal: 'Meta', fields: [] }, database);
+    const base = { projectId: p.id, toolId: 'porques', phase: 'analizar', measuredAt: Date.UTC(2026, 10, 20, 9), context: {}, note: '', input: porquesExample(t), headline: null };
+    const a = await saveMeasurement({ ...base, name: 'Primera' }, database);
+    await saveMeasurement({ ...base, name: 'Segunda' }, database);
+    await addAction(p.id, { what: 'Cambiar guía', who: '', due: null, status: 'open', note: '' }, database);
+    const opts = { version: '1', date: 'x' };
+    // Una medición, sin acciones ni hitos: no salen ni como «Todavía no hay…».
+    const one = (await projectReport(p.id, t, 'es', { ...opts, include: { measurements: new Set([a.id]), actions: false, milestones: false } }, database))!;
+    expect(one.def.textSections!.map((x) => x.title)).toEqual(['Mediciones']);
+    expect(one.def.textSections![0]!.rows.map((x) => x.label)).toEqual(['Analizar · Primera']);
+    expect(one.context).not.toContain('Segunda');
+    expect(one.context).not.toContain('## Acciones');
+    expect(one.context).toContain('- Objetivo: Meta');
+    // Ninguna medición, solo acciones.
+    const none = (await projectReport(p.id, t, 'es', { ...opts, include: { measurements: new Set(), actions: true, milestones: false } }, database))!;
+    expect(none.def.textSections!.map((x) => x.title)).toEqual(['Acciones']);
+    expect(none.context).not.toContain('## Mediciones');
+  });
 });

@@ -16,12 +16,33 @@ export interface ProjectReport {
   context: string;
 }
 
-export async function projectReport(projectId: string, t: Messages, lang: 'es' | 'en', opts: { version: string; date: string }, database: GembaDB = defaultDb): Promise<ProjectReport | null> {
+/**
+ * Qué entra en el informe (lo elige el usuario en la pestaña Informe). El tipo,
+ * la fase y el objetivo van siempre. `measurements`: ids elegidos, o null para
+ * todas. Lo que no se elige no sale, ni como «Todavía no hay…».
+ */
+export interface ReportInclude {
+  measurements: ReadonlySet<string> | null;
+  actions: boolean;
+  milestones: boolean;
+}
+export const INCLUDE_ALL: ReportInclude = { measurements: null, actions: true, milestones: true };
+
+export async function projectReport(
+  projectId: string,
+  t: Messages,
+  lang: 'es' | 'en',
+  opts: { version: string; date: string; include?: ReportInclude },
+  database: GembaDB = defaultDb,
+): Promise<ProjectReport | null> {
   const project = await getProject(projectId, database);
   if (!project) return null;
   const r = t.projectPlus.report;
   const p = t.projects;
-  const measurements = await listMeasurements(projectId, database);
+  const inc = opts.include ?? INCLUDE_ALL;
+  const picked = inc.measurements;
+  const measurements = (await listMeasurements(projectId, database)).filter((m) => !picked || picked.has(m.id));
+  const withMeasurements = !picked || picked.size > 0;
   const actions = await listActions(projectId, database);
   const milestones = await listMilestones(projectId, database);
 
@@ -74,14 +95,18 @@ export async function projectReport(projectId: string, t: Messages, lang: 'es' |
     },
     info: { title: r.project, rows: header },
     textSections: [
-      {
-        title: r.measurements,
-        rows: items.length
-          ? items.map((x) => ({ label: `${x.phase} · ${x.name}`, value: [`${x.tool} · ${x.date}`, x.headline, x.conclusion].filter(Boolean).join('\n') }))
-          : [{ label: r.noMeasurements, value: '' }],
-      },
-      { title: r.actions, rows: actionRows.length ? actionRows : [{ label: r.noActions, value: '' }] },
-      { title: r.milestones, rows: milestones.length ? milestones.map((h) => ({ label: formatDateTime(h.at, lang), value: [h.title, h.note].filter(Boolean).join('\n') })) : [{ label: r.noMilestones, value: '' }] },
+      ...(withMeasurements
+        ? [
+          {
+            title: r.measurements,
+            rows: items.length
+              ? items.map((x) => ({ label: `${x.phase} · ${x.name}`, value: [`${x.tool} · ${x.date}`, x.headline, x.conclusion].filter(Boolean).join('\n') }))
+              : [{ label: r.noMeasurements, value: '' }],
+          },
+        ]
+        : []),
+      ...(inc.actions ? [{ title: r.actions, rows: actionRows.length ? actionRows : [{ label: r.noActions, value: '' }] }] : []),
+      ...(inc.milestones ? [{ title: r.milestones, rows: milestones.length ? milestones.map((h) => ({ label: formatDateTime(h.at, lang), value: [h.title, h.note].filter(Boolean).join('\n') })) : [{ label: r.noMilestones, value: '' }] }] : []),
     ],
     inputs: [],
     results: [],
@@ -94,15 +119,9 @@ export async function projectReport(projectId: string, t: Messages, lang: 'es' |
     '',
     `# ${project.name}`,
     ...header.map((h) => `- ${h.label}: ${h.value}`),
-    '',
-    `## ${r.measurements}`,
-    ...(items.length ? items.map((x) => `- [${x.phase}] ${x.name} (${x.tool}, ${r.measuredOn(x.date)})${x.headline ? `: ${x.headline}` : ''}${x.conclusion ? `. ${x.conclusion}` : ''}`) : [`- ${r.noMeasurements}`]),
-    '',
-    `## ${r.actions}`,
-    ...(actionRows.length ? actionRows.map((a) => `- ${a.label} (${a.value})`) : [`- ${r.noActions}`]),
-    '',
-    `## ${r.milestones}`,
-    ...(milestones.length ? milestones.map((h) => `- ${formatDateTime(h.at, lang)}: ${h.title}${h.note ? ` — ${h.note}` : ''}`) : [`- ${r.noMilestones}`]),
+    ...(withMeasurements ? ['', `## ${r.measurements}`, ...(items.length ? items.map((x) => `- [${x.phase}] ${x.name} (${x.tool}, ${r.measuredOn(x.date)})${x.headline ? `: ${x.headline}` : ''}${x.conclusion ? `. ${x.conclusion}` : ''}`) : [`- ${r.noMeasurements}`])] : []),
+    ...(inc.actions ? ['', `## ${r.actions}`, ...(actionRows.length ? actionRows.map((a) => `- ${a.label} (${a.value})`) : [`- ${r.noActions}`])] : []),
+    ...(inc.milestones ? ['', `## ${r.milestones}`, ...(milestones.length ? milestones.map((h) => `- ${formatDateTime(h.at, lang)}: ${h.title}${h.note ? ` — ${h.note}` : ''}`) : [`- ${r.noMilestones}`])] : []),
   ];
   return { def, context: lines.join('\n') };
 }
